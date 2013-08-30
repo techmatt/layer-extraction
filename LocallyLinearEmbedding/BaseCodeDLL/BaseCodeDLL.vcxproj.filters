@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="Config.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Main.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="AppParameters.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="App.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseCodeDLL.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility.h">
+      <Filter>LayerExtractor</Filter>
+    </ClInclude>
+    <ClInclude Include="Recolorizer.h">
+      <Filter>LayerExtractor</Filter>
+    </ClInclude>
+    <ClInclude Include="BasisColorExtractor.h">
+      <Filter>LayerExtractor</Filter>
+    </ClInclude>
+    <ClInclude Include="LayerExtractor.h">
+      <Filter>LayerExtractor</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DLLMain.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="App.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseCodeDLL.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BasisColorExtractor.cpp">
+      <Filter>LayerExtractor</Filter>
+    </ClCompile>
+    <ClCompile Include="Recolorizer.cpp">
+      <Filter>LayerExtractor</Filter>
+    </ClCompile>
+    <ClCompile Include="LayerExtractor.cpp">
+      <Filter>LayerExtractor</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Base">
+      <UniqueIdentifier>{c928787a-2d0a-40d8-9c91-930e53aad1ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App">
+      <UniqueIdentifier>{e0bdb0f1-00f3-41f9-8c72-c27b4e6bb002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files">
+      <UniqueIdentifier>{1877c21b-f73a-465d-9c64-ac8eed3a4f70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LayerExtractor">
+      <UniqueIdentifier>{966b30e3-5e5b-488b-92f8-ae43e01ebac5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\bin\Console.txt">
+      <Filter>Files</Filter>
+    </None>
+    <None Include="BaseCodeDLL.def">
+      <Filter>Base</Filter>
+    </None>
+    <None Include="Thoughts.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\Parameters.txt">
+      <Filter>Files</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

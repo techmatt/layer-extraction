@@ -1,0 +1,47 @@
+Edit propogation
+http://www.ece.nus.edu.sg/stfpage/eletp/Papers/sigasia12.pdf
+
+Linear Embedding
+http://www.sciencemag.org/content/290/5500/2323.full.pdf
+http://www.stat.cmu.edu/~cshalizi/350/lectures/14/lecture-14.pdf
+http://www.stat.cmu.edu/~cshalizi/350/
+
+Superpixels
+http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=06205760&tag=1
+
+CHOLMOD for sparse cholesky updating
+
+What we want is a "minimum but sufficient" color basis for the image
+a color basis is a set of colors along with an approximate region of support in the image
+i.e. this reddish-color holds sway over this set of pixels
+
+Such a basis is subjective. But the two terms are:
+minimum -- as few colors as possible that span as few pixels as possible
+sufficient -- it should be possible to represent any desired change to the colors in the image by modifying the basis (no need to subdivide down to the level of pixels)
+
+Possible ways to form such a basis:
+-- downsample the image ("square superpixels")
+-- standard superpixels
+-- superpixels with multiple colors
+-- pyramid approach?
+
+In theory, we could then merge invidiual channels of the superpixels with multiple colors approach to form layers
+Perhaps only merge a superpixel channel if their corresponding superpixels have a sufficiently good mapping?
+
+instead of using ANN, just search over a fixed radius for the k-closest colors?
+
+Algorithm 1
+-- do superpixelpalette segmenetation for 6 colors per pixel
+-- place an edge between k-nearest colors (or all adjacent?) if:
+   * the superpixels are sufficiently similar
+   * the colors are close enough
+   * model this as a simple soft-product sort of behavior?
+-- layers are all connected components in this graph
+
+two vertices belong to the same region if:
+ -- there exists at least one edge connecting them with weight=0.1
+ -- there exists a k-flow path connecting them
+
+ interface
+  -- select a color
+  -- click on a region and drag a growing-radius object. The bigger the radius, the more influence things will be constrained
