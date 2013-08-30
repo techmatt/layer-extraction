@@ -47,9 +47,6 @@ namespace BaseCodeApp
                 baseCodeDLLContext = BCInit();
             }
 
-            layerScroll.Minimum = 1;
-            layerScroll.Maximum = BCQueryIntegerByName(baseCodeDLLContext, "layerCount");
-            layerScroll.Value = 1;
             UpdateImages();
         }
 
@@ -78,7 +75,6 @@ namespace BaseCodeApp
 
         private void UpdateImages()
         {
-            String layerString = (layerScroll.Value - 1).ToString();
             
             pictureBoxOriginal.Image = (Image)GetBitmap("original");
 
@@ -93,31 +89,5 @@ namespace BaseCodeApp
 
         }
 
-        private void buttonNewColor_Click(object sender, EventArgs e)
-        {
-            colorPicker.AnyColor = true;
-            colorPicker.FullOpen = true;
-            colorPicker.ShowHelp = false;
-            colorPicker.Color = pictureBoxColor.BackColor;
-            DialogResult result = colorPicker.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                pictureBoxColor.BackColor = colorPicker.Color;
-                BCProcessCommand(baseCodeDLLContext, "setLayerColor " + (layerScroll.Value - 1).ToString() + " " + pictureBoxColor.BackColor.R + " " + pictureBoxColor.BackColor.G + " " + pictureBoxColor.BackColor.B);
-                UpdateImages();
-            }
-        }
-
-        private void layerScroll_Scroll(object sender, ScrollEventArgs e)
-        {
-            labelLayer.Text = "Layer " + layerScroll.Value.ToString() + "/" + layerScroll.Maximum.ToString();
-            UpdateImages();
-        }
-
-        private void buttonResetColor_Click(object sender, EventArgs e)
-        {
-            BCProcessCommand(baseCodeDLLContext, "resetLayerColor " + (layerScroll.Value - 1).ToString());
-            UpdateImages();
-        }
     }
 }

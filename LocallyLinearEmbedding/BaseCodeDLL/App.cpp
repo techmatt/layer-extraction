@@ -8,7 +8,8 @@ void App::Init()
     Bitmap bmp;
     //bmp.LoadPNG("../Data/bird.png");
     //bmp.LoadPNG("../Data/fish.png");
-    bmp.LoadPNG("../Data/bird.png");
+    //bmp.LoadPNG("../Data/bird.png");
+	bmp.LoadPNG("../Data/2508514.png");
     //bmp.LoadPNG("../Data/princess.png");
     //bmp.LoadPNG("../Data/fish.png");
     //bmp.LoadPNG("../Data/throne.png");
@@ -16,7 +17,8 @@ void App::Init()
     //bmp.LoadPNG("../Data/faceCroppedSmall.png");
 
     Bitmap mask;
-    mask.LoadPNG("../Data/birdLayerA.png");
+    //mask.LoadPNG("../Data/birdLayerA.png");
+	mask.LoadPNG("../Data/2508514_Mask.png");
 
     _image = bmp;
     
