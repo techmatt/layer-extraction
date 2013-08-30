@@ -519,6 +519,7 @@ void LayerExtractor::VisualizeLayers(const AppParameters &parameters, const Bitm
         
         Bitmap smoothBmp = Recolor(bmp, newColors);
         Bitmap discreteBmp = smoothBmp;
+		discreteBmp.Clear(RGBColor::Black);
 
         for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
         {
@@ -527,7 +528,7 @@ void LayerExtractor::VisualizeLayers(const AppParameters &parameters, const Bitm
             
             if(weight > 1.02) c = Vec3f(RGBColor::Red);
             if(weight < -0.02) c = Vec3f(RGBColor::Blue);
-            render.DrawRect(discreteBmp, Rectangle2i::ConstructFromCenterVariance(superpixelColors[superpixelIndex].coord, Vec2i(2, 2)), RGBColor(c), RGBColor(0, 128, 0));
+            render.DrawRect(discreteBmp, Rectangle2i::ConstructFromCenterVariance(superpixelColors[superpixelIndex].coord, Vec2i(2, 2)), RGBColor(c), RGBColor(c));//RGBColor(0, 128, 0));
         }
         
         for(UINT y = 0; y < smoothBmp.Height(); y++) for(UINT x = 0; x < 10; x++)
