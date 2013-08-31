@@ -45,6 +45,10 @@ public:
     void InitLayers(const AppParameters &parameters, const Bitmap &bmp, const Vector<PixelConstraint> &targetPixelColors, LayerSet &result);
     void AddNegativeConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result);
     void ExtractLayers(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers);
+
+    void TestLayerRecoloring(const Bitmap &bmp, const LayerSet &layers) const;
+    Bitmap RecolorSuperpixels(const Bitmap &bmp, const Vector<Vec3f> &newSuperpixelColors) const;
+    Bitmap RecolorLayers(const Bitmap &bmp, const LayerSet &layers, const Vector<RGBColor> &newLayerColors) const;
     
     const Vector<ColorCoordinate>& SuperpixelColors() const
     {
@@ -65,8 +69,6 @@ private:
     void VisualizeSuperpixels(const AppParameters &parameters, const Bitmap &bmp, const Vector<Vec3f> *newSuperpixelColors, const String &filename) const;
     void VisualizeNearestNeighbors(const AppParameters &parameters, const Bitmap &bmp) const;
     void TestNeighborWeights(const AppParameters &parameters, const Bitmap &bmp) const;
-
-    Bitmap Recolor(const Bitmap &bmp, const Vector<Vec3f> &newSuperpixelColors) const;
 
     Vector<ColorCoordinate> superpixelColors;
     Vector<SuperpixelNeighborhood> superpixelNeighbors;
