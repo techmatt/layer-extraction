@@ -267,7 +267,7 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
 
 Bitmap LayerExtractor::Recolor(const Bitmap &bmp, const Vector<Vec3f> &newSuperpixelColors) const
 {
-    ComponentTimer timer("Final recoloring");
+    Console::WriteLine("Recoloring");
 
     Bitmap result = bmp;
 
