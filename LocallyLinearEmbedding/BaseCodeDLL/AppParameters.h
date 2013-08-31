@@ -4,6 +4,9 @@ struct AppParameters
     {
         ParameterFile file(parameterFilename);
 
+        imageFile = file.GetRequiredString("imageFile");
+        maskFile = file.GetRequiredString("maskFile");
+
         periodicBasisCount = file.GetInteger("periodicBasisCount");
         superpixelIterations = file.GetInteger("superpixelIterations");
 
@@ -26,6 +29,9 @@ struct AppParameters
         regularizationWeight = file.GetDouble("regularizationWeight");
         negativeSupressionWeight = file.GetDouble("negativeSupressionWeight");
     }
+
+    String imageFile;
+    String maskFile;
 
     int periodicBasisCount;
     int superpixelIterations;

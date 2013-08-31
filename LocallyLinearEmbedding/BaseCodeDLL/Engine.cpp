@@ -35,10 +35,6 @@ See Engine.h for a defintion of all files included here.
 #include "Engine\Multithreading\WorkerThread.cpp"
 #include "Engine\Multithreading\ThreadPool.cpp"
 
-#include "Engine\Audio\AudioDevice.cpp"
-#include "Engine\Audio\WaveFile.cpp"
-#include "Engine\Audio\WaveFileReader.cpp"
-
 #include "Engine\Graphics Objects\Bitmap.cpp"
 #include "Engine\Graphics Objects\MatrixController.cpp"
 #include "Engine\Graphics Objects\Camera.cpp"

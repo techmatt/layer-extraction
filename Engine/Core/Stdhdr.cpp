@@ -421,7 +421,7 @@ void SignalError(const char *Description)
 {
     MessageBox(NULL, Description, "Fatal Problem Encountered", MB_OK);
 #ifdef _DEBUG
-    __asm int 3;
+    DEBUG_BREAK;
 #endif
     ExitProcess(1);
 }

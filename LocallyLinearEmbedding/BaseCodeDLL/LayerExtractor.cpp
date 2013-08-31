@@ -1,12 +1,40 @@
 #include "Main.h"
 
+void LayerSet::Dump(const String &filename, const Vector<ColorCoordinate> &superpixelColors) const
+{
+    ofstream file(filename.CString());
+    const UINT superpixelCount = layers[0].superpixelWeights.Length();
+
+    file << "index\tcolor\treconstructed\tcolor diff magnitude\tweight sum\tindex\tweights" << endl;
+    for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+    {
+        file << superpixelIndex << '\t';
+        file << superpixelColors[superpixelIndex].color.CommaSeparatedString() << '\t';
+
+        Vec3f reconstructedColor = Vec3f::Origin;
+        for(const Layer &l : layers) reconstructedColor += (float)l.superpixelWeights[superpixelIndex] * l.color;
+        
+        file << RGBColor(reconstructedColor).CommaSeparatedString() << '\t';
+
+        file << (reconstructedColor - Vec3f(superpixelColors[superpixelIndex].color)).Length() * 255.0f << '\t';
+
+        double weightSum = 0.0;
+        for(const Layer &l : layers) weightSum += l.superpixelWeights[superpixelIndex];
+        file << weightSum << '\t';
+
+        file << superpixelIndex << '\t';
+        for(const Layer &l : layers) file << l.superpixelWeights[superpixelIndex] << '\t';
+        file << endl;
+    }
+}
+
 void LayerExtractor::Init(const AppParameters &parameters, const Bitmap &bmp)
 {
     ComputeSuperpixels(parameters, bmp);
     VisualizeSuperpixels(parameters, bmp, NULL, "superpixels");
 
     ComputeNearestNeighbors(parameters, bmp);
-    VisualizeNearestNeighbors(parameters, bmp);
+    //VisualizeNearestNeighbors(parameters, bmp);
 
     ComputeNeighborWeights(parameters, bmp);
     //TestNeighborWeights(parameters, bmp);
@@ -18,7 +46,12 @@ void LayerExtractor::Init(const AppParameters &parameters, const Bitmap &bmp)
 
 void LayerExtractor::AddNegativeConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result)
 {
-    result.constraints = result.baseConstraints;
+    map<UINT64,UINT> activeConstraints;
+    for(UINT constraintIndex = 0; constraintIndex < result.constraints.Length(); constraintIndex++)
+    {
+        const auto &c = result.constraints[constraintIndex];
+        activeConstraints[UINT64(c.index) + (UINT64(c.layerIndex) << 32)] = constraintIndex;
+    }
 
     const UINT layerCount = result.layers.Length();
     const UINT superpixelCount = superpixelColors.Length();
@@ -27,9 +60,18 @@ void LayerExtractor::AddNegativeConstraints(const AppParameters &parameters, con
         Layer &curLayer = result.layers[layerIndex];
         for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
         {
+            UINT64 constraintHash = UINT64(superpixelIndex) + (UINT64(layerIndex) << 32);
             if(curLayer.superpixelWeights[superpixelIndex] < 0.0)
             {
-                result.constraints.PushEnd(SuperpixelLayerConstraint(superpixelIndex, layerIndex, 0.0, parameters.negativeSupressionWeight));
+                if(activeConstraints.count(constraintHash) == 0)
+                {
+                    result.constraints.PushEnd(SuperpixelLayerConstraint(superpixelIndex, layerIndex, 0.0, parameters.negativeSupressionWeight));
+                }
+                else
+                {
+                    auto &c = result.constraints[activeConstraints[constraintHash]];
+                    if(c.target == 0.0) c.weight += parameters.negativeSupressionWeight;
+                }
             }
         }
     }
@@ -76,8 +118,6 @@ void LayerExtractor::InitLayers(const AppParameters &parameters, const Bitmap &b
             }
         }
     }
-
-    result.baseConstraints = result.constraints;
 
     //VisualizeEmptyLayers(parameters, bmp, result);
 }
@@ -205,17 +245,8 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
 
     Vector<double> b = Crhs + STranspose * Srhs + RTranspose * Rrhs;
 
-    Console::WriteLine("Loading Eigen matrix...");
-    Eigen::SparseMatrix<double> M(layerCount * superpixelCount, layerCount * superpixelCount);
-    auto triplets = Utility::MakeEigenTriplets(Q);
-    M.setFromTriplets(triplets.begin(), triplets.end());
-
-    Console::WriteLine("Starting cholesky solve...");
-    Eigen::SimplicialCholesky< Eigen::SparseMatrix<double> > choleskyFactorization(M);
-    //Eigen::SimplicialLDLT< Eigen::SparseMatrix<double> > choleskyFactorization(M);
-    Console::WriteLine("Cholesky solve done");
-
-    Vector<double> x = Utility::EigenSolve(choleskyFactorization, b);
+    EigenSolver solver;
+    Vector<double> x = solver.Solve(Q, b, EigenSolver::ConjugateGradient_Diag);
 
     for(UINT layerIndex = 0; layerIndex < layerCount; layerIndex++)
     {

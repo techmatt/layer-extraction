@@ -51,20 +51,6 @@ thus avoids as many external dependencies as possible.)
 #include "Engine\Core\KeyDefs.h"
 
 /****************************/
-/*          Audio           */
-/****************************/
-//Objects pretaining to loading and playing audio files
-
-//WaveFileReader is needed to load wave files from disk
-#include "Engine\Audio\WaveFileReader.h"
-
-//a wave file defines a (possibly stereo) sound
-#include "Engine\Audio\WaveFile.h"
-
-//AudioDevice plays wave files
-#include "Engine\Audio\AudioDevice.h"
-
-/****************************/
 /*      Multithreading      */
 /****************************/
 //Objects pretaining to creating applications that use multiple threads

@@ -147,14 +147,6 @@ public:
     RGBColor AverageColorOverRegion(const Rectangle2f &Region) const;
     
 private:
-#ifdef USE_PNG
-    static void __cdecl PNGReadFromBuffer(png_structp png_ptr, png_bytep data, png_size_t length);
-    static void __cdecl PNGWriteToBuffer(png_structp png_ptr, png_bytep data, png_size_t length);
-    static void __cdecl PNGFlushBuffer(png_structp png_ptr);
-    void PNGCompleteRead(png_structp PngRead, png_infop PngInfo, const String &Filename);
-    void PNGCompleteWrite(png_structp PngWrite, png_infop PngInfo, const BitmapSaveOptions &Options) const;
-#endif
-
     UINT _Width, _Height;   //width and height of the bitmap
     RGBColor* _Data;        //Raw RGBColor data in one big array
 };

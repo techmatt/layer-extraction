@@ -1,23 +1,38 @@
-periodicBasisCount=3
 
+imageFile=face.png
+maskFile=faceLayerA.png
+
+#
+# Superpixel terms
+#
+superpixelIterations=5
+superpixelCount=2000
+
+#
+# Locally-linear embedding constants
+#
 spatialToColorScale=0.01
-
 pixelNeighborCount=10
 superpixelNeighborCount=30
 
-superpixelIterations=10
-superpixelCount=1000
+#
+# These terms are used by LayerExtractor
+#
+layerConstraintWeight=0.01
+sumToOneWeight=0.1
+reconstructionWeight=0.2
+regularizationWeight=0.0
+negativeSupressionWeight=0.02
 
+#
+# Unused terms
+#
+periodicBasisCount=3
+
+#
+# These terms are used for recolorizing (have no effect on LayerExtractor)
+#
 weightRegularizationTerm=0.000001
-
 userConstraintWeight=0.00001
 distantConstraintWeight=0.00000
-
 colorInertiaWeight=0.00000000
-
-layerConstraintWeight=0.01
-sumToOneWeight=0.01
-reconstructionWeight=0.01
-regularizationWeight=0.0
-
-negativeSupressionWeight=0.01

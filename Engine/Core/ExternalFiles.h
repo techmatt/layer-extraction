@@ -81,10 +81,14 @@ extern "C" {
 #include "libpng\zlib.h"
 
 // PNG saving and loading (requires zlib)
-#ifdef USE_PNG
+#ifdef USE_LIBPNG
 #include "libpng\png.h"
 #endif
 
+#endif
+
+#ifdef USE_PNG
+#include "lodepng\lodepng.h"
 #endif
 
 #ifdef USE_SDL
