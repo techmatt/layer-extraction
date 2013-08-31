@@ -247,321 +247,34 @@ void Bitmap::LoadSDL(const String &Filename)
 #endif
 }
 
+void Bitmap::LoadPNG(const String &filename)
+{
 #ifdef USE_PNG
-struct PNGDirectMemoryIORead
-{
-    const Vector<BYTE> *Buffer;
-    UINT Offset;
-};
+    vector<BYTE> image;
+    UINT width, height;
 
-void Bitmap::PNGReadFromBuffer(png_structp png_ptr, png_bytep data, png_size_t length)
-{
-    PNGDirectMemoryIORead *ReadInfo = (PNGDirectMemoryIORead *)png_get_io_ptr(png_ptr);
-    memcpy(data, ReadInfo->Buffer->CArray() + ReadInfo->Offset, length);
-    ReadInfo->Offset += (UINT)length;
-}
+    UINT error = lodepng::decode(image, width, height, filename.CString());
 
-struct PNGDirectMemoryIOWrite
-{
-    Vector<BYTE> *Buffer;
-};
+    PersistentAssert(!error, lodepng_error_text(error));
 
-void Bitmap::PNGWriteToBuffer(png_structp png_ptr, png_bytep data, png_size_t length)
-{
-    PNGDirectMemoryIOWrite *WriteInfo = (PNGDirectMemoryIOWrite *)png_get_io_ptr(png_ptr);
-    UINT StartLength = WriteInfo->Buffer->Length();
-    WriteInfo->Buffer->ReSize(StartLength + (UINT)length);
-    memcpy(WriteInfo->Buffer->CArray() + StartLength, data, length);
-}
-
-void Bitmap::PNGFlushBuffer(png_structp png_ptr)
-{
+    Allocate(width, height);
+    memcpy(_Data, &image[0], 4 * width * height);
     
-}
-#endif
 
-void Bitmap::LoadPNG(const String &Filename)
-{
-#ifdef USE_PNG
-    FILE *File;
-    File = fopen(Filename.CString(), "rb");
-    PersistentAssert(File != NULL, String("File open for LoadPNG failed: ") + String(Filename));
-
-    png_structp PngRead = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    PersistentAssert(PngRead != NULL, "png_create_read_struct failed.");
-
-    png_infop PngInfo = png_create_info_struct(PngRead);
-    PersistentAssert(PngInfo != NULL, "png_create_info_struct failed.");
-
-    png_init_io(PngRead, File);
-    PNGCompleteRead(PngRead, PngInfo, Filename);
-
-    fclose(File);
 #else
-    SignalError("LoadPNG called without USE_PNG");
+    PersistentSignalError("LoadPNG called without USE_PNG");
 #endif
 }
 
-#ifdef USE_PNG
-void Bitmap::LoadPNGFromMemory(const Vector<BYTE> &Buffer)
+void Bitmap::SavePNG(const String &filename) const
 {
-    png_structp PngRead = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    Assert(PngRead != NULL, "png_create_read_struct failed.");
-
-    png_infop PngInfo = png_create_info_struct(PngRead);
-    Assert(PngInfo != NULL, "png_create_info_struct failed.");
-
-    PNGDirectMemoryIORead ReadInfo;
-    ReadInfo.Buffer = &Buffer;
-    ReadInfo.Offset = 0;
-
-    png_set_read_fn(PngRead, (void *)&ReadInfo, Bitmap::PNGReadFromBuffer);
-    PNGCompleteRead(PngRead, PngInfo, "Memory");
+    const UINT pixelCount = _Width * _Height;
+    RGBColor *copy = new RGBColor[pixelCount];
+    memcpy(copy, _Data, pixelCount * 4);
+    for(UINT i = 0; i < pixelCount; i++) copy[i].a = 255;
+    lodepng::encode(string(filename.CString()), (const BYTE *)copy, _Width, _Height, LodePNGColorType::LCT_RGBA);
+    delete[] copy;
 }
-
-void Bitmap::PNGCompleteRead(png_structp PngRead, png_infop PngInfo, const String &Filename)
-{
-    png_read_png(PngRead, PngInfo, PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
-    png_bytepp RowPointers = png_get_rows(PngRead, PngInfo);
-    Assert(RowPointers != NULL, "png_get_rows failed.");
-
-    Allocate(PngRead->width, PngRead->height);
-    if(PngRead->channels == 3 && PngRead->pixel_depth == 24)
-    {
-        for(UINT y = 0; y < _Height; y++)
-        {
-            png_bytep CurRow = RowPointers[_Height - 1 - y];
-            for(UINT x = 0; x < _Width; x++)
-            {
-                (*this)[y][x].r = CurRow[x * 3 + 0];
-                (*this)[y][x].g = CurRow[x * 3 + 1];
-                (*this)[y][x].b = CurRow[x * 3 + 2];
-                (*this)[y][x].a = 0;
-            }
-        }
-    }
-    else if(PngRead->channels == 4 && PngRead->pixel_depth == 32)
-    {
-        for(UINT y = 0; y < _Height; y++)
-        {
-            png_bytep CurRow = RowPointers[_Height - 1 - y];
-            for(UINT x = 0; x < _Width; x++)
-            {
-                (*this)[y][x].r = CurRow[x * 4 + 0];
-                (*this)[y][x].g = CurRow[x * 4 + 1];
-                (*this)[y][x].b = CurRow[x * 4 + 2];
-                (*this)[y][x].a = CurRow[x * 4 + 3];
-            }
-        }
-    }
-    else if(PngRead->channels == 1 && PngRead->pixel_depth == 8)
-    {
-        for(UINT y = 0; y < _Height; y++)
-        {
-            png_bytep CurRow = RowPointers[_Height - 1 - y];
-            for(UINT x = 0; x < _Width; x++)
-            {
-                BYTE C = CurRow[x];
-                (*this)[y][x] = RGBColor(C, C, C, 0);
-            }
-        }
-    }
-    else
-    {
-        /*PersistentAssert(NULL, String("Unsupported channel # / pixel depth in ") + Filename + String("; ") +
-                                      String(PngRead->channels) + String(" channels ") + String(PngRead->pixel_depth) +
-                                      String(" bits per pixel"));*/
-        Console::WriteLine(String("Unsupported channel # / pixel depth in ") + Filename + String("; ") +
-                                      String(PngRead->channels) + String(" channels ") + String(PngRead->pixel_depth) +
-                                      String(" bits per pixel"));
-        Clear(RGBColor::Magenta);
-    }
-
-    png_destroy_read_struct(&PngRead, &PngInfo, NULL);
-}
-#endif
-
-void Bitmap::SavePNG(const String &Filename) const
-{
-#ifdef USE_PNG
-    BitmapSaveOptions Options;
-    SavePNG(Filename, Options);
-#else
-    SignalError("SavePNG called without USE_PNG");
-#endif
-}
-
-#ifdef USE_PNG
-void Bitmap::SavePNG(const String &Filename, const BitmapSaveOptions &Options) const
-{
-    PersistentAssert(_Width > 0 && _Height > 0, "Saving empty image");
-
-    FILE *File;
-    File = fopen(Filename.CString(), "wb");
-    PersistentAssert(File != NULL, String("File open for SavePNG failed: ") + Filename);
-
-    png_structp PngWrite = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    PersistentAssert(PngWrite != NULL, "png_create_write_struct failed.");
-
-    png_infop PngInfo = png_create_info_struct(PngWrite);
-    PersistentAssert(PngInfo != NULL, "png_create_info_struct failed.");
-
-    png_init_io(PngWrite, File);
-
-    PNGCompleteWrite(PngWrite, PngInfo, Options);
-
-    fclose(File);
-}
-
-void Bitmap::SavePNGToMemory(Vector<BYTE> &Buffer) const
-{
-    BitmapSaveOptions Options;
-    SavePNGToMemory(Buffer, Options);
-}
-
-Vector<BYTE> Bitmap::SavePNGToMemory() const
-{
-    Vector<BYTE> buffer;
-    BitmapSaveOptions options;
-    SavePNGToMemory(buffer, options);
-    return buffer;
-}
-
-void Bitmap::SavePNGToMemory(Vector<BYTE> &Buffer, const BitmapSaveOptions &Options) const
-{
-    Buffer.FreeMemory();
-    png_structp PngWrite = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    Assert(PngWrite != NULL, "png_create_write_struct failed");
-
-    png_infop PngInfo = png_create_info_struct(PngWrite);
-    Assert(PngInfo != NULL, "png_create_info_struct failed");
-
-    PNGDirectMemoryIORead WriteInfo;
-    WriteInfo.Buffer = &Buffer;
-
-    png_set_write_fn(PngWrite, (void *)&WriteInfo, Bitmap::PNGWriteToBuffer, Bitmap::PNGFlushBuffer);
-    PNGCompleteWrite(PngWrite, PngInfo, Options);
-}
-
-void Bitmap::PNGCompleteWrite(png_structp PngWrite, png_infop PngInfo, const BitmapSaveOptions &Options) const
-{
-    UINT LocalWidth = _Width;
-    UINT LocalHeight = _Height;
-    if(Options.Region.Max != Vec2i::Origin)
-    {
-        LocalWidth = Options.Region.Dimensions().x;
-        LocalHeight = Options.Region.Dimensions().y;
-    }
-
-    if(Options.SaveAlpha)
-    {
-        png_set_IHDR(PngWrite, PngInfo, LocalWidth, LocalHeight, 8, PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-    }
-    else
-    {
-        png_set_IHDR(PngWrite, PngInfo, LocalWidth, LocalHeight, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-    }
-    png_set_PLTE(PngWrite, PngInfo, NULL, 0);
-    png_set_gAMA(PngWrite, PngInfo, 0.0);
-    //png_set_sRGB_gAMA_and_cHRM(PngWrite, PngInfo, PNG_sRGB_INTENT_PERCEPTUAL);
-    
-    png_color_8 ColorInfo;
-
-    ColorInfo.alpha = 0;
-    UINT BytesPerPixel = 3;
-    if(Options.SaveAlpha)
-    {
-        ColorInfo.alpha = 8;
-        BytesPerPixel = 4;
-    }
-    ColorInfo.red = 8;
-    ColorInfo.green = 8;
-    ColorInfo.blue = 8;
-    ColorInfo.gray = 0;
-    png_set_sBIT(PngWrite, PngInfo, &ColorInfo);
-    
-    
-    UINT ScratchSizeNeeded = (sizeof(png_bytep) + sizeof(png_byte) * BytesPerPixel * LocalWidth) * LocalHeight;
-    BYTE *ScratchSpace = Options.ScratchSpace;
-    BYTE *ScratchSpaceStart = NULL;
-    if(Options.ScratchSpaceSize < ScratchSizeNeeded)
-    {
-        ScratchSpace = new BYTE[ScratchSizeNeeded];
-        ScratchSpaceStart = ScratchSpace;
-    }
-
-    png_bytep *RowPointers = (png_bytep *)ScratchSpace;
-    ScratchSpace += sizeof(png_bytep) * LocalHeight;
-    for(UINT y = 0; y < LocalHeight; y++)
-    {
-        BYTE *DestRowStart = ScratchSpace;
-        ScratchSpace += sizeof(png_byte) * BytesPerPixel * LocalWidth;
-        RowPointers[LocalHeight - 1 - y] = DestRowStart;
-        
-        const RGBColor *SrcRowStart = (*this)[y + Options.Region.Min.y];
-        UINT DestRowStartOffset = 0;
-        
-        if(Options.UseBGR)
-        {
-            if(Options.SaveAlpha)
-            {
-                for(UINT x = 0; x < LocalWidth; x++)
-                {
-                    RGBColor Color = SrcRowStart[x + Options.Region.Min.x];
-                    DestRowStart[DestRowStartOffset++] = Color.b;
-                    DestRowStart[DestRowStartOffset++] = Color.g;
-                    DestRowStart[DestRowStartOffset++] = Color.r;
-                    DestRowStart[DestRowStartOffset++] = Color.a;
-                }
-            }
-            else
-            {
-                for(UINT x = 0; x < LocalWidth; x++)
-                {
-                    RGBColor Color = SrcRowStart[x + Options.Region.Min.x];
-                    DestRowStart[DestRowStartOffset++] = Color.b;
-                    DestRowStart[DestRowStartOffset++] = Color.g;
-                    DestRowStart[DestRowStartOffset++] = Color.r;
-                }
-            }
-        }
-        else
-        {
-            if(Options.SaveAlpha)
-            {
-                for(UINT x = 0; x < LocalWidth; x++)
-                {
-                    RGBColor Color = SrcRowStart[x + Options.Region.Min.x];
-                    DestRowStart[DestRowStartOffset++] = Color.r;
-                    DestRowStart[DestRowStartOffset++] = Color.g;
-                    DestRowStart[DestRowStartOffset++] = Color.b;
-                    DestRowStart[DestRowStartOffset++] = Color.a;
-                }
-            }
-            else
-            {
-                for(UINT x = 0; x < LocalWidth; x++)
-                {
-                    RGBColor Color = SrcRowStart[x + Options.Region.Min.x];
-                    DestRowStart[DestRowStartOffset++] = Color.r;
-                    DestRowStart[DestRowStartOffset++] = Color.g;
-                    DestRowStart[DestRowStartOffset++] = Color.b;
-                }
-            }
-        }
-    }
-
-    png_set_rows(PngWrite, PngInfo, RowPointers);
-    png_write_png(PngWrite, PngInfo, NULL, NULL);
-
-    png_destroy_write_struct(&PngWrite, &PngInfo);
-
-    if(ScratchSpaceStart != NULL)
-    {
-        delete[] ScratchSpaceStart;
-    }
-}
-#endif
 
 void Bitmap::SavePPM(const String &Filename) const
 {

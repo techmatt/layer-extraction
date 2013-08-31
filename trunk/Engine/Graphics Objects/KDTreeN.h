@@ -46,4 +46,24 @@ private:
 };
 
 #endif
+#else
+
+class KDTree
+{
+public:
+    KDTree() {}
+    ~KDTree() {}
+    void FreeMemory() {}
+
+    void BuildTree(const Vector<const double*> &Points, UINT Dimension, UINT MaxK) {}
+    void BuildTree(const Vector<const float*> &Points, UINT Dimension, UINT MaxK) {}
+    void KNearest(const float *QueryPoint, UINT k, Vector<UINT> &Indices, float Epsilon) const {}
+    void KNearest(const double *QueryPoint, UINT k, Vector<UINT> &Indices, float Epsilon) const {}
+    void KNearest(const float *QueryPoint, UINT k, Vector<UINT> &Indices, Vector<float> &Distances, float Epsilon) const {}
+    void KNearest(const double *QueryPoint, UINT k, Vector<UINT> &Indices, Vector<double> &Distances, float Epsilon) const {}
+    __forceinline UINT MaxK() {return 0;}
+    __forceinline UINT Dimension() {return 0;}
+    double* GetDataPoint(UINT Index) {return NULL;}
+};
+
 #endif

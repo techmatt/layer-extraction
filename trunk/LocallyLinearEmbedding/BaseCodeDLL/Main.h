@@ -23,7 +23,8 @@ Main.h is included by all source files and includes every header file in the cor
 
 #include "AppParameters.h"
 
-#include "Eigen/Sparse"
+#include "Eigen3_2/Sparse"
+#include "EigenSolver.h"
 
 #include "BasisColorExtractor.h"
 #include "Recolorizer.h"

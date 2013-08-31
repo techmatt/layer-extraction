@@ -33,9 +33,9 @@ struct SuperpixelLayerConstraint
 
 struct LayerSet
 {
+    void Dump(const String &filename, const Vector<ColorCoordinate> &superpixelColors) const;
     Vector<Layer> layers;
     Vector<SuperpixelLayerConstraint> constraints;
-    Vector<SuperpixelLayerConstraint> baseConstraints;
 };
 
 class LayerExtractor
@@ -46,6 +46,10 @@ public:
     void AddNegativeConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result);
     void ExtractLayers(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers);
     
+    const Vector<ColorCoordinate>& SuperpixelColors() const
+    {
+        return superpixelColors;
+    }
 private:
     void ComputeSuperpixels(const AppParameters &parameters, const Bitmap &bmp);
     void ComputeNearestNeighbors(const AppParameters &parameters, const Bitmap &bmp);

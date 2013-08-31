@@ -37,6 +37,23 @@ namespace Utility
     }
 
     template<class T>
+    Eigen::VectorXd MakeEigenVector(const Vector<T> &v)
+    {
+        const UINT n = v.Length();
+        Eigen::VectorXd result(n);
+        for(UINT i = 0; i < n; i++) result[i] = v[i];
+        return result;
+    }
+
+    __forceinline Vector<double> DumpEigenVector(const Eigen::VectorXd &v)
+    {
+        const UINT n = (UINT)v.size();
+        Vector<double> result(n);
+        for(UINT i = 0; i < n; i++) result[i] = v[i];
+        return result;
+    }
+
+    template<class T>
     Vector<double> EigenSolve(const Eigen::SimplicialLDLT< Eigen::SparseMatrix<double> > &choleskyFactorization, const Vector<T> &b)
     {
         const UINT n = b.Length();

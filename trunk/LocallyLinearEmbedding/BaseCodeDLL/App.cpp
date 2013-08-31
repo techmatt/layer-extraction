@@ -6,20 +6,11 @@ void App::Init()
     _parameters.Init("../Parameters.txt");
 
     Bitmap bmp;
-    //bmp.LoadPNG("../Data/bird.png");
-    //bmp.LoadPNG("../Data/fish.png");
-    //bmp.LoadPNG("../Data/bird.png");
-	bmp.LoadPNG("../Data/2508514.png");
-    //bmp.LoadPNG("../Data/princess.png");
-    //bmp.LoadPNG("../Data/fish.png");
-    //bmp.LoadPNG("../Data/throne.png");
-    //bmp.LoadPNG("../Data/swordsman.png");
-    //bmp.LoadPNG("../Data/faceCroppedSmall.png");
-
+    bmp.LoadPNG("../Data/" + _parameters.imageFile);
+    
     Bitmap mask;
-    //mask.LoadPNG("../Data/birdLayerA.png");
-	mask.LoadPNG("../Data/2508514_Mask.png");
-
+    mask.LoadPNG("../Data/" + _parameters.maskFile);
+    
     _image = bmp;
     
     //_recolorizer.Init(_parameters, bmp);
@@ -34,25 +25,17 @@ void App::Init()
     _extractor.ExtractLayers(_parameters, bmp, layers);
     _extractor.AddNegativeConstraints(_parameters, bmp, layers);
     _extractor.ExtractLayers(_parameters, bmp, layers);
+    _extractor.AddNegativeConstraints(_parameters, bmp, layers);
+    _extractor.ExtractLayers(_parameters, bmp, layers);
+    _extractor.AddNegativeConstraints(_parameters, bmp, layers);
+    _extractor.ExtractLayers(_parameters, bmp, layers);
+    _extractor.AddNegativeConstraints(_parameters, bmp, layers);
+    _extractor.ExtractLayers(_parameters, bmp, layers);
+
+    layers.Dump("../Results/Layers.txt", _extractor.SuperpixelColors());
     
     //Bitmap result = _recolorizer.Recolor(_parameters, bmp, pixelColors, 0.001, 0.6);
     //result.SavePNG("../Results/result.png");
-
-    /*int cutoffIndex = 0;
-    for(double cutoff = 0.1; cutoff <= 0.85; cutoff += 0.05, cutoffIndex++)
-    //for(double cutoff = 0.0; cutoff <= 0.1; cutoff += 0.01, cutoffIndex++)
-    {
-        Bitmap result = _recolorizer.Recolor(_parameters, bmp, pixelColors, 0.001, cutoff);
-        result.SavePNG("../Results/result" + String(cutoffIndex) + "_" + String(cutoff) + ".png");
-    }*/
-
-    /*for(const PixelConstraint &c : pixelColors)
-    {
-        if(bmp[c.coord.y][c.coord.x] == RGBColor(c.targetColor)) result[c.coord.y][c.coord.x] = RGBColor::Black;
-        else result[c.coord.y][c.coord.x] = RGBColor(c.targetColor);
-    }
-
-    result.SavePNG("../Results/resultAnnotated.png");*/
 }
 
 UINT32 App::ProcessCommand(const String &command)

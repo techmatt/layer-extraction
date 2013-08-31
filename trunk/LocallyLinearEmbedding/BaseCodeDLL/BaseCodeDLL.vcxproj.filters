@@ -34,6 +34,9 @@
     <ClInclude Include="LayerExtractor.h">
       <Filter>LayerExtractor</Filter>
     </ClInclude>
+    <ClInclude Include="EigenSolver.h">
+      <Filter>LayerExtractor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -58,6 +61,12 @@
       <Filter>LayerExtractor</Filter>
     </ClCompile>
     <ClCompile Include="LayerExtractor.cpp">
+      <Filter>LayerExtractor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Include\lodepng\lodepng.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="EigenSolver.cpp">
       <Filter>LayerExtractor</Filter>
     </ClCompile>
   </ItemGroup>
