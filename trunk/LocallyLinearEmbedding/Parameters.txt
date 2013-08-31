@@ -6,7 +6,7 @@ maskFile=catepillarLayerA.png
 # Superpixel terms
 #
 superpixelIterations=5
-superpixelCount=5000
+superpixelCount=1000
 
 #
 # Locally-linear embedding constants

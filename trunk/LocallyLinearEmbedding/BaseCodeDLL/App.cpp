@@ -33,6 +33,8 @@ void App::Init()
     _extractor.ExtractLayers(_parameters, bmp, layers);
 
     layers.Dump("../Results/Layers.txt", _extractor.SuperpixelColors());
+
+    _extractor.TestLayerRecoloring(bmp, layers);
     
     //Bitmap result = _recolorizer.Recolor(_parameters, bmp, pixelColors, 0.001, 0.6);
     //result.SavePNG("../Results/result.png");

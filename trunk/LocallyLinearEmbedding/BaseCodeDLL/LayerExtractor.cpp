@@ -260,15 +260,10 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
 
     VisualizeLayers(parameters, bmp, layers);
     VisualizeReconstruction(parameters, bmp, layers);
-
-    //VisualizeSuperpixels(parameters, bmp, &newSuperpixelColors, "superpixelsRecolored");
-    //return Recolor(bmp, newSuperpixelColors);
 }
 
-Bitmap LayerExtractor::Recolor(const Bitmap &bmp, const Vector<Vec3f> &newSuperpixelColors) const
+Bitmap LayerExtractor::RecolorSuperpixels(const Bitmap &bmp, const Vector<Vec3f> &newSuperpixelColors) const
 {
-    Console::WriteLine("Recoloring");
-
     Bitmap result = bmp;
 
     for(UINT y = 0; y < bmp.Height(); y++)
@@ -287,6 +282,21 @@ Bitmap LayerExtractor::Recolor(const Bitmap &bmp, const Vector<Vec3f> &newSuperp
         }
     }
     return result;
+}
+
+Bitmap LayerExtractor::RecolorLayers(const Bitmap &bmp, const LayerSet &layers, const Vector<RGBColor> &newLayerColors) const
+{
+    const UINT superpixelCount = superpixelColors.Length();
+    Vector<Vec3f> newColors(superpixelCount, Vec3f::Origin);
+    for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+    {
+        for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+        {
+            newColors[superpixelIndex] += (float)layers.layers[layerIndex].superpixelWeights[superpixelIndex] * Vec3f(newLayerColors[layerIndex]);
+        }
+    }
+
+    return RecolorSuperpixels(bmp, newColors);
 }
 
 void LayerExtractor::ComputeSuperpixels(const AppParameters &parameters, const Bitmap &bmp)
@@ -356,6 +366,33 @@ void LayerExtractor::ComputeNearestNeighbors(const AppParameters &parameters, co
         else
         {
             b.indices.PopEnd();
+        }
+    }
+}
+
+void LayerExtractor::TestLayerRecoloring(const Bitmap &bmp, const LayerSet &layers) const
+{
+    Vector<RGBColor> targetColors;
+    targetColors.PushEnd(RGBColor::Black);
+    targetColors.PushEnd(RGBColor::White);
+    targetColors.PushEnd(RGBColor::Red);
+    targetColors.PushEnd(RGBColor::Green);
+    targetColors.PushEnd(RGBColor::Blue);
+
+    const UINT layerCount = layers.layers.Length(); 
+
+    Vector<RGBColor> baseLayerColors(layerCount);
+    for(UINT layerIndex = 0; layerIndex < layerCount; layerIndex++) baseLayerColors[layerIndex] = RGBColor(layers.layers[layerIndex].color);
+
+    for(UINT layerIndex = 0; layerIndex < layerCount; layerIndex++)
+    {
+        const Layer &l = layers.layers[layerIndex];
+        for(UINT targetColorIndex = 0; targetColorIndex < targetColors.Length(); targetColorIndex++)
+        {
+            Vector<RGBColor> newLayerColors = baseLayerColors;
+            newLayerColors[layerIndex] = RGBColor::Interpolate(RGBColor(layers.layers[layerIndex].color), targetColors[targetColorIndex], 0.6f);
+
+            RecolorLayers(bmp, layers, newLayerColors).SavePNG("../Results/Recoloring/layer" + String(layerIndex) + "_t" + String(targetColorIndex) + ".png");
         }
     }
 }
@@ -531,7 +568,7 @@ void LayerExtractor::VisualizeReconstruction(const AppParameters &parameters, co
         }
     }
 
-    Recolor(bmp, newColors).SavePNG("../Results/Reconstruction_P" + String(pass) + ".png");
+    RecolorSuperpixels(bmp, newColors).SavePNG("../Results/Reconstruction_P" + String(pass) + ".png");
 }
 
 void LayerExtractor::VisualizeLayers(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const
@@ -548,7 +585,7 @@ void LayerExtractor::VisualizeLayers(const AppParameters &parameters, const Bitm
             newColors[superpixelIndex] = Vec3f(RGBColor::Interpolate(RGBColor::Black, RGBColor::White, (float)curLayer.superpixelWeights[superpixelIndex]));
         }
         
-        Bitmap smoothBmp = Recolor(bmp, newColors);
+        Bitmap smoothBmp = RecolorSuperpixels(bmp, newColors);
         Bitmap discreteBmp = smoothBmp;
 		discreteBmp.Clear(RGBColor::Black);
 
