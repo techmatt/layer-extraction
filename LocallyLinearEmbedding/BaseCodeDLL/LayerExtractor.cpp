@@ -609,7 +609,10 @@ void LayerExtractor::VisualizeLayerConstraints(const AppParameters &parameters, 
 {
     const UINT paletteHeight = 40;
     Bitmap result(bmp.Width(), bmp.Height() + paletteHeight);
+    
     result.Clear(RGBColor::Black);
+
+    for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) result[y][x] = RGBColor(Vec3f(bmp[y][x]) * 0.2f);
     
     AliasRender render;
     for(const auto &constraint : layers.constraints)
