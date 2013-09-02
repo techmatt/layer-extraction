@@ -27,6 +27,9 @@ void App::Init()
         Vector<Vec3f> palette(_parameters.KMeansPaletteSize);
         for(int i = 0; i < _parameters.KMeansPaletteSize; i++) palette[i] = clustering.ClusterCenter(i);
 
+        //palette.Sort([](const Vec3f &a, const Vec3f &b){ return a.LengthSq() < b.LengthSq(); });
+        palette.Sort([](const Vec3f &a, const Vec3f &b){ return a.y < b.y; });
+        
         _extractor.InitLayersFromPalette(_parameters, bmp, palette, layers);
     }
     else

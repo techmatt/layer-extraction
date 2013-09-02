@@ -23,7 +23,6 @@ struct AppParameters
         distantConstraintWeight = file.GetDouble("distantConstraintWeight");
         colorInertiaWeight = file.GetDouble("colorInertiaWeight");
 
-        paletteSimilarityWeight = file.GetDouble("paletteSimilarityWeight");
         pixelConstraintWeight = file.GetDouble("pixelConstraintWeight");
         sumToOneWeight = file.GetDouble("sumToOneWeight");
         reconstructionWeight = file.GetDouble("reconstructionWeight");
@@ -55,7 +54,6 @@ struct AppParameters
     double distantConstraintWeight;
     double colorInertiaWeight;
 
-    double paletteSimilarityWeight;
     double pixelConstraintWeight;
     double sumToOneWeight;
     double reconstructionWeight;
