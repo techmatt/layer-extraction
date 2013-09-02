@@ -20,7 +20,6 @@ superpixelNeighborCount=30
 #
 useKMeansPalette=true
 KMeansPaletteSize=10
-paletteSimilarityWeight=0.01
 pixelConstraintWeight=0.01
 sumToOneWeight=0.1
 reconstructionWeight=0.5

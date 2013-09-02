@@ -60,7 +60,7 @@ private:
 
     void VisualizeReconstruction(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const;
     void VisualizeLayers(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const;
-    void VisualizeEmptyLayers(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const;
+    void VisualizeLayerConstraints(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const;
     void VisualizeSuperpixels(const AppParameters &parameters, const Bitmap &bmp, const Vector<Vec3f> *newSuperpixelColors, const String &filename) const;
     void VisualizeNearestNeighbors(const AppParameters &parameters, const Bitmap &bmp) const;
     void TestNeighborWeights(const AppParameters &parameters, const Bitmap &bmp) const;

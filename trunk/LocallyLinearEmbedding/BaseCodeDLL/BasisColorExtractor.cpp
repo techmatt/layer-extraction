@@ -52,25 +52,6 @@ Vec2i Superpixel::MassCentroid() const
 double Superpixel::AssignmentError(const Bitmap &bmp, const Vec2i &coord) const
 {
     return Vec3f::DistSq(palette[0], Vec3f(bmp[coord.y][coord.x]));
-    /*Vec3f pixelColor = Vec3f(bmp[coord.y][coord.x]);
-
-    double bestColorError = 1000000.0;
-    for(int paletteIndex = 0; paletteIndex < paletteCount; paletteIndex++)
-    {
-        double curError = Vec3f::DistSq(palette[paletteIndex], pixelColor);
-        if(curError < bestColorError)
-        {
-            bestColorError = curError;
-        }
-    }*/
-    //const double colorError = sqrt(bestColorError);
-
-    //const float scale = 1.0f / Math::Max(bmp.Width(), bmp.Height());
-    //const double seedDistError = Vec2f::Dist( Vec2f(_seed) * scale, Vec2f(coord) * scale );
-
-    //const double sizeError = sqrt(double(pixels.Length()));
-
-    //return colorError + sizeError * 0.005;
 }
 
 void Superpixel::ComputePalette(const Bitmap &bmp, UINT paletteCount)

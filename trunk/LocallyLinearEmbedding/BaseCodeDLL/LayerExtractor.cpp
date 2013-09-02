@@ -118,7 +118,7 @@ void LayerExtractor::InitLayersFromPixelConstraints(const AppParameters &paramet
         }
     }
 
-    //VisualizeEmptyLayers(parameters, bmp, result);
+    VisualizeLayerConstraints(parameters, bmp, result);
 }
 
 void LayerExtractor::InitLayersFromPalette(const AppParameters &parameters, const Bitmap &bmp, const Vector<Vec3f> &palette, LayerSet &result)
@@ -187,6 +187,8 @@ void LayerExtractor::InitLayersFromPalette(const AppParameters &parameters, cons
             }
         }
     }
+
+    VisualizeLayerConstraints(parameters, bmp, result);
 }
 
 void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers)
@@ -603,24 +605,38 @@ void LayerExtractor::VisualizeNearestNeighbors(const AppParameters &parameters, 
     }
 }
 
-void LayerExtractor::VisualizeEmptyLayers(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const
+void LayerExtractor::VisualizeLayerConstraints(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const
 {
-    /*for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+    const UINT paletteHeight = 40;
+    Bitmap result(bmp.Width(), bmp.Height() + paletteHeight);
+    result.Clear(RGBColor::Black);
+    
+    AliasRender render;
+    for(const auto &constraint : layers.constraints)
     {
-        const Layer &curLayer = layers.layers[layerIndex];
-        
-        Bitmap layerBmp = bmp;
-        layerBmp.Clear(RGBColor::Black);
-        if(RGBColor(curLayer.color) == RGBColor::Black) layerBmp.Clear(RGBColor::White);
-
-        for(UINT p : curLayer.superpixelSeeds)
+        if(constraint.target > 0.0)
         {
-            Vec2i c = superpixelColors[p].coord;
-            layerBmp[c.y][c.x] = RGBColor(curLayer.color);
+            RGBColor color = RGBColor(layers.layers[constraint.layerIndex].color);
+            RGBColor borderColor = color;
+            if(Vec3f(color).Length() < 0.3) borderColor = RGBColor::White;
+        
+            render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(superpixelColors[constraint.index].coord, Vec2i(2, 2)), color, borderColor);
         }
+    }
 
-        layerBmp.SavePNG("../Results/EmptyLayer" + String(layerIndex) + ".png");
-    }*/
+    int layerWidth = Math::Ceiling((double)bmp.Width() / (double)layers.layers.Length());
+    for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+    {
+        for(int x = layerIndex * layerWidth; x < (int)(layerIndex + 1) * layerWidth; x++)
+        {
+            for(int y = (int)bmp.Height(); y < (int)result.Height(); y++)
+            {
+                if(result.ValidCoordinates(x, y)) result[y][x] = RGBColor(layers.layers[layerIndex].color);
+            }
+        }
+    }
+
+    result.SavePNG("../Results/LayerConstraints.png");
 }
 
 void LayerExtractor::VisualizeReconstruction(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const
