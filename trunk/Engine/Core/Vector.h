@@ -423,6 +423,38 @@ public:
     T Product() const;
     const T& MaxValue() const;
     unsigned int MaxIndex() const;
+    unsigned int MaxIndex(const function<double(const T&)> &valueFunction) const
+    {
+        if(_Data == NULL) return -1;
+        double maxValue = valueFunction(_Data[0]);
+        UINT maxIndex = 0;
+        for(UINT i = 0; i < _Length; i++)
+        {
+            double value = valueFunction(_Data[i]);
+            if(value > maxValue)
+            {
+                maxValue = value;
+                maxIndex = i;
+            }
+        }
+        return maxIndex;
+    }
+    unsigned int MinIndex(const function<double(const T&)> &valueFunction) const
+    {
+        if(_Data == NULL) return -1;
+        double minValue = valueFunction(_Data[0]);
+        UINT minIndex = 0;
+        for(UINT i = 0; i < _Length; i++)
+        {
+            double value = valueFunction(_Data[i]);
+            if(value < minValue)
+            {
+                minValue = value;
+                minIndex = i;
+            }
+        }
+        return minIndex;
+    }
     const T& MinValue() const;
     unsigned int MinIndex() const;
     bool Contains(const T &t) const;
@@ -430,33 +462,6 @@ public:
     int FindFirstIndex(const T &t) const;
     unsigned int Hash32() const;
     unsigned __int64 Hash64() const;
-
-    //
-    // File
-    //
-    void SaveToASCIIFile(const String &Filename)
-    {
-        ofstream File(Filename.CString());
-        PersistentAssert(!File.fail(), "Failed to open file");
-        File << _Length << endl;
-        for(unsigned int Index = 0; Index < _Length; Index++)
-        {
-            File << _Data[Index] << '\n';
-        }
-    }
-
-    void LoadFromASCIIFile(const String &Filename)
-    {
-        ifstream File(Filename.CString());
-        PersistentAssert(!File.fail(), "Failed to open file");
-        unsigned int Length;
-        File >> Length;
-        Allocate(Length);
-        for(unsigned int Index = 0; Index < Length; Index++)
-        {
-            File >> _Data[Index];
-        }
-    }
 
     //
     // Wrapping stack-allocated memory
