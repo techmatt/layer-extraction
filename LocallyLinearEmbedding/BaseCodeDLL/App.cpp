@@ -8,20 +8,36 @@ void App::Init()
     Bitmap bmp;
     bmp.LoadPNG("../Data/" + _parameters.imageFile);
     
-    Bitmap mask;
-    mask.LoadPNG("../Data/" + _parameters.maskFile);
-    
     _image = bmp;
     
     //_recolorizer.Init(_parameters, bmp);
     _extractor.Init(_parameters, bmp);
 
-    Vector<PixelConstraint> pixelColors;
-    Utility::AddMaskConstraints(bmp, mask, pixelColors);
-
-    
     LayerSet layers;
-    _extractor.InitLayers(_parameters, bmp, pixelColors, layers);
+    if(_parameters.useKMeansPalette)
+    {
+        KMeansClustering<Vec3f, Vec3fKMeansMetric> clustering;
+        Vector<Vec3f> bmpColors;
+        
+        for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) bmpColors.PushEnd(Vec3f(bmp[y][x]));
+        bmpColors.Randomize();
+        
+        clustering.Cluster(bmpColors, _parameters.KMeansPaletteSize, 100, false, 0.01);
+        
+        Vector<Vec3f> palette(_parameters.KMeansPaletteSize);
+        for(int i = 0; i < _parameters.KMeansPaletteSize; i++) palette[i] = clustering.ClusterCenter(i);
+
+        _extractor.InitLayersFromPalette(_parameters, bmp, palette, layers);
+    }
+    else
+    {
+        Bitmap mask;
+        mask.LoadPNG("../Data/" + _parameters.maskFile);
+        Vector<PixelConstraint> pixelColors;
+        Utility::AddMaskConstraints(bmp, mask, pixelColors);
+        _extractor.InitLayersFromPixelConstraints(_parameters, bmp, pixelColors, layers);
+    }
+
     _extractor.ExtractLayers(_parameters, bmp, layers);
     _extractor.AddNegativeConstraints(_parameters, bmp, layers);
     _extractor.ExtractLayers(_parameters, bmp, layers);

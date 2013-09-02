@@ -23,15 +23,22 @@ struct AppParameters
         distantConstraintWeight = file.GetDouble("distantConstraintWeight");
         colorInertiaWeight = file.GetDouble("colorInertiaWeight");
 
-        layerConstraintWeight = file.GetDouble("layerConstraintWeight");
+        paletteSimilarityWeight = file.GetDouble("paletteSimilarityWeight");
+        pixelConstraintWeight = file.GetDouble("pixelConstraintWeight");
         sumToOneWeight = file.GetDouble("sumToOneWeight");
         reconstructionWeight = file.GetDouble("reconstructionWeight");
         regularizationWeight = file.GetDouble("regularizationWeight");
         negativeSupressionWeight = file.GetDouble("negativeSupressionWeight");
+
+        useKMeansPalette = file.GetBoolean("useKMeansPalette");
+        KMeansPaletteSize = file.GetInteger("KMeansPaletteSize");
     }
 
     String imageFile;
     String maskFile;
+
+    bool useKMeansPalette;
+    int KMeansPaletteSize;
 
     int periodicBasisCount;
     int superpixelIterations;
@@ -48,7 +55,8 @@ struct AppParameters
     double distantConstraintWeight;
     double colorInertiaWeight;
 
-    double layerConstraintWeight;
+    double paletteSimilarityWeight;
+    double pixelConstraintWeight;
     double sumToOneWeight;
     double reconstructionWeight;
     double regularizationWeight;

@@ -2,12 +2,6 @@
 struct Layer
 {
     Vec3f color;
-
-    //
-    // superpixelSeeds is just used for debugging and visualization. Full constraint list is in LayerSet::constraints
-    //
-    Vector<UINT> superpixelSeeds;
-
     Vector<double> superpixelWeights;
 };
 
@@ -42,7 +36,8 @@ class LayerExtractor
 {
 public:
     void Init(const AppParameters &parameters, const Bitmap &bmp);
-    void InitLayers(const AppParameters &parameters, const Bitmap &bmp, const Vector<PixelConstraint> &targetPixelColors, LayerSet &result);
+    void InitLayersFromPixelConstraints(const AppParameters &parameters, const Bitmap &bmp, const Vector<PixelConstraint> &targetPixelColors, LayerSet &result);
+    void InitLayersFromPalette(const AppParameters &parameters, const Bitmap &bmp, const Vector<Vec3f> &palette, LayerSet &result);
     void AddNegativeConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result);
     void ExtractLayers(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers);
 

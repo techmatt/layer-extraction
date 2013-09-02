@@ -1,12 +1,12 @@
 
-imageFile=catepillar.png
-maskFile=catepillarLayerA.png
+imageFile=CGface.png
+maskFile=CGface.png
 
 #
 # Superpixel terms
 #
 superpixelIterations=5
-superpixelCount=1000
+superpixelCount=2000
 
 #
 # Locally-linear embedding constants
@@ -18,11 +18,14 @@ superpixelNeighborCount=30
 #
 # These terms are used by LayerExtractor
 #
-layerConstraintWeight=0.01
+useKMeansPalette=true
+KMeansPaletteSize=10
+paletteSimilarityWeight=0.01
+pixelConstraintWeight=0.01
 sumToOneWeight=0.1
-reconstructionWeight=0.2
+reconstructionWeight=0.5
 regularizationWeight=0.0
-negativeSupressionWeight=0.02
+negativeSupressionWeight=0.01
 
 #
 # These terms are only used for recolorizing (have no effect on LayerExtractor)
