@@ -22,7 +22,7 @@ void App::Init()
         for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) bmpColors.PushEnd(Vec3f(bmp[y][x]));
         bmpColors.Randomize();
         
-        clustering.Cluster(bmpColors, _parameters.KMeansPaletteSize, 100, false, 0.01);
+        clustering.Cluster(bmpColors, _parameters.KMeansPaletteSize, 10000, true, 0.000001);
         
         Vector<Vec3f> palette(_parameters.KMeansPaletteSize);
         for(int i = 0; i < _parameters.KMeansPaletteSize; i++) palette[i] = clustering.ClusterCenter(i);

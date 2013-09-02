@@ -1,6 +1,6 @@
 
-imageFile=CGface.png
-maskFile=CGface.png
+imageFile=face.png
+maskFile=face.png
 
 #
 # Superpixel terms
@@ -19,7 +19,7 @@ superpixelNeighborCount=30
 # These terms are used by LayerExtractor
 #
 useKMeansPalette=true
-KMeansPaletteSize=10
+KMeansPaletteSize=15
 pixelConstraintWeight=0.01
 sumToOneWeight=0.1
 reconstructionWeight=0.5
