@@ -35,3 +35,11 @@ BASECODEDLL_API BCBitmapInfo* __stdcall BCQueryBitmapByName(void *context, const
     App &app = *(App*)context;
     return app.QueryBitmapByName(s);
 }
+
+BASECODEDLL_API BCLayers* __stdcall BCGetLayers(void *context, const char *s)
+{
+    if(context == NULL) return 0;
+    App &app = *(App*)context;
+
+	return app.GetLayers();
+}

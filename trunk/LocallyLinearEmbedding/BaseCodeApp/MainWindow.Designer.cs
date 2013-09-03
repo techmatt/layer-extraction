@@ -35,9 +35,9 @@
             // 
             // pictureBoxOriginal
             // 
-            this.pictureBoxOriginal.Location = new System.Drawing.Point(28, 12);
+            this.pictureBoxOriginal.Location = new System.Drawing.Point(26, 37);
             this.pictureBoxOriginal.Name = "pictureBoxOriginal";
-            this.pictureBoxOriginal.Size = new System.Drawing.Size(562, 804);
+            this.pictureBoxOriginal.Size = new System.Drawing.Size(562, 465);
             this.pictureBoxOriginal.TabIndex = 0;
             this.pictureBoxOriginal.TabStop = false;
             // 
@@ -45,7 +45,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1721, 902);
+            this.ClientSize = new System.Drawing.Size(1110, 625);
             this.Controls.Add(this.pictureBoxOriginal);
             this.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Margin = new System.Windows.Forms.Padding(4);

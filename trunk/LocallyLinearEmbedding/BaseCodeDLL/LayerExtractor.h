@@ -5,6 +5,15 @@ struct Layer
     Vector<double> superpixelWeights;
 };
 
+struct PixelLayer
+{
+	Vec3f color;
+	Vector<double> pixelWeights;
+	int width;
+	int height;
+};
+
+
 struct SuperpixelLayerConstraint
 {
     SuperpixelLayerConstraint()
@@ -44,6 +53,8 @@ public:
     void TestLayerRecoloring(const Bitmap &bmp, const LayerSet &layers) const;
     Bitmap RecolorSuperpixels(const Bitmap &bmp, const Vector<Vec3f> &newSuperpixelColors) const;
     Bitmap RecolorLayers(const Bitmap &bmp, const LayerSet &layers, const Vector<RGBColor> &newLayerColors) const;
+
+	Vector<PixelLayer> GetPixelLayers(const Bitmap &bmp, const LayerSet &layers) const;
     
     const Vector<ColorCoordinate>& SuperpixelColors() const
     {

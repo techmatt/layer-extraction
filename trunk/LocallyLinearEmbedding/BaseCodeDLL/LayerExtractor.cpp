@@ -368,6 +368,42 @@ Bitmap LayerExtractor::RecolorLayers(const Bitmap &bmp, const LayerSet &layers, 
     return RecolorSuperpixels(bmp, newColors);
 }
 
+Vector<PixelLayer> LayerExtractor::GetPixelLayers(const Bitmap &bmp, const LayerSet &layers) const
+{
+	//for each pixel, compute it's layer membership
+	Vector<PixelLayer> result;
+	for (UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+	{
+		PixelLayer layer;
+		layer.color = layers.layers[layerIndex].color;
+		layer.width = bmp.Width();
+		layer.height = bmp.Height();
+		layer.pixelWeights = Vector<double>(layer.width*layer.height, 0);
+		result.PushEnd(layer);
+	}
+	for (UINT y=0; y<bmp.Height(); y++)
+	{
+		for (UINT x=0; x<bmp.Width(); x++)
+		{
+			const PixelNeighborhood &curPixel = pixelNeighborhoods(y, x);
+			const UINT k = curPixel.indices.Length();
+			const int idx = y*bmp.Width()+x;
+
+			for (UINT neighborIndex = 0; neighborIndex < k; neighborIndex++)
+			{
+				for (UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+				{
+					UINT superpixelIndex = curPixel.indices[neighborIndex];
+					double superpixelWeight = curPixel.weights[neighborIndex];
+					result[layerIndex].pixelWeights[idx] += layers.layers[layerIndex].superpixelWeights[superpixelIndex]*superpixelWeight;
+				}
+			}
+
+		}
+	}
+	return result;
+}
+
 void LayerExtractor::ComputeSuperpixels(const AppParameters &parameters, const Bitmap &bmp)
 {
     ComponentTimer timer("Computing superpixels");
