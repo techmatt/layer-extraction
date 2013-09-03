@@ -7,11 +7,13 @@ public:
     BCBitmapInfo* QueryBitmapByName(const String &s);
     int QueryIntegerByName(const String &s);
     const char *QueryStringByName(const String &s);
+	BCLayers* GetLayers();
     
 private:
     AppParameters _parameters;
 
     Bitmap _image;
+	LayerSet _layers;
 
     LayerExtractor _extractor;
     //Recolorizer _recolorizer;

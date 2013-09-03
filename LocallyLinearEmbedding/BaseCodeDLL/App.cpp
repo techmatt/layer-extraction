@@ -44,20 +44,48 @@ void App::Init()
     _extractor.ExtractLayers(_parameters, bmp, layers);
     _extractor.AddNegativeConstraints(_parameters, bmp, layers);
     _extractor.ExtractLayers(_parameters, bmp, layers);
-    _extractor.AddNegativeConstraints(_parameters, bmp, layers);
+   /* _extractor.AddNegativeConstraints(_parameters, bmp, layers);
     _extractor.ExtractLayers(_parameters, bmp, layers);
     _extractor.AddNegativeConstraints(_parameters, bmp, layers);
     _extractor.ExtractLayers(_parameters, bmp, layers);
     _extractor.AddNegativeConstraints(_parameters, bmp, layers);
-    _extractor.ExtractLayers(_parameters, bmp, layers);
+    _extractor.ExtractLayers(_parameters, bmp, layers);*/
 
     layers.Dump("../Results/Layers.txt", _extractor.SuperpixelColors());
 
     _extractor.TestLayerRecoloring(bmp, layers);
+	_layers = layers;
     
     //Bitmap result = _recolorizer.Recolor(_parameters, bmp, pixelColors, 0.001, 0.6);
     //result.SavePNG("../Results/result.png");
 }
+
+BCLayers* App::GetLayers()
+{
+	BCLayers *result = new BCLayers();
+
+	Vector<PixelLayer> layers = _extractor.GetPixelLayers(_image, _layers);
+	result->layers = new BCLayerInfo[layers.Length()];
+	result->numLayers = layers.Length();
+
+	UINT width = layers.First().width;
+	UINT height = layers.First().height;
+	
+	for (UINT i=0; i<layers.Length(); i++)
+	{
+		result->layers[i].d0 = layers[i].color[0];
+		result->layers[i].d1 = layers[i].color[1];
+		result->layers[i].d2 = layers[i].color[2];
+		result->layers[i].width = width;
+		result->layers[i].height = height;
+
+		result->layers[i].weights = new double[width*height];
+		memcpy(result->layers[i].weights, layers[i].pixelWeights.CArray(), width*height*sizeof(double));
+	}
+
+	return result;
+}
+
 
 UINT32 App::ProcessCommand(const String &command)
 {
