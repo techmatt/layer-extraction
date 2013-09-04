@@ -6,4 +6,4 @@ EXPORTS
 	BCQueryStringByName
 	BCQueryIntegerByName
 	BCQueryBitmapByName
-	BCGetLayers
+	BCExtractLayers

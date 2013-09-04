@@ -7,7 +7,7 @@ public:
     BCBitmapInfo* QueryBitmapByName(const String &s);
     int QueryIntegerByName(const String &s);
     const char *QueryStringByName(const String &s);
-	BCLayers* GetLayers();
+	BCLayers* ExtractLayers(BCBitmapInfo bitmap, Vector<Vec3f> palette);
     
 private:
     AppParameters _parameters;
