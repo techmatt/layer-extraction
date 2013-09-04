@@ -216,6 +216,8 @@ namespace BaseCodeApp
 
             if (layersUnmanaged == (IntPtr)0) return;
 
+            layers = new Layers();
+
             BCLayers layerSet = (BCLayers)Marshal.PtrToStructure(layersUnmanaged, typeof(BCLayers));
             IntPtr layerInfoUnmanaged = layerSet.layers;
 
@@ -254,9 +256,9 @@ namespace BaseCodeApp
                         {
                             result.SetPixel(x, y, Color.FromArgb((int)Clamp(Math.Abs(weight) * 255), 0, 0)); 
                         }
-                        else if (weight > 1)
+                        else if (weight > 1.01)
                         {
-                            result.SetPixel(x, y, Color.FromArgb(0, (int)Clamp((weight-1) * 255), 0)); 
+                            result.SetPixel(x, y, Color.FromArgb(0, 255, 0)); 
                         }
                         else
                         {
@@ -439,9 +441,17 @@ namespace BaseCodeApp
             return Math.Max(0, Math.Min(channel, 255));
         }
 
+        private void ClearPalette()
+        {
+            palette.Clear();
+            palettePanel.Controls.Clear();
+            layerBox.Image = new Bitmap(100, 100);
+        }
+
 
         private void openButton_Click(object sender, EventArgs e)
         {
+            ClearPalette();
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = "Image Files (*.png)|*.png";
             dialog.ShowDialog();
