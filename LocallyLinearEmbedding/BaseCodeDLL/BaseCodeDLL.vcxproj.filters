@@ -37,6 +37,36 @@
     <ClInclude Include="EigenSolver.h">
       <Filter>LayerExtractor</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\FelzenszwalbSegmentation\convolve.h">
+      <Filter>FelzenszwalbSegmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\FelzenszwalbSegmentation\disjoint-set.h">
+      <Filter>FelzenszwalbSegmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\FelzenszwalbSegmentation\filter.h">
+      <Filter>FelzenszwalbSegmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\FelzenszwalbSegmentation\image.h">
+      <Filter>FelzenszwalbSegmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\FelzenszwalbSegmentation\imconv.h">
+      <Filter>FelzenszwalbSegmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\FelzenszwalbSegmentation\imutil.h">
+      <Filter>FelzenszwalbSegmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\FelzenszwalbSegmentation\misc.h">
+      <Filter>FelzenszwalbSegmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\FelzenszwalbSegmentation\pnmfile.h">
+      <Filter>FelzenszwalbSegmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\FelzenszwalbSegmentation\segment-graph.h">
+      <Filter>FelzenszwalbSegmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\FelzenszwalbSegmentation\segment-image.h">
+      <Filter>FelzenszwalbSegmentation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -82,6 +112,9 @@
     </Filter>
     <Filter Include="LayerExtractor">
       <UniqueIdentifier>{966b30e3-5e5b-488b-92f8-ae43e01ebac5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FelzenszwalbSegmentation">
+      <UniqueIdentifier>{12c6088a-f93d-47ff-9be9-04c3b3118790}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

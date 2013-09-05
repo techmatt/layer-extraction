@@ -11,6 +11,7 @@ using System.Net;
 using MathNet.Numerics.LinearAlgebra.Double;
 using Engine;
 using System.Linq;
+using System.Diagnostics;
 
 namespace BaseCodeApp
 {
@@ -68,6 +69,8 @@ namespace BaseCodeApp
         private static extern Int32 BCQueryIntegerByName(IntPtr context, [In, MarshalAs(UnmanagedType.LPStr)] String integerName);
         [DllImport(BaseCodeDLL)]
         private static extern IntPtr BCExtractLayers(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize);
+        [DllImport(BaseCodeDLL)]
+        private static extern IntPtr BCSegmentImage(IntPtr context, BCBitmapInfo bitmap);
 
 
         IntPtr baseCodeDLLContext = (IntPtr)0;
@@ -90,6 +93,10 @@ namespace BaseCodeApp
         private Layers layers = new Layers();
         private BackgroundWorker bw = new BackgroundWorker();
         private List<Button> palette = new List<Button>();
+        private String currImageFile = "";
+        private int CHITrials = 5;
+        private PaletteCache paletteCache = new PaletteCache("../PaletteCache");
+        private PaletteData currPalette = new PaletteData();
 
         public MainWindow()
         {
@@ -101,6 +108,99 @@ namespace BaseCodeApp
             }
 
             //UpdateImages();
+            paletteMethodBox.SelectedIndex = 1;
+            layerMethodBox.SelectedIndex = 0;
+
+        }
+
+        private void SaveSaliencyMap(String dir, String key)
+        {
+            if (File.Exists(Path.Combine(dir, "saliency", Util.ConvertFileName(key, "_Judd")))) return;
+
+
+            Directory.CreateDirectory(Path.Combine(dir, "saliency"));
+            String exeDir = new DirectoryInfo("../../SaliencyExe").FullName;
+            ProcessStartInfo info = new ProcessStartInfo();
+            info.FileName = Path.Combine(exeDir, "Saliency.exe");
+            info.WorkingDirectory = exeDir;
+
+            String fullDir = new DirectoryInfo(dir).FullName;
+            info.Arguments = "\""+Path.Combine(fullDir,key)+"\"";
+
+            Process process = new Process();
+            process.StartInfo = info;
+
+            try
+            {
+
+               process.Start();
+               process.WaitForExit();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Could not extract saliency map");
+                Console.WriteLine(e.StackTrace);
+            }
+
+        }
+
+        private void SaveSegmentation(String dir, String key)
+        {
+
+            if (File.Exists(Path.Combine(dir, "segments", key))) return;
+
+            Bitmap bmp = new Bitmap(Path.Combine(dir, key));
+            Directory.CreateDirectory(Path.Combine(dir, "segments"));
+
+            Color[] bmpData = Util.BitmapTo1DArray(bmp);
+
+            //for now, pass in RGB format
+            byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
+            for (int idx = 0; idx < bmpData.Length; idx++)
+            {
+                Color color = bmpData[idx];
+                rgbData[3 * idx] = (byte)color.R;
+                rgbData[3 * idx + 1] = (byte)color.G;
+                rgbData[3 * idx + 2] = (byte)color.B;
+            }
+
+
+            BCBitmapInfo bmpInfo = new BCBitmapInfo();
+            bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
+            bmpInfo.width = bmp.Width;
+            bmpInfo.height = bmp.Height;
+
+            try
+            {
+                Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
+            }
+            finally
+            {
+            }
+
+            IntPtr bitmapInfoUnmanaged = BCSegmentImage(baseCodeDLLContext, bmpInfo);
+            Marshal.FreeHGlobal(bmpInfo.colorData);
+
+            if (bitmapInfoUnmanaged == (IntPtr)0) return;
+
+            BCBitmapInfo bitmapInfo = (BCBitmapInfo)Marshal.PtrToStructure(bitmapInfoUnmanaged, typeof(BCBitmapInfo));
+
+            //return new Bitmap(bitmapInfo.width, bitmapInfo.height, bitmapInfo.width * 4, System.Drawing.Imaging.PixelFormat.Format32bppRgb, bitmapInfo.colorData);
+
+            byte[] data = new byte[3* bitmapInfo.width * bitmapInfo.height];
+            Marshal.Copy(bitmapInfo.colorData, data, 0, 3*bitmapInfo.width * bitmapInfo.height);
+
+            Bitmap result = new Bitmap(bitmapInfo.width, bitmapInfo.height);
+            for (int x = 0; x < result.Width; x++)
+            {
+                for (int y = 0; y < result.Height; y++)
+                {
+                    int idx = 3*(y*result.Width+x);
+                    result.SetPixel(x,y, Color.FromArgb(data[idx], data[idx+1], data[idx+2]));
+                }
+            }
+
+            result.Save(Path.Combine(dir, "segments", key));
         }
 
         private void SavePaletteToImage(Bitmap image, String filename, PaletteData data)
@@ -153,62 +253,119 @@ namespace BaseCodeApp
 
         }
 
-        private void ExtractLayers()
+        private void ExtractPalette(int pmethod)
         {
-            //Load a bitmap and extract the layers
-            //Do K-means clustering for now
-            Bitmap bmp = new Bitmap(pictureBoxOriginal.Image);//new Bitmap("../Data/bird.png");
+            Bitmap bmp = new Bitmap(currImageFile);//new Bitmap("../Data/bird.png");
             List<CIELAB> bmpData = Util.BitmapTo1DArray(bmp).Select(i => Util.RGBtoLAB(i)).ToList<CIELAB>();
-            List<Cluster> seeds = Clustering.InitializePictureSeeds(bmpData, Int32.Parse(KBox.Text));
-            Clustering.KMeansPicture(bmpData, seeds);
-
+            int k = Int32.Parse(KBox.Text);
 
             PaletteData data = new PaletteData();
-            data.lab = seeds.Select(c => c.lab).ToList<CIELAB>();
-            data.colors = data.lab.Select(c => Util.LABtoRGB(c)).ToList<Color>();
-            SavePaletteToImage(bmp, "palette.png", data);
-
-
-
-            double[] palette = new double[seeds.Count*3];
-            for(int i=0; i<seeds.Count; i++)
+            if (pmethod == 0)
             {
-                Color color = Util.LABtoRGB(seeds[i].lab);
-                palette[3*i] = color.R/255.0;
-                palette[3*i+1] = color.G/255.0;
-                palette[3*i+2] = color.B/255.0;
-            }
-            IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
+                if (!paletteCache.Exists("kmeans",k,currImageFile))
+                {
+                    List<Cluster> seeds = Clustering.InitializePictureSeeds(bmpData, Int32.Parse(KBox.Text));
+                    Clustering.KMeansPicture(bmpData, seeds);
 
-            //for now, pass in RGB format
-            byte[] rgbData = new byte[bmp.Width*bmp.Height*3];
-            for (int idx=0; idx < bmpData.Count; idx++)
+                    data.lab = seeds.Select(c => c.lab).ToList<CIELAB>();
+                    data.colors = data.lab.Select(c => Util.LABtoRGB(c)).ToList<Color>();
+                    paletteCache.SavePalette("kmeans",k,currImageFile,data);
+                }
+                else
+                {
+                    data = paletteCache.GetPalette("kmeans",k,currImageFile);
+                }
+            }
+            else
             {
-                Color color = Util.LABtoRGB(bmpData[idx]);
-                rgbData[3*idx] = (byte)color.R;
-                rgbData[3*idx+1] = (byte)color.G;
-                rgbData[3*idx+2] = (byte)color.B;
-            }
+                if (!paletteCache.Exists("chidebug",k, currImageFile))
+                {
+                    FileInfo info = new FileInfo(currImageFile);
+                    String dir = info.DirectoryName;
+                    String key = info.Name;
 
-            BCBitmapInfo bmpInfo = new BCBitmapInfo();
-            bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0])*rgbData.Length);
-            bmpInfo.width = bmp.Width;
-            bmpInfo.height = bmp.Height;
+                    //Save saliency and segmentation images if needed
+                    SaveSaliencyMap(dir, key);
+                    SaveSegmentation(dir, key);
 
-            try
-            {              
-                Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
-                Marshal.Copy(palette, 0, palettePtr, palette.Length);
+                    PaletteExtractor extractor = new PaletteExtractor(dir, "../Weights", "../Weights/c3_data.json");
+                    data = extractor.HillClimbPalette(key, "_Judd", true, k, CHITrials);
+                    paletteCache.SavePalette("chidebug", k, currImageFile, data);
+                }
+                else
+                {
+                    data = paletteCache.GetPalette("chidebug", k, currImageFile);
+                }
+
             }
-            finally
+            currPalette = data;
+        }
+
+        private void ExtractLayers(int pmethod, int lmethod)
+        {
+            //Load a bitmap and extract the layers
+            Bitmap bmp = new Bitmap(currImageFile);
+
+            List<CIELAB> bmpData = Util.BitmapTo1DArray(bmp).Select(i => Util.RGBtoLAB(i)).ToList<CIELAB>();
+
+            ExtractPalette(pmethod);
+            PaletteData data = currPalette;
+
+            if (lmethod == 0)
             {
+
+                double[] palette = new double[data.colors.Count * 3];
+                for (int i = 0; i < data.colors.Count; i++)
+                {
+                    Color color = data.colors[i];
+                    palette[3 * i] = color.R / 255.0;
+                    palette[3 * i + 1] = color.G / 255.0;
+                    palette[3 * i + 2] = color.B / 255.0;
+                }
+                IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
+
+                //for now, pass in RGB format
+                byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
+                for (int idx = 0; idx < bmpData.Count; idx++)
+                {
+                    Color color = Util.LABtoRGB(bmpData[idx]);
+                    rgbData[3 * idx] = (byte)color.R;
+                    rgbData[3 * idx + 1] = (byte)color.G;
+                    rgbData[3 * idx + 2] = (byte)color.B;
+                }
+
+                BCBitmapInfo bmpInfo = new BCBitmapInfo();
+                bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
+                bmpInfo.width = bmp.Width;
+                bmpInfo.height = bmp.Height;
+
+                try
+                {
+                    Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
+                    Marshal.Copy(palette, 0, palettePtr, palette.Length);
+                }
+                finally
+                {
+                }
+
+                IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count);
+                Marshal.FreeHGlobal(bmpInfo.colorData);
+                Marshal.FreeHGlobal(palettePtr);
+
+                ProcessLayers(layersUnmanaged);
+            }
+            else
+            {
+                //grad descent, convex constraint
+                layers = new Layers();
+                layers.colors = data.colors.Select(c=>new DenseVector(new double[]{c.R, c.G, c.B})).ToList<DenseVector>();
+                layers.layers = LayerExtract.SolveLayersGradDescent(bmp, layers.colors);
+                layers.width = bmp.Width;
+                layers.height = bmp.Height;
+
             }
 
-            IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, seeds.Count);
-            Marshal.FreeHGlobal(bmpInfo.colorData);
-            Marshal.FreeHGlobal(palettePtr);
-
-            ProcessLayers(layersUnmanaged);
+            CreatePreviews();
         }
 
         private void ProcessLayers(IntPtr layersUnmanaged)
@@ -243,6 +400,10 @@ namespace BaseCodeApp
                 layers.colors.Add(color);
             }
 
+        }
+
+        private void CreatePreviews()
+        {
             //now visualize the first layer
             for (int l = 0; l < layers.layers.Count; l++)
             {
@@ -251,14 +412,14 @@ namespace BaseCodeApp
                     for (int y = 0; y < result.Height; y++)
                     {
                         double weight = layers.layers[l][x, y];
-                        
+
                         if (weight < 0)
                         {
-                            result.SetPixel(x, y, Color.FromArgb((int)Clamp(Math.Abs(weight) * 255), 0, 0)); 
+                            result.SetPixel(x, y, Color.FromArgb((int)Clamp(Math.Abs(weight) * 255), 0, 0));
                         }
                         else if (weight > 1.01)
                         {
-                            result.SetPixel(x, y, Color.FromArgb(0, 255, 0)); 
+                            result.SetPixel(x, y, Color.FromArgb(0, 255, 0));
                         }
                         else
                         {
@@ -266,16 +427,16 @@ namespace BaseCodeApp
                             result.SetPixel(x, y, Color.FromArgb(d, d, d));
                         }
 
-                        
+
                     }
 
                 layers.previews.Add(result);
                 result.Save("test" + l + ".png");
             }
-
         }
 
-        private void UpdatePaletteDisplay()
+
+        private void UpdatePaletteDisplay(bool enableEvents=true)
         {
             palettePanel.Controls.Clear();
             palette.Clear();
@@ -283,52 +444,50 @@ namespace BaseCodeApp
             ColorSpace cspace = layers.space;
             int padding = 10;
 
-            for (int l = 0; l < layers.layers.Count; l++)
+            for (int l = 0; l < currPalette.colors.Count; l++)
             {
-                DenseVector color = layers.colors[l];
-                Color rgb = Color.White;
-                if (cspace == ColorSpace.LAB)
-                    rgb = Util.LABtoRGB(new CIELAB(color[0], color[1], color[2]));
-                else
-                    rgb = Color.FromArgb((int)color[0], (int)color[1], (int)color[2]);
-
+                Color rgb = currPalette.colors[l];
 
                 Button element = new Button();
                 element.BackColor = rgb;
-                element.Width = 200;
-                element.Height = 50;
+                element.Width = 150;
+                element.Height = 20;
                 element.Top = element.Height * l + padding;
                 element.FlatStyle = FlatStyle.Flat;
 
-                element.MouseHover += delegate(Object sender, EventArgs e)
+                if (enableEvents)
                 {
-                    Button btn = (Button)sender;
-                    int index = palette.IndexOf(btn);
-
-                    //preview the layer
-                    layerBox.Image = layers.previews[index]; 
-
-                };
-
-                element.Click += delegate(Object sender, EventArgs e) { 
-                    //Open the color picker and recolor 
-                    Button btn = ((Button)sender);
-
-                    colorPicker.Color = btn.BackColor;
-                    colorPicker.ShowDialog();
-
-                    if (colorPicker.Color != btn.BackColor)
+                    element.MouseHover += delegate(Object sender, EventArgs e)
                     {
-                        btn.BackColor = colorPicker.Color;
+                        Button btn = (Button)sender;
+                        int index = palette.IndexOf(btn);
 
-                        //recolor
-                        pictureBoxOriginal.Image = Recolor(palette.Select(c => new DenseVector(new double[]{c.BackColor.R, c.BackColor.G, c.BackColor.B})).ToList<DenseVector>(), ColorSpace.RGB);
+                        //preview the layer
+                        layerBox.Image = layers.previews[index];
+
+                    };
+
+                    element.Click += delegate(Object sender, EventArgs e)
+                    {
+                        //Open the color picker and recolor 
+                        Button btn = ((Button)sender);
+
+                        colorPicker.Color = btn.BackColor;
+                        colorPicker.ShowDialog();
+
+                        if (colorPicker.Color != btn.BackColor)
+                        {
+                            btn.BackColor = colorPicker.Color;
+
+                            //recolor
+                            pictureBox.Image = Recolor(palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);
 
 
-                    }
+                        }
 
-                
-                };
+
+                    };
+                }
 
                 palette.Add(element);
                 palettePanel.Controls.Add(element);
@@ -364,7 +523,7 @@ namespace BaseCodeApp
         private void UpdateImages()
         {
             
-            pictureBoxOriginal.Image = (Image)GetBitmap("original");
+            pictureBox.Image = (Image)GetBitmap("original");
 
             /*String color = GetString("layerColor_" + layerString);
             pictureBoxColor.BackColor = Color.FromArgb(Convert.ToInt32(color.Split(' ')[0]),
@@ -446,6 +605,7 @@ namespace BaseCodeApp
             palette.Clear();
             palettePanel.Controls.Clear();
             layerBox.Image = new Bitmap(100, 100);
+            pictureBoxOriginal.Image = new Bitmap(100, 100);
         }
 
 
@@ -460,7 +620,8 @@ namespace BaseCodeApp
             {
                 String filepath = dialog.FileName;
                 Image image = Image.FromFile(filepath);
-                pictureBoxOriginal.Image = image;
+                pictureBox.Image = image;
+                currImageFile = filepath;
             }
         }
 
@@ -470,15 +631,59 @@ namespace BaseCodeApp
                 return;
 
             this.Cursor = Cursors.WaitCursor;
+            int method = paletteMethodBox.SelectedIndex;
+            int layerMethod = layerMethodBox.SelectedIndex;
 
             bw = new BackgroundWorker();
             bw.DoWork += delegate { 
-                ExtractLayers();
+                ExtractLayers(method, layerMethod);
             };
             bw.RunWorkerCompleted += delegate
             {
-                pictureBoxOriginal.Image = Recolor(layers.colors, layers.space);
-                UpdatePaletteDisplay();
+                pictureBox.Image = Recolor(layers.colors, layers.space);
+                UpdatePaletteDisplay(true);
+                pictureBoxOriginal.Image = new Bitmap(currImageFile);
+                this.Cursor = Cursors.Default;
+            };
+            bw.RunWorkerAsync();
+        }
+
+        private void resetImageButton_Click(object sender, EventArgs e)
+        {
+            //reset the palette and image
+            for (int i = 0; i < palette.Count; i++)
+            {
+                DenseVector color = layers.colors[i];
+                Color rgb = Color.White;
+                if (layers.space == ColorSpace.LAB)
+                    rgb = Util.LABtoRGB(new CIELAB(color[0], color[1], color[2]));
+                else
+                    rgb = Color.FromArgb((int)color[0], (int)color[1], (int)color[2]);
+
+                palette[i].BackColor = rgb;
+      
+            }
+            pictureBox.Image = Recolor(palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);
+
+        }
+
+        private void extractPaletteButton_Click(object sender, EventArgs e)
+        {
+            if (bw.IsBusy)
+                return;
+
+            this.Cursor = Cursors.WaitCursor;
+            int method = paletteMethodBox.SelectedIndex;
+            ClearPalette();
+
+            bw = new BackgroundWorker();
+            bw.DoWork += delegate
+            {
+                ExtractPalette(method);
+            };
+            bw.RunWorkerCompleted += delegate
+            {
+                UpdatePaletteDisplay(false);
                 this.Cursor = Cursors.Default;
             };
             bw.RunWorkerAsync();

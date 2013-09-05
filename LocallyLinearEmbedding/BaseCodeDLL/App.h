@@ -8,6 +8,7 @@ public:
     int QueryIntegerByName(const String &s);
     const char *QueryStringByName(const String &s);
 	BCLayers* ExtractLayers(BCBitmapInfo bitmap, Vector<Vec3f> palette);
+	BCBitmapInfo* SegmentImage(BCBitmapInfo bitmap);
     
 private:
     AppParameters _parameters;

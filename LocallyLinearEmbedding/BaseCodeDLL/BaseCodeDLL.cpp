@@ -4,6 +4,7 @@ BASECODEDLL_API void* __stdcall BCInit()
 {
     App *app = new App;
     //app->Init();
+	AllocConsole();
     return app;
 }
 
@@ -50,4 +51,14 @@ BASECODEDLL_API BCLayers* __stdcall BCExtractLayers(void *context, BCBitmapInfo 
 		p.PushEnd(Vec3f((float)data[3*i], (float)data[3*i+1], (float)data[3*i+2]));
 	
 	return app ->ExtractLayers(bitmap, p);
+}
+
+BASECODEDLL_API BCBitmapInfo* __stdcall BCSegmentImage(void* context, BCBitmapInfo bitmap)
+{
+	if (context == NULL) return 0;
+	App *app = (App*) context;
+	
+
+	return app->SegmentImage(bitmap);
+
 }

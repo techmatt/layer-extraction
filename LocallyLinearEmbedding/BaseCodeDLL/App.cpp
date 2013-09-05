@@ -1,4 +1,5 @@
 #include "Main.h"
+#include "segment-image.h"
 
 void App::Init()
 {
@@ -144,6 +145,45 @@ BCBitmapInfo* App::QueryBitmapByName(const String &s)
     _queryBitmapInfo.height = resultPtr->Height();
     _queryBitmapInfo.colorData = (BYTE*)resultPtr->Pixels();
     return &_queryBitmapInfo;
+}
+
+BCBitmapInfo* App::SegmentImage(BCBitmapInfo bcbmp)
+{
+	Bitmap bmp;
+	bmp.Allocate(bcbmp.width, bcbmp.height);
+	for (UINT x=0; x<bcbmp.width; x++)
+	{
+		for (UINT y=0; y<bcbmp.height; y++)
+		{
+			int idx = 3*(y*bcbmp.width+x);
+			bmp[y][x] = RGBColor(bcbmp.colorData[idx], bcbmp.colorData[idx+1], bcbmp.colorData[idx+2]);
+		}
+	}
+	int numCCs; 
+	Bitmap result = ImageToBitmap(segment_image(BitmapToImage(bmp), 0.5, 500, 20, &numCCs));
+
+	BCBitmapInfo *info = new BCBitmapInfo();
+
+	info->width = result.Width();
+	info->height = result.Height();
+	int width = info->width;
+	int height = info->height;
+
+	info->colorData = new byte[3*width*height];
+	for (int x=0; x<width; x++)
+	{
+		for (int y=0; y<height; y++)
+		{
+			int idx = 3*(y*width+x);
+			info->colorData[idx] = result[y][x].r; 
+			info->colorData[idx+1] = result[y][x].g; 
+			info->colorData[idx+2] = result[y][x].b; 
+		}
+	}
+
+
+	return info;
+
 }
 
 int App::QueryIntegerByName(const String &s)
