@@ -42,3 +42,4 @@ BASECODEDLL_API const char*   __stdcall BCQueryStringByName(void *context, const
 BASECODEDLL_API int           __stdcall BCQueryIntegerByName(void *context, const char *s);
 BASECODEDLL_API BCBitmapInfo* __stdcall BCQueryBitmapByName(void *context, const char *s);
 BASECODEDLL_API BCLayers* __stdcall BCExtractLayers(void* context, BCBitmapInfo image, const double* palette, int paletteSize);
+BASECODEDLL_API BCBitmapInfo* __stdcall BCSegmentImage(void* context, BCBitmapInfo image);

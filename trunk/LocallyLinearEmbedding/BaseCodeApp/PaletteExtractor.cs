@@ -452,6 +452,20 @@ namespace Engine
             }
             return String.Join(" ", colorString);
         }
+
+        public static PaletteData FromString(String s)
+        {
+            PaletteData data = new PaletteData();
+            String[] colors = s.Split(' ');
+            foreach (String rgb in colors)
+            {
+                String[] fields = rgb.Split(',');
+                Color color = Color.FromArgb(Int32.Parse(fields[0]), Int32.Parse(fields[1]), Int32.Parse(fields[2]));
+                data.colors.Add(color);
+                data.lab.Add(Util.RGBtoLAB(color));
+            }
+            return data;
+        }
     }
 
 
@@ -1839,10 +1853,10 @@ namespace Engine
          * debug - if images should be resized smaller
          * paletteSize - the size of the palette to be extracted
          */ 
-        public PaletteData HillClimbPalette(String key, String saliencyPattern, bool debug = false, int paletteSize=5)
+        public PaletteData HillClimbPalette(String key, String saliencyPattern, bool debug = false, int paletteSize=5, int trials=5)
         {
             //Now initialize a palette and start hill climbing
-            int trials = 5;
+            //int trials = 5;
 
             PaletteScoreCache cache = new PaletteScoreCache(1000000);
 
@@ -1993,6 +2007,7 @@ namespace Engine
                     allScores[t] = optionScore;
                 }
                 Log(Path.Combine(dir, "out", "convergelog.txt"), "Trial " + t + " Key " + key + " BestScore: " + allScores[t] + " Steps: " + iters + " Time: " + watch.ElapsedMilliseconds);
+                Console.WriteLine("Trial " + t + " Key " + key + " BestScore: " + allScores[t] + " Steps: " + iters + " Time: " + watch.ElapsedMilliseconds);
                 Log(Path.Combine(dir, "out", "convergelog.txt"), "Reused " + reuse);
 
             }
