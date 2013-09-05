@@ -648,6 +648,19 @@ namespace BaseCodeApp
             bw.RunWorkerAsync();
         }
 
+        private void saveButton_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.Filter = "Image Files (*.png)|*.png";
+            dialog.ShowDialog();
+
+            if (dialog.FileName != "")
+            {
+                pictureBoxOriginal.Image.Save(dialog.FileName);
+            }
+            
+        }
+
         private void resetImageButton_Click(object sender, EventArgs e)
         {
             //reset the palette and image
@@ -688,6 +701,5 @@ namespace BaseCodeApp
             };
             bw.RunWorkerAsync();
         }
-
     }
 }
