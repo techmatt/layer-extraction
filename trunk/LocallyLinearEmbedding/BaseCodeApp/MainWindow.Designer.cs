@@ -36,6 +36,7 @@
             this.layerBox = new System.Windows.Forms.PictureBox();
             this.label1 = new System.Windows.Forms.Label();
             this.KBox = new System.Windows.Forms.TextBox();
+            this.saveButton = new System.Windows.Forms.Button();
             this.resetImageButton = new System.Windows.Forms.Button();
             this.paletteMethodBox = new System.Windows.Forms.ComboBox();
             this.paletteLabel = new System.Windows.Forms.Label();
@@ -76,7 +77,7 @@
             // 
             // extractLayersButton
             // 
-            this.extractLayersButton.Location = new System.Drawing.Point(137, 552);
+            this.extractLayersButton.Location = new System.Drawing.Point(137, 553);
             this.extractLayersButton.Name = "extractLayersButton";
             this.extractLayersButton.Size = new System.Drawing.Size(136, 35);
             this.extractLayersButton.TabIndex = 3;
@@ -96,7 +97,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(302, 517);
+            this.label1.Location = new System.Drawing.Point(289, 519);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(30, 19);
             this.label1.TabIndex = 5;
@@ -104,11 +105,21 @@
             // 
             // KBox
             // 
-            this.KBox.Location = new System.Drawing.Point(338, 515);
+            this.KBox.Location = new System.Drawing.Point(325, 515);
             this.KBox.Name = "KBox";
             this.KBox.Size = new System.Drawing.Size(72, 27);
             this.KBox.TabIndex = 6;
             this.KBox.Text = "5";
+            // 
+            // saveButton
+            // 
+            this.saveButton.Location = new System.Drawing.Point(279, 552);
+            this.saveButton.Name = "saveButton";
+            this.saveButton.Size = new System.Drawing.Size(136, 35);
+            this.saveButton.TabIndex = 3;
+            this.saveButton.Text = "Save Image";
+            this.saveButton.UseVisualStyleBackColor = true;
+            this.saveButton.Click += new System.EventHandler(this.saveButton_Click);
             // 
             // resetImageButton
             // 
@@ -143,7 +154,7 @@
             // layerLabel
             // 
             this.layerLabel.AutoSize = true;
-            this.layerLabel.Location = new System.Drawing.Point(410, 561);
+            this.layerLabel.Location = new System.Drawing.Point(421, 561);
             this.layerLabel.Name = "layerLabel";
             this.layerLabel.Size = new System.Drawing.Size(105, 19);
             this.layerLabel.TabIndex = 10;
@@ -194,6 +205,7 @@
             this.Controls.Add(this.KBox);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.layerBox);
+            this.Controls.Add(this.saveButton);
             this.Controls.Add(this.extractLayersButton);
             this.Controls.Add(this.openButton);
             this.Controls.Add(this.palettePanel);
@@ -222,6 +234,7 @@
         private System.Windows.Forms.PictureBox layerBox;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox KBox;
+        private System.Windows.Forms.Button saveButton;
         private System.Windows.Forms.Button resetImageButton;
         private System.Windows.Forms.ComboBox paletteMethodBox;
         private System.Windows.Forms.Label paletteLabel;

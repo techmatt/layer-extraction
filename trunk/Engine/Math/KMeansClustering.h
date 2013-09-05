@@ -12,6 +12,15 @@ public:
     }
 };
 
+class Vec3fKMeansMetricL1
+{
+public:
+    static __forceinline float Dist(const Vec3f &L, const Vec3f &R)
+    {
+        return Vec3f::Dist(L, R);
+    }
+};
+
 class Vec2fKMeansMetric
 {
 public:
