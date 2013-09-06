@@ -656,7 +656,7 @@ namespace BaseCodeApp
 
             if (dialog.FileName != "")
             {
-                pictureBoxOriginal.Image.Save(dialog.FileName);
+                pictureBox.Image.Save(dialog.FileName);
             }
             
         }
