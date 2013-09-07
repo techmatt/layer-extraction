@@ -110,6 +110,7 @@ namespace BaseCodeApp
             //UpdateImages();
             paletteMethodBox.SelectedIndex = 1;
             layerMethodBox.SelectedIndex = 0;
+            colorSpaceBox.SelectedIndex = 0;
 
         }
 
@@ -276,9 +277,9 @@ namespace BaseCodeApp
                     data = paletteCache.GetPalette("kmeans",k,currImageFile);
                 }
             }
-            else
+            else if (pmethod == 1)
             {
-                if (!paletteCache.Exists("chidebug",k, currImageFile))
+                if (!paletteCache.Exists("chidebug", k, currImageFile))
                 {
                     FileInfo info = new FileInfo(currImageFile);
                     String dir = info.DirectoryName;
@@ -298,10 +299,23 @@ namespace BaseCodeApp
                 }
 
             }
+            else if (pmethod == 2)
+            {
+                data = ExtractConvexMergedPalette(k);
+            }
+            else
+            {
+                //turk
+                if (paletteCache.Exists("turk", 5, currImageFile))
+                {
+                    data = paletteCache.GetPalette("turk", 5, currImageFile);
+                }
+
+            }
             currPalette = data;
         }
 
-        private void ExtractLayers(int pmethod, int lmethod)
+        private void ExtractLayers(int pmethod, int lmethod, ColorSpace space)
         {
             //Load a bitmap and extract the layers
             Bitmap bmp = new Bitmap(currImageFile);
@@ -313,53 +327,108 @@ namespace BaseCodeApp
 
             if (lmethod == 0)
             {
-
-                double[] palette = new double[data.colors.Count * 3];
-                for (int i = 0; i < data.colors.Count; i++)
+                if (space == ColorSpace.RGB)
                 {
-                    Color color = data.colors[i];
-                    palette[3 * i] = color.R / 255.0;
-                    palette[3 * i + 1] = color.G / 255.0;
-                    palette[3 * i + 2] = color.B / 255.0;
-                }
-                IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
+                    double[] palette = new double[data.colors.Count * 3];
+                    for (int i = 0; i < data.colors.Count; i++)
+                    {
+                        Color color = data.colors[i];
+                        palette[3 * i] = color.R / 255.0;
+                        palette[3 * i + 1] = color.G / 255.0;
+                        palette[3 * i + 2] = color.B / 255.0;
+                    }
+                    IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
 
-                //for now, pass in RGB format
-                byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
-                for (int idx = 0; idx < bmpData.Count; idx++)
+                    //for now, pass in RGB format
+                    byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
+                    for (int idx = 0; idx < bmpData.Count; idx++)
+                    {
+                        Color color = Util.LABtoRGB(bmpData[idx]);
+                        rgbData[3 * idx] = (byte)color.R;
+                        rgbData[3 * idx + 1] = (byte)color.G;
+                        rgbData[3 * idx + 2] = (byte)color.B;
+                    }
+
+                    BCBitmapInfo bmpInfo = new BCBitmapInfo();
+                    bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
+                    bmpInfo.width = bmp.Width;
+                    bmpInfo.height = bmp.Height;
+
+                    try
+                    {
+                        Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
+                        Marshal.Copy(palette, 0, palettePtr, palette.Length);
+                    }
+                    finally
+                    {
+                    }
+
+                    IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count);
+                    Marshal.FreeHGlobal(bmpInfo.colorData);
+                    Marshal.FreeHGlobal(palettePtr);
+
+                    ProcessLayers(layersUnmanaged, space);
+                }
+                else
                 {
-                    Color color = Util.LABtoRGB(bmpData[idx]);
-                    rgbData[3 * idx] = (byte)color.R;
-                    rgbData[3 * idx + 1] = (byte)color.G;
-                    rgbData[3 * idx + 2] = (byte)color.B;
+                    double[] palette = new double[data.colors.Count * 3];
+                    for (int i = 0; i < data.lab.Count; i++)
+                    {
+                        CIELAB color = data.lab[i];
+                        palette[3 * i] = color.L / 255.0;
+                        palette[3 * i + 1] = (color.A + 128) / 255.0;
+                        palette[3 * i + 2] = (color.B + 128) / 255.0;
+                    }
+                    IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
+
+                    //for now, pass in RGB format
+                    byte[] labData = new byte[bmp.Width * bmp.Height * 3];
+                    for (int idx = 0; idx < bmpData.Count; idx++)
+                    {
+                        CIELAB color = bmpData[idx];
+                        labData[3 * idx] = (byte)(color.L);
+                        labData[3 * idx + 1] = (byte)(color.A + 128);
+                        labData[3 * idx + 2] = (byte)(color.B + 128);
+                    }
+
+                    BCBitmapInfo bmpInfo = new BCBitmapInfo();
+                    bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(labData[0]) * labData.Length);
+                    bmpInfo.width = bmp.Width;
+                    bmpInfo.height = bmp.Height;
+
+                    try
+                    {
+                        Marshal.Copy(labData, 0, bmpInfo.colorData, labData.Length);
+                        Marshal.Copy(palette, 0, palettePtr, palette.Length);
+                    }
+                    finally
+                    {
+                    }
+
+                    IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count);
+                    Marshal.FreeHGlobal(bmpInfo.colorData);
+                    Marshal.FreeHGlobal(palettePtr);
+
+                    ProcessLayers(layersUnmanaged, space);
                 }
-
-                BCBitmapInfo bmpInfo = new BCBitmapInfo();
-                bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
-                bmpInfo.width = bmp.Width;
-                bmpInfo.height = bmp.Height;
-
-                try
-                {
-                    Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
-                    Marshal.Copy(palette, 0, palettePtr, palette.Length);
-                }
-                finally
-                {
-                }
-
-                IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count);
-                Marshal.FreeHGlobal(bmpInfo.colorData);
-                Marshal.FreeHGlobal(palettePtr);
-
-                ProcessLayers(layersUnmanaged);
             }
             else
             {
                 //grad descent, convex constraint
                 layers = new Layers();
-                layers.colors = data.colors.Select(c=>new DenseVector(new double[]{c.R, c.G, c.B})).ToList<DenseVector>();
-                layers.layers = LayerExtract.SolveLayersGradDescent(bmp, layers.colors);
+                layers.space = space;
+
+                if (layers.space == ColorSpace.RGB)
+                {
+                    layers.colors = data.colors.Select(c => new DenseVector(new double[] { c.R, c.G, c.B })).ToList<DenseVector>();
+                    layers.layers = LayerExtract.SolveLayersGradDescent(bmp, layers.colors);
+                }
+                else
+                {
+                    layers.colors = data.lab.Select(c => new DenseVector(new double[] { c.L, c.A, c.B })).ToList<DenseVector>();
+                    layers.layers = LayerExtract.SolveLayersGradDescent(bmp, layers.colors);
+                }
+                
                 layers.width = bmp.Width;
                 layers.height = bmp.Height;
 
@@ -368,12 +437,13 @@ namespace BaseCodeApp
             CreatePreviews();
         }
 
-        private void ProcessLayers(IntPtr layersUnmanaged)
+        private void ProcessLayers(IntPtr layersUnmanaged, ColorSpace space)
         {
 
             if (layersUnmanaged == (IntPtr)0) return;
 
             layers = new Layers();
+            layers.space = space;
 
             BCLayers layerSet = (BCLayers)Marshal.PtrToStructure(layersUnmanaged, typeof(BCLayers));
             IntPtr layerInfoUnmanaged = layerSet.layers;
@@ -396,7 +466,13 @@ namespace BaseCodeApp
 
                 layers.width = width;
                 layers.height = height;
-                DenseVector color = new DenseVector(new double[] { layerInfo.d0*255, layerInfo.d1*255, layerInfo.d2*255 });
+
+                DenseVector color = new DenseVector(3);
+                if (layers.space == ColorSpace.RGB)
+                    color = new DenseVector(new double[] { layerInfo.d0*255, layerInfo.d1*255, layerInfo.d2*255 });
+                else
+                    color = new DenseVector(new double[] { layerInfo.d0 * 255, layerInfo.d1 * 255-128, layerInfo.d2 * 255-128 });
+                
                 layers.colors.Add(color);
             }
 
@@ -493,6 +569,10 @@ namespace BaseCodeApp
                 palettePanel.Controls.Add(element);
             }
 
+            //count convex hull
+            if (currPalette.colors.Count > 3)
+                statusBox.Text = "Percent of image within convex hull: " + WithinConvexHull();
+
         }
 
 
@@ -535,6 +615,51 @@ namespace BaseCodeApp
         {
 
         }
+
+
+        private Dictionary<String, List<PaletteData>> LoadFilePalettes(String file)
+        {
+            //load art palettes
+            var lines = File.ReadLines(file);
+
+            Dictionary<String, List<PaletteData>> plist = new Dictionary<String, List<PaletteData>>();
+
+            int count = 0;
+            List<String> headers = new List<String>();
+
+            foreach (String line in lines)
+            {
+                if (count == 0)
+                {
+                    count++;
+                    headers = line.Replace("\"", "").Split('\t').ToList<String>();
+                    continue;
+                }
+
+                String[] fields = line.Replace("\"", "").Split('\t');
+                PaletteData data = new PaletteData();
+                data.id = Int32.Parse(fields[headers.IndexOf("pid")]);
+                data.workerNum = Int32.Parse(fields[headers.IndexOf("id")]);
+                String key = fields[headers.IndexOf("image")];
+                String[] colors = fields[headers.IndexOf("colors")].Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                if (headers.IndexOf("log") >= 0)
+                    data.log = fields[headers.IndexOf("log")];
+
+                foreach (String s in colors)
+                {
+                    String[] comp = s.Split(',');
+                    Color c = Color.FromArgb(Int32.Parse(comp[0]), Int32.Parse(comp[1]), Int32.Parse(comp[2]));
+                    CIELAB l = Util.RGBtoLAB(c);
+                    data.colors.Add(c);
+                    data.lab.Add(l);
+                }
+                if (!plist.ContainsKey(key))
+                    plist.Add(key, new List<PaletteData>());
+                plist[key].Add(data);
+            }
+            return plist;
+        }
+
 
 
         private Bitmap Recolor(List<DenseVector> newColors, ColorSpace cspace)
@@ -580,7 +705,7 @@ namespace BaseCodeApp
                     }
                  
                     //convert to RGB if necessary
-                    if (cspace == ColorSpace.LAB)
+                    if (layers.space == ColorSpace.LAB)
                     {
                         Color rgb = Util.LABtoRGB(new CIELAB(color[0], color[1], color[2]));
                         result.SetPixel(x,y, rgb);
@@ -602,16 +727,20 @@ namespace BaseCodeApp
 
         private void ClearPalette()
         {
+            currPalette = new PaletteData();
             palette.Clear();
             palettePanel.Controls.Clear();
             layerBox.Image = new Bitmap(100, 100);
             pictureBoxOriginal.Image = new Bitmap(100, 100);
+            layers = new Layers();
         }
 
 
         private void openButton_Click(object sender, EventArgs e)
         {
             ClearPalette();
+
+
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = "Image Files (*.png)|*.png";
             dialog.ShowDialog();
@@ -622,6 +751,14 @@ namespace BaseCodeApp
                 Image image = Image.FromFile(filepath);
                 pictureBox.Image = image;
                 currImageFile = filepath;
+
+                String basename = new FileInfo(filepath).Name;
+                if (paletteCache.Exists("turk",5,basename) && !paletteMethodBox.Items.Contains("TurkAverage"))
+                {
+                    paletteMethodBox.Items.Add("TurkAverage");
+                } else if (paletteMethodBox.Items.Contains("TurkAverage"))
+                    paletteMethodBox.Items.Remove("TurkAverage");
+
             }
         }
 
@@ -633,10 +770,11 @@ namespace BaseCodeApp
             this.Cursor = Cursors.WaitCursor;
             int method = paletteMethodBox.SelectedIndex;
             int layerMethod = layerMethodBox.SelectedIndex;
+            ColorSpace space = (colorSpaceBox.SelectedIndex == 0) ? ColorSpace.RGB : ColorSpace.LAB;
 
             bw = new BackgroundWorker();
             bw.DoWork += delegate { 
-                ExtractLayers(method, layerMethod);
+                ExtractLayers(method, layerMethod, space);
             };
             bw.RunWorkerCompleted += delegate
             {
@@ -664,19 +802,16 @@ namespace BaseCodeApp
         private void resetImageButton_Click(object sender, EventArgs e)
         {
             //reset the palette and image
-            for (int i = 0; i < palette.Count; i++)
+            for (int i = 0; i < currPalette.colors.Count; i++)
             {
-                DenseVector color = layers.colors[i];
-                Color rgb = Color.White;
-                if (layers.space == ColorSpace.LAB)
-                    rgb = Util.LABtoRGB(new CIELAB(color[0], color[1], color[2]));
-                else
-                    rgb = Color.FromArgb((int)color[0], (int)color[1], (int)color[2]);
-
+                Color rgb = currPalette.colors[i];
                 palette[i].BackColor = rgb;
       
             }
-            pictureBox.Image = Recolor(palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);
+            if (layers.layers.Count > 0)
+                pictureBox.Image = Recolor(palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);
+            else
+                pictureBox.Image = new Bitmap(currImageFile);
 
         }
 
@@ -688,6 +823,7 @@ namespace BaseCodeApp
             this.Cursor = Cursors.WaitCursor;
             int method = paletteMethodBox.SelectedIndex;
             ClearPalette();
+            resetImageButton_Click(sender, e);
 
             bw = new BackgroundWorker();
             bw.DoWork += delegate
@@ -701,5 +837,176 @@ namespace BaseCodeApp
             };
             bw.RunWorkerAsync();
         }
+
+        //check percent of image within palette convex hull
+        private double WithinConvexHull()
+        {
+            //check color space
+            Color[] imageColors = Util.BitmapTo1DArray(new Bitmap(currImageFile));
+            int numPoints = imageColors.Length;
+            int count = 0;
+
+            if (layers.space == ColorSpace.LAB)
+            {
+                DenseVector[] points = imageColors.Select(c => { CIELAB l = Util.RGBtoLAB(c); return new DenseVector(new double[] { l.L, l.A, l.B }); }).ToArray<DenseVector>();
+                List<DenseVector> hullPoints = currPalette.lab.Select(l => new DenseVector(new double[]{l.L, l.A, l.B})).ToList<DenseVector>();
+                var hull = Util.GetConvexHull(hullPoints);
+                foreach (DenseVector point in points)
+                    if (Util.InHull(point, hull))
+                        count++;
+
+            }
+            else
+            {
+                DenseVector[] points = imageColors.Select(c => new DenseVector(new double[]{c.R, c.G, c.B})).ToArray<DenseVector>();
+                List<DenseVector> hullPoints = currPalette.colors.Select(c => new DenseVector(new double[]{c.R, c.G, c.B})).ToList<DenseVector>();
+                var hull = Util.GetConvexHull(hullPoints);
+                foreach (DenseVector point in points)
+                   if (Util.InHull(point, hull))
+                       count++;
+                       
+            }
+            return (double)100*count/numPoints;
+        }
+
+        private PaletteData ExtractConvexMergedPalette(int k)
+        {
+            //and in the meantime, output intermediate results
+            Color[] imageColors = Util.BitmapTo1DArray(Util.GetImage(currImageFile, true));
+
+            List<DenseVector> points = new List<DenseVector> { };
+            String space = "rgb";
+
+            if (layers.space == ColorSpace.LAB)
+            {
+                points = imageColors.Select(c => { CIELAB l = Util.RGBtoLAB(c); return new DenseVector(new double[] { l.L, l.A, l.B }); }).ToList<DenseVector>();
+                space = "lab";
+            }
+            else
+                points = imageColors.Select(c => new DenseVector(new double[] { c.R, c.G, c.B })).ToList<DenseVector>();
+
+            if (paletteCache.Exists("convexhullmerged-"+space, k, currImageFile))
+                return paletteCache.GetPalette("convexhullmerged-"+space, k, currImageFile);
+
+            Console.WriteLine("Computing convex hull");
+
+            var hull = Util.GetConvexHull(points);
+            var hullPoints = hull.Points.Select(p => p.Position).ToList<double[]>();
+            var numPoints = hullPoints.Count;
+            Console.WriteLine("ConvexPalette: Convex Hull # points: " + numPoints);
+
+            //convert the points to LAB space, to merge in LAB space
+            List<CIELAB> labColors = new List<CIELAB>();
+            if (layers.space == ColorSpace.LAB)
+                labColors = hullPoints.Select(p => new CIELAB(p[0], p[1], p[2])).ToList<CIELAB>();
+            else
+                labColors = hullPoints.Select(p=>Util.RGBtoLAB(Color.FromArgb((int)p[0],(int)p[1],(int)p[2]))).ToList<CIELAB>();
+
+
+            //Run agglomerative clustering
+            var clusterer = new AgglomerativeClustering();
+            clusterer.ClusterColors(labColors, k);
+
+            PaletteData data = new PaletteData();
+            data.lab = clusterer.GetClusterColors();
+            data.colors = data.lab.Select(l => Util.LABtoRGB(l)).ToList<Color>();
+
+            paletteCache.SavePalette("convexhullmerged-"+space, k, currImageFile, data);
+
+            return data;
+        }
+
+
+
+        private PaletteData ExtractConvexPalette(int rawK)
+        {
+            int k = Math.Max(rawK, 4);
+
+            //and in the meantime, output intermediate results
+            Color[] imageColors = Util.BitmapTo1DArray(Util.GetImage(currImageFile, true));
+
+            List<DenseVector> points = new List<DenseVector> { };
+            String space = "rgb";
+
+            if (layers.space == ColorSpace.LAB)
+            {
+                points = imageColors.Select(c => { CIELAB l = Util.RGBtoLAB(c); return new DenseVector(new double[] { l.L, l.A, l.B }); }).ToList<DenseVector>();
+                space = "lab";
+            } 
+            else
+                points = imageColors.Select(c => new DenseVector(new double[] { c.R, c.G, c.B })).ToList<DenseVector>();
+
+            if (paletteCache.Exists("convexhulldebug-"+space, k, currImageFile))
+                return paletteCache.GetPalette("convexhulldebug-"+space, k, currImageFile);
+
+            Console.WriteLine("Computing convex hull");
+
+            var hull = Util.GetConvexHull(points);
+            var hullPoints = hull.Points.Select(p=>p.Position).ToList<double[]>();
+            var numPoints = hullPoints.Count;
+
+            k = Math.Min(numPoints, k);
+
+            if (paletteCache.Exists("convexhulldebug-"+space, k, currImageFile))
+                return paletteCache.GetPalette("convexhulldebug-"+space, k, currImageFile);
+
+            PaletteData temp = new PaletteData();
+            if (layers.space == ColorSpace.LAB)
+            {
+                temp.lab = hullPoints.Select(p => new CIELAB(p[0], p[1], p[2])).ToList<CIELAB>();
+                temp.colors = temp.lab.Select(l => Util.LABtoRGB(l)).ToList<Color>();
+            }
+            else
+            {
+                temp.colors = hullPoints.Select(p => Color.FromArgb((int)p[0], (int)p[1], (int)p[2])).ToList<Color>();
+                temp.lab = temp.colors.Select(c => Util.RGBtoLAB(c)).ToList<CIELAB>();
+            }
+            paletteCache.SavePalette("convexhulldebug-" + space, numPoints, currImageFile, temp);
+
+            var curPoints = new List<double[]>(hullPoints);
+            Console.WriteLine("ConvexPalette: Convex Hull # points: " + curPoints.Count);
+            
+            //for each point, figure out which is best to remove
+            while (curPoints.Count() > k)
+            {
+                //find the best point to remove
+                int bestIdx = 0;
+                double bestScore = 0;
+
+                for (int i = 0; i < curPoints.Count(); i++)
+                {
+                    var option = new List<double[]>(curPoints);
+                    option.RemoveAt(i);
+                    double score = Util.NumInHull(points, Util.GetConvexHull(option));
+                    if (score > bestScore)
+                    {
+                        bestIdx = i;
+                        bestScore = score;
+                    }
+                }
+                curPoints.RemoveAt(bestIdx);
+
+                //save
+                temp = new PaletteData();
+                if (layers.space == ColorSpace.LAB)
+                {
+                    temp.lab = curPoints.Select(p => new CIELAB(p[0], p[1], p[2])).ToList<CIELAB>();
+                    temp.colors = temp.lab.Select(l => Util.LABtoRGB(l)).ToList<Color>();
+                }
+                else
+                {
+                    temp.colors = curPoints.Select(p => Color.FromArgb((int)p[0], (int)p[1], (int)p[2])).ToList<Color>();
+                    temp.lab = temp.colors.Select(c => Util.RGBtoLAB(c)).ToList<CIELAB>();
+                }
+                paletteCache.SavePalette("convexhulldebug-" + space, curPoints.Count, currImageFile, temp);
+                Console.WriteLine("ConvexPalette: Solved k= " + curPoints.Count);
+            }
+
+            return temp;
+        }
+
+
+
+
     }
 }

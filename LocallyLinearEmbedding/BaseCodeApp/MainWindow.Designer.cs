@@ -44,6 +44,9 @@
             this.layerMethodBox = new System.Windows.Forms.ComboBox();
             this.extractPaletteButton = new System.Windows.Forms.Button();
             this.pictureBoxOriginal = new System.Windows.Forms.PictureBox();
+            this.statusBox = new System.Windows.Forms.TextBox();
+            this.colorSpaceLabel = new System.Windows.Forms.Label();
+            this.colorSpaceBox = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -60,6 +63,7 @@
             // 
             // palettePanel
             // 
+            this.palettePanel.AutoScroll = true;
             this.palettePanel.Location = new System.Drawing.Point(617, 37);
             this.palettePanel.Name = "palettePanel";
             this.palettePanel.Size = new System.Drawing.Size(169, 464);
@@ -89,7 +93,7 @@
             // 
             this.layerBox.Location = new System.Drawing.Point(811, 37);
             this.layerBox.Name = "layerBox";
-            this.layerBox.Size = new System.Drawing.Size(349, 241);
+            this.layerBox.Size = new System.Drawing.Size(349, 228);
             this.layerBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.layerBox.TabIndex = 4;
             this.layerBox.TabStop = false;
@@ -113,9 +117,9 @@
             // 
             // saveButton
             // 
-            this.saveButton.Location = new System.Drawing.Point(279, 552);
+            this.saveButton.Location = new System.Drawing.Point(279, 554);
             this.saveButton.Name = "saveButton";
-            this.saveButton.Size = new System.Drawing.Size(136, 35);
+            this.saveButton.Size = new System.Drawing.Size(136, 34);
             this.saveButton.TabIndex = 3;
             this.saveButton.Text = "Save Image";
             this.saveButton.UseVisualStyleBackColor = true;
@@ -136,7 +140,8 @@
             this.paletteMethodBox.FormattingEnabled = true;
             this.paletteMethodBox.Items.AddRange(new object[] {
             "K-Means",
-            "CHI-Resize"});
+            "CHI-Resize",
+            "ConvexHull"});
             this.paletteMethodBox.Location = new System.Drawing.Point(530, 515);
             this.paletteMethodBox.Name = "paletteMethodBox";
             this.paletteMethodBox.Size = new System.Drawing.Size(162, 27);
@@ -165,7 +170,8 @@
             this.layerMethodBox.FormattingEnabled = true;
             this.layerMethodBox.Items.AddRange(new object[] {
             "Manifold",
-            "Pixel-ConvexConstraint"});
+            "Pixel-ConvexConstraint",
+            "ConvexMerged"});
             this.layerMethodBox.Location = new System.Drawing.Point(530, 558);
             this.layerMethodBox.Name = "layerMethodBox";
             this.layerMethodBox.Size = new System.Drawing.Size(162, 27);
@@ -183,18 +189,50 @@
             // 
             // pictureBoxOriginal
             // 
-            this.pictureBoxOriginal.Location = new System.Drawing.Point(812, 289);
+            this.pictureBoxOriginal.Location = new System.Drawing.Point(812, 283);
             this.pictureBoxOriginal.Name = "pictureBoxOriginal";
-            this.pictureBoxOriginal.Size = new System.Drawing.Size(347, 212);
+            this.pictureBoxOriginal.Size = new System.Drawing.Size(347, 218);
             this.pictureBoxOriginal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBoxOriginal.TabIndex = 13;
             this.pictureBoxOriginal.TabStop = false;
+            // 
+            // statusBox
+            // 
+            this.statusBox.BackColor = System.Drawing.SystemColors.Control;
+            this.statusBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.statusBox.Location = new System.Drawing.Point(-2, 609);
+            this.statusBox.Name = "statusBox";
+            this.statusBox.Size = new System.Drawing.Size(1230, 20);
+            this.statusBox.TabIndex = 14;
+            // 
+            // colorSpaceLabel
+            // 
+            this.colorSpaceLabel.AutoSize = true;
+            this.colorSpaceLabel.Location = new System.Drawing.Point(721, 562);
+            this.colorSpaceLabel.Name = "colorSpaceLabel";
+            this.colorSpaceLabel.Size = new System.Drawing.Size(89, 19);
+            this.colorSpaceLabel.TabIndex = 15;
+            this.colorSpaceLabel.Text = "Color Space";
+            // 
+            // colorSpaceBox
+            // 
+            this.colorSpaceBox.FormattingEnabled = true;
+            this.colorSpaceBox.Items.AddRange(new object[] {
+            "RGB",
+            "LAB"});
+            this.colorSpaceBox.Location = new System.Drawing.Point(816, 558);
+            this.colorSpaceBox.Name = "colorSpaceBox";
+            this.colorSpaceBox.Size = new System.Drawing.Size(121, 27);
+            this.colorSpaceBox.TabIndex = 16;
             // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1225, 625);
+            this.Controls.Add(this.colorSpaceBox);
+            this.Controls.Add(this.colorSpaceLabel);
+            this.Controls.Add(this.statusBox);
             this.Controls.Add(this.pictureBoxOriginal);
             this.Controls.Add(this.extractPaletteButton);
             this.Controls.Add(this.layerMethodBox);
@@ -242,6 +280,9 @@
         private System.Windows.Forms.ComboBox layerMethodBox;
         private System.Windows.Forms.Button extractPaletteButton;
         private System.Windows.Forms.PictureBox pictureBoxOriginal;
+        private System.Windows.Forms.TextBox statusBox;
+        private System.Windows.Forms.Label colorSpaceLabel;
+        private System.Windows.Forms.ComboBox colorSpaceBox;
     }
 }
 
