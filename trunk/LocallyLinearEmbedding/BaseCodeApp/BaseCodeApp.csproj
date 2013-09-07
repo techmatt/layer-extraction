@@ -55,6 +55,9 @@
     <Reference Include="MathNet.Numerics">
       <HintPath>..\..\DLLs\MathNet.Numerics.dll</HintPath>
     </Reference>
+    <Reference Include="MIConvexHullPlugin">
+      <HintPath>..\..\DLLs\x64\MIConvexHullPlugin.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

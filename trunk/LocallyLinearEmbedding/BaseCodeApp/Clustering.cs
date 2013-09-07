@@ -386,16 +386,15 @@ namespace Engine
             return (int)(Abins * Bbins * Lbin + Abins * Bbin + Abin);
         }
 
-        public void ClusterColors(List<CIELAB> colors, int width, int height)
+        public void ClusterColors(List<CIELAB> colors, int minRegions, double maxDist=Double.PositiveInfinity)
         {
             //Bin the colors
-            int minRegions = 5;
-            double maxDist = 10*10;
+            //double maxDist = 10*10;
             SortedSet<int> activeClusterIds = new SortedSet<int>();
-            String logFile = "log-colorspace.txt";
-            StreamWriter log = File.AppendText(logFile);
-            log.WriteLine("\n\tCluster Color Space " + DateTime.Now.ToString());
-            log.Flush();
+            //String logFile = "log-colorspace.txt";
+            //StreamWriter log = File.AppendText(logFile);
+            //log.WriteLine("\n\tCluster Color Space " + DateTime.Now.ToString());
+            //log.Flush();
 
             //the smaller id comes first in the dictionary for pairwise distances
             PriorityQueue<Tuple<int, int>, double> pq = new PriorityQueue<Tuple<int, int>, double>();
@@ -453,7 +452,7 @@ namespace Engine
                 Tuple<int, int> pair = result.Key;
                 double bestDist = -1 * result.Value;
 
-                Console.WriteLine("num clusters: " + activeClusterIds.Count());
+                //Console.WriteLine("num clusters: " + activeClusterIds.Count());
 
                 if (bestDist > maxDist)
                     break;
@@ -527,21 +526,27 @@ namespace Engine
                 if (activeClusterIds.Count() % 1000 == 0)
                 {
                     //write to file
-                    log.WriteLine("Merge loop: " + timer.ElapsedMilliseconds / 1000.0 + " # Clusters: " + activeClusterIds.Count() + " pqCount: " + pq.Count + " merged # neighbors: " + merged.neighbors.Count);
-                    log.Flush();
+                    Console.WriteLine("Merge loop: " + timer.ElapsedMilliseconds / 1000.0 + " # Clusters: " + activeClusterIds.Count() + " pqCount: " + pq.Count + " merged # neighbors: " + merged.neighbors.Count);
+                   // log.WriteLine("Merge loop: " + timer.ElapsedMilliseconds / 1000.0 + " # Clusters: " + activeClusterIds.Count() + " pqCount: " + pq.Count + " merged # neighbors: " + merged.neighbors.Count);
+                    //log.Flush();
                     timer.Restart();
                 }
 
             }
             rootIds = activeClusterIds;
             timer.Stop();
-            log.WriteLine("End: " + timer.ElapsedMilliseconds / 1000.0 + " # Clusters: " + activeClusterIds.Count() + " pqCount: " + pq.Count);
+            /*log.WriteLine("End: " + timer.ElapsedMilliseconds / 1000.0 + " # Clusters: " + activeClusterIds.Count() + " pqCount: " + pq.Count);
             log.WriteLine("End Time: " + DateTime.Now.ToString());
             log.Flush();
-            log.Close();
+            log.Close();*/
             
             
 
+        }
+
+        public List<CIELAB> GetClusterColors()
+        {
+            return rootIds.Select(id => clusters[id].lab).ToList<CIELAB>();
         }
 
         /**

@@ -7,6 +7,8 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
+using MIConvexHull;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace Engine
 {
@@ -303,6 +305,70 @@ namespace Engine
         {
             return x >= 0 && x < width && y >= 0 && y < height;
         }
+
+
+        public static ConvexHull<MIConvexHull.DefaultVertex, MIConvexHull.DefaultConvexFace<MIConvexHull.DefaultVertex>> GetConvexHull(List<DenseVector> points)
+        {
+            int n = points.Count;
+            int dim = points.First().Count;
+            double[][] vertices = new double[n][];
+            for (int i = 0; i < n; i++)
+            {
+                var location = new double[dim];
+                for (int j = 0; j < dim; j++)
+                    location[j] = points[i][j];
+                vertices[i] = location;
+            }
+            var hull = ConvexHull.Create(vertices);
+            
+            return hull;
+
+        }
+
+        public static ConvexHull<MIConvexHull.DefaultVertex, MIConvexHull.DefaultConvexFace<MIConvexHull.DefaultVertex>> GetConvexHull(List<double[]> points)
+        {
+            int n = points.Count;
+            int dim = points.First().Length;
+            double[][] vertices = new double[n][];
+            for (int i = 0; i < n; i++)
+            {
+                var location = new double[dim];
+                for (int j = 0; j < dim; j++)
+                    location[j] = points[i][j];
+                vertices[i] = location;
+            }
+            var hull = ConvexHull.Create(vertices);
+
+            return hull;
+
+        }
+
+        public static bool InHull(DenseVector point, ConvexHull<MIConvexHull.DefaultVertex, MIConvexHull.DefaultConvexFace<MIConvexHull.DefaultVertex>> hull)
+        {
+            foreach (var f in hull.Faces)
+            {
+                DenseVector normal = new DenseVector(f.Normal);
+                DenseVector vert = new DenseVector(f.Vertices.First().Position);
+                double magnitude = normal.DotProduct(point-vert);
+                if (magnitude > 0) //point is facing opposite direction of face (?)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public static double NumInHull(List<DenseVector> points, ConvexHull<MIConvexHull.DefaultVertex, MIConvexHull.DefaultConvexFace<MIConvexHull.DefaultVertex>> hull)
+        {
+            int count = 0;
+            foreach (var p in points)
+            {
+                if (InHull(p, hull))
+                    count++;
+            }
+            return count;
+        }
+
 
     }
 }
