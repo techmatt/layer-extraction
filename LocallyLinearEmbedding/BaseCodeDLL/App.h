@@ -9,6 +9,7 @@ public:
     const char *QueryStringByName(const String &s);
 	BCLayers* ExtractLayers(BCBitmapInfo bitmap, Vector<Vec3f> palette);
 	BCBitmapInfo* SegmentImage(BCBitmapInfo bitmap);
+    void Recolorize();
     
 private:
     AppParameters _parameters;
@@ -17,7 +18,6 @@ private:
 	LayerSet _layers;
 
     LayerExtractor _extractor;
-    //Recolorizer _recolorizer;
 
     String _queryString;
 

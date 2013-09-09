@@ -1,6 +1,8 @@
 #include "Main.h"
 #include "segment-image.h"
 
+const bool usingRecolorizer = false;
+
 void App::Init()
 {
     AllocConsole();
@@ -11,7 +13,6 @@ void App::Init()
     
     _image = bmp;
     
-    //_recolorizer.Init(_parameters, bmp);
     _extractor.Init(_parameters, bmp);
 
     LayerSet layers;
@@ -56,9 +57,21 @@ void App::Init()
 
     _extractor.TestLayerRecoloring(bmp, layers);
 	_layers = layers;
+}
+
+void App::Recolorize()
+{
+    Bitmap bmp, mask;
+    bmp.LoadPNG("../Data/" + _parameters.imageFile);
+    mask.LoadPNG("../Data/" + _parameters.maskFile);
     
-    //Bitmap result = _recolorizer.Recolor(_parameters, bmp, pixelColors, 0.001, 0.6);
-    //result.SavePNG("../Results/result.png");
+    Recolorizer recolorizer;
+    recolorizer.Init(_parameters, bmp);
+
+    Vector<PixelConstraint> pixelConstraints;
+    Utility::AddMaskConstraints(bmp, mask, pixelConstraints);
+    Bitmap result = recolorizer.Recolor(_parameters, bmp, pixelConstraints, 0.001, 0.6);
+    result.SavePNG("../Results/result.png");
 }
 
 BCLayers* App::ExtractLayers(BCBitmapInfo bcbmp, Vector<Vec3f> palette)
@@ -66,6 +79,10 @@ BCLayers* App::ExtractLayers(BCBitmapInfo bcbmp, Vector<Vec3f> palette)
 	 AllocConsole();
     _parameters.Init("../Parameters.txt");
 	
+    if(usingRecolorizer)
+    {
+        Recolorize();
+    }
 
 	Bitmap bmp;
 	bmp.Allocate(bcbmp.width, bcbmp.height);
