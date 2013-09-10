@@ -38,7 +38,7 @@ BASECODEDLL_API BCBitmapInfo* __stdcall BCQueryBitmapByName(void *context, const
 }
 
 
-BASECODEDLL_API BCLayers* __stdcall BCExtractLayers(void *context, BCBitmapInfo bitmap, const double* palette, int paletteSize)
+BASECODEDLL_API BCLayers* __stdcall BCExtractLayers(void *context, BCBitmapInfo bitmap, const double* palette, int paletteSize, const char *constraints)
 {
 	if (context == NULL) return 0;
 	App *app = (App*) context;
@@ -50,7 +50,7 @@ BASECODEDLL_API BCLayers* __stdcall BCExtractLayers(void *context, BCBitmapInfo 
 	for (int i=0; i<numColors; i++)
 		p.PushEnd(Vec3f((float)data[3*i], (float)data[3*i+1], (float)data[3*i+2]));
 	
-	return app ->ExtractLayers(bitmap, p);
+	return app->ExtractLayers(bitmap, p, constraints);
 }
 
 BASECODEDLL_API BCBitmapInfo* __stdcall BCSegmentImage(void* context, BCBitmapInfo bitmap)
