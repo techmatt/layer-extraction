@@ -344,6 +344,21 @@ namespace Engine
 
         }
 
+        public static ConvexHull<MIConvexHull.DefaultVertex, MIConvexHull.DefaultConvexFace<MIConvexHull.DefaultVertex>> GetConvexHull(List<CIELAB> points)
+        {
+            int n = points.Count;
+            double[][] vertices = new double[n][];
+            for (int i = 0; i < n; i++)
+            {
+                var location = new double[] { points[i].L, points[i].A, points[i].B };
+                vertices[i] = location;
+            }
+            var hull = ConvexHull.Create(vertices);
+
+            return hull;
+
+        }
+
         public static bool InHull(DenseVector point, ConvexHull<MIConvexHull.DefaultVertex, MIConvexHull.DefaultConvexFace<MIConvexHull.DefaultVertex>> hull)
         {
             foreach (var f in hull.Faces)
@@ -351,6 +366,21 @@ namespace Engine
                 DenseVector normal = new DenseVector(f.Normal);
                 DenseVector vert = new DenseVector(f.Vertices.First().Position);
                 double magnitude = normal.DotProduct(point-vert);
+                if (magnitude > 0) //point is facing opposite direction of face (?)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public static bool InHull(CIELAB point, ConvexHull<MIConvexHull.DefaultVertex, MIConvexHull.DefaultConvexFace<MIConvexHull.DefaultVertex>> hull)
+        {
+            foreach (var f in hull.Faces)
+            {
+                double[] normal = f.Normal;
+                double[] vert = f.Vertices.First().Position;
+                double magnitude = (point.L - vert[0]) * normal[0] + (point.A - vert[1]) * normal[1] + (point.B - vert[2]) * normal[2];//normal.DotProduct(point - vert);
                 if (magnitude > 0) //point is facing opposite direction of face (?)
                 {
                     return false;

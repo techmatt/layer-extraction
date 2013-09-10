@@ -230,6 +230,7 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
     //
     // *** Final matrix
     // (Q + wC C + wS S^T S + wR R^T R) x = wC Crhs + wS S^T Srhs + wR R^T Rrhs
+	// (WBase + wC C)x = wC Crhs
     // where wC, wS, wR are three weights
     //
 

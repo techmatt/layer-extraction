@@ -337,6 +337,11 @@ namespace BaseCodeApp
             {
                 data = ExtractConvexMergedPalette(k);
             }
+            else if (pmethod == 3)
+            {
+                //encourage convex hull
+   
+            }
             else
             {
                 //turk
@@ -356,8 +361,21 @@ namespace BaseCodeApp
 
             List<CIELAB> bmpData = Util.BitmapTo1DArray(bmp).Select(i => Util.RGBtoLAB(i)).ToList<CIELAB>();
 
-            ExtractPalette(pmethod);
-            PaletteData data = currPalette;
+            //ExtractPalette(pmethod);
+            //PaletteData data = currPalette;
+            PaletteData data;
+            if (currPalette.colors.Count() == 0)
+            {
+                ExtractPalette(pmethod);
+                data = currPalette;
+            }
+            else
+            {
+                currPalette = new PaletteData();
+                currPalette.colors = this.palette.Select(c => c.BackColor).ToList<Color>();
+                currPalette.lab = this.palette.Select(c => Util.RGBtoLAB(c.BackColor)).ToList<CIELAB>();
+                data = currPalette;
+            }
 
             string constraintString = "";
             if (constraints != null) constraintString = constraints.ToString();
