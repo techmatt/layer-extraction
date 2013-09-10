@@ -144,7 +144,8 @@
             this.paletteMethodBox.Items.AddRange(new object[] {
             "K-Means",
             "CHI-Resize",
-            "ConvexHull"});
+            "ConvexHull",
+            "CHI-Patch"});
             this.paletteMethodBox.Location = new System.Drawing.Point(419, 641);
             this.paletteMethodBox.Name = "paletteMethodBox";
             this.paletteMethodBox.Size = new System.Drawing.Size(162, 27);
@@ -173,8 +174,7 @@
             this.layerMethodBox.FormattingEnabled = true;
             this.layerMethodBox.Items.AddRange(new object[] {
             "Manifold",
-            "Pixel-ConvexConstraint",
-            "ConvexMerged"});
+            "Pixel-ConvexConstraint"});
             this.layerMethodBox.Location = new System.Drawing.Point(133, 682);
             this.layerMethodBox.Name = "layerMethodBox";
             this.layerMethodBox.Size = new System.Drawing.Size(162, 27);

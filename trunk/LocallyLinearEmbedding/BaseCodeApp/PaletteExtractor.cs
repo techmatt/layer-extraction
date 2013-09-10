@@ -93,7 +93,9 @@ namespace Engine
         SaliencyDensClustAvg,
 
         //cluster statistics
-        WithinVar, BetweenVar
+        WithinVar, BetweenVar,
+
+        ConvexCoverage
     }
 
     public class FeatureNamePair
@@ -170,7 +172,9 @@ namespace Engine
                     Features.SoftErrorSegSD,
                     
                     Features.SqErrorSegSD,
-                    Features.ErrorSegSD
+                    Features.ErrorSegSD,
+
+                    Features.ConvexCoverage
                 
                 
     
@@ -317,6 +321,8 @@ namespace Engine
                     new FeatureNamePair(Features.ErrorSegSD, "error-segment-hard-saliencydens-lab"),
                     new FeatureNamePair(Features.NErrorSegSD, "error-segment-hard-saliencydens-names"),
                     new FeatureNamePair(Features.NSqErrorSegSD, "error-segment-hard-saliencydens-sqnames"),
+
+                    new FeatureNamePair(Features.ConvexCoverage, "convexcoverage")
                 };
 
             featureToName = new Dictionary<Features, String>();
@@ -858,8 +864,8 @@ namespace Engine
                 Bbounds[1] = Math.Max(Bbounds[1], lab.B);
 
                 double s = rgb.GetSaturation();
-                Satbounds[0] = Math.Min(Lbounds[0], s);
-                Satbounds[1] = Math.Max(Lbounds[1], s);
+                Satbounds[0] = Math.Min(Satbounds[0], s);
+                Satbounds[1] = Math.Max(Satbounds[1], s);
             }
 
 
@@ -939,12 +945,12 @@ namespace Engine
         }
 
         /**
-         * Calculate all the palette and image features here. 
-         * options is the precomputed information from SetupFeatureParams
-         * */
+        * Calculate all the palette and image features here. 
+        * options is the precomputed information from SetupFeatureParams
+        * */
         public Dictionary<Features, double> CalculateFeatures(PaletteData data, FeatureParams options)
         {
-            String log = Path.Combine(dir,"out","timelog.txt");
+            String log = Path.Combine(dir, "out", "timelog.txt");
             Stopwatch watch = new Stopwatch();
 
             //unpack options
@@ -1089,7 +1095,7 @@ namespace Engine
             double Lcov = Math.Min(Lspan, options.Lspan) / Math.Max(Math.Max(Lspan, options.Lspan), 1);
             double Acov = Math.Min(Aspan, options.Aspan) / Math.Max(Math.Max(Aspan, options.Aspan), 1);
             double Bcov = Math.Min(Bspan, options.Bspan) / Math.Max(Math.Max(Bspan, options.Bspan), 1);
-            double Scov = Math.Min(Satspan, options.Satspan) / Math.Max(Math.Max(Satspan, options.Satspan), 1);
+            double Scov = Math.Min(Satspan, options.Satspan) / Math.Max(Math.Max(Satspan, options.Satspan), 0.00001);
 
 
 
@@ -1167,6 +1173,7 @@ namespace Engine
 
             double[,] nsubs = new double[width, height];
             double[,] subs = new double[width, height];
+            double convexCoverage = 0;
 
             if (included.Overlaps(options.NameCovFeatures) ||
                 included.Overlaps(options.CoverageFeatures) ||
@@ -1184,95 +1191,108 @@ namespace Engine
 
                 int[,] nassignment = new int[width, height];
 
+                var hull = Util.GetConvexHull(data.lab);
+                int[,] inhull = new int[width, height];
+
                 Parallel.For(0, width, i =>
-               {
-                   for (int j = 0; j < height; j++)
-                   {
-                       double bestDist = Double.PositiveInfinity;
-                       int bestIdx = -1;
-                       for (int s = 0; s < data.lab.Count(); s++)
-                       {
-                           double dist = data.lab[s].SqDist(options.imageLAB[i, j]);
-                           if (dist < bestDist)
-                               bestIdx = s;
-                           bestDist = Math.Min(dist, bestDist);
+                {
+                    for (int j = 0; j < height; j++)
+                    {
+                        double bestDist = Double.PositiveInfinity;
+                        int bestIdx = -1;
+                        for (int s = 0; s < data.lab.Count(); s++)
+                        {
+                            double dist = data.lab[s].SqDist(options.imageLAB[i, j]);
+                            if (dist < bestDist)
+                                bestIdx = s;
+                            bestDist = Math.Min(dist, bestDist);
 
-                       }
-                       assignment[i, j] = bestIdx;
-                       double sqrtBestDist = Math.Sqrt(bestDist);
-                       errors[i, j] = sqrtBestDist;
-                       //clusterSqError[bestIdx] += bestDist;
-                       clusterSqErrorTemp[i, j, bestIdx] = bestDist;
-                   }
+                        }
+                        assignment[i, j] = bestIdx;
+                        double sqrtBestDist = Math.Sqrt(bestDist);
+                        errors[i, j] = sqrtBestDist;
+                        //clusterSqError[bestIdx] += bestDist;
+                        clusterSqErrorTemp[i, j, bestIdx] = bestDist;
 
+                        inhull[i, j] = (Util.InHull(imageLAB[i, j], hull)) ? 1 : 0;
 
-                   if (included.Overlaps(options.NameCovFeatures))
-                   {
-                       for (int j = 0; j < height; j++)
-                       {
-                           int bestIdx = -1;
-                           double bestDist = Double.PositiveInfinity;
-                           for (int s = 0; s < data.lab.Count(); s++)
-                           {
-                               int sIdx = swatchIndexOf[data.lab[s]];
-                               double dist = GetCNDist(binAssignments[i, j], swatchIdxToBin[sIdx]);
-
-                               if (dist < bestDist)
-                                   bestIdx = s;
-
-                               bestDist = Math.Min(dist, bestDist);
-                           }
-                           double val = map[i, j];
-                           nerrors[i, j] = bestDist;
-                           nerrorsWeighted[i, j] = bestDist * val;
-                           nassignment[i, j] = bestIdx;
-                       }
-                   }
+                    }
 
 
-                   double epsilon = 0.0001;
+                    if (included.Overlaps(options.NameCovFeatures))
+                    {
+                        for (int j = 0; j < height; j++)
+                        {
+                            int bestIdx = -1;
+                            double bestDist = Double.PositiveInfinity;
+                            for (int s = 0; s < data.lab.Count(); s++)
+                            {
+                                int sIdx = swatchIndexOf[data.lab[s]];
+                                double dist = GetCNDist(binAssignments[i, j], swatchIdxToBin[sIdx]);
 
-                   for (int j = 0; j < height; j++)
-                   {
-                       //calculate the memberships
-                       double[] dists = new double[n];
-                       double[] ndists = new double[n];
+                                if (dist < bestDist)
+                                    bestIdx = s;
 
-                       double subtotal = 0;
-                       double nsubtotal = 0;
-
-                       int idx = j * width + i;
-
-                       for (int k = 0; k < n; k++)
-                       {
-                           int sidx = swatchIndexOf[data.lab[k]];
-
-                           dists[k] = Math.Max(pixelToDists[idx, sidx], epsilon);
-                           ndists[k] = Math.Max(pixelToCNDists[idx, sidx], epsilon);
-
-                           subtotal += (1.0 / dists[k]);
-                           nsubtotal += (1.0 / ndists[k]);
-                       }
-                       for (int k = 0; k < n; k++)
-                       {
-                           memberships[idx, k] = 1.0 / (dists[k] * subtotal);
-                           nmemberships[idx, k] = 1.0 / (ndists[k] * nsubtotal);
-                       }
-
-                       for (int k = 0; k < n; k++)
-                       {
-                           int sidx = swatchIndexOf[data.lab[k]];
-
-                           double u = memberships[idx, k];
-                           subs[i, j] += u * u * Math.Max(pixelToDists[idx, sidx], epsilon);
-
-                           double nu = nmemberships[idx, k];
-                           nsubs[i, j] += nu * nu * Math.Max(pixelToCNDists[idx, sidx], epsilon);
-                       }
-                   }
+                                bestDist = Math.Min(dist, bestDist);
+                            }
+                            double val = map[i, j];
+                            nerrors[i, j] = bestDist;
+                            nerrorsWeighted[i, j] = bestDist * val;
+                            nassignment[i, j] = bestIdx;
+                        }
+                    }
 
 
-               });
+                    double epsilon = 0.0001;
+
+                    for (int j = 0; j < height; j++)
+                    {
+                        //calculate the memberships
+                        double[] dists = new double[n];
+                        double[] ndists = new double[n];
+
+                        double subtotal = 0;
+                        double nsubtotal = 0;
+
+                        int idx = j * width + i;
+
+                        for (int k = 0; k < n; k++)
+                        {
+                            int sidx = swatchIndexOf[data.lab[k]];
+
+                            dists[k] = Math.Max(pixelToDists[idx, sidx], epsilon);
+                            ndists[k] = Math.Max(pixelToCNDists[idx, sidx], epsilon);
+
+                            subtotal += (1.0 / dists[k]);
+                            nsubtotal += (1.0 / ndists[k]);
+                        }
+                        for (int k = 0; k < n; k++)
+                        {
+                            memberships[idx, k] = 1.0 / (dists[k] * subtotal);
+                            nmemberships[idx, k] = 1.0 / (ndists[k] * nsubtotal);
+                        }
+
+                        for (int k = 0; k < n; k++)
+                        {
+                            int sidx = swatchIndexOf[data.lab[k]];
+
+                            double u = memberships[idx, k];
+                            subs[i, j] += u * u * Math.Max(pixelToDists[idx, sidx], epsilon);
+
+                            double nu = nmemberships[idx, k];
+                            nsubs[i, j] += nu * nu * Math.Max(pixelToCNDists[idx, sidx], epsilon);
+                        }
+                    }
+
+
+                });
+
+
+                //calculate convex coverage
+                for (int i = 0; i < width; i++)
+                    for (int j = 0; j < height; j++)
+                        convexCoverage += inhull[i, j];
+                convexCoverage /= (width * height);
 
 
 
@@ -1702,7 +1722,7 @@ namespace Engine
             puritymax = ptemp / factor;
             puritymaxr = ptemp / afactor;
 
-            ptemp = purityavg / data.lab.Count(); 
+            ptemp = purityavg / data.lab.Count();
             purityavg = ptemp / factor;
             purityavgr = ptemp / afactor;
 
@@ -1752,7 +1772,7 @@ namespace Engine
             features.Add(Features.NSaliencyAvgR, csavg / avgE);
             features.Add(Features.NSaliencyMaxR, csmax / avgE);
             features.Add(Features.NSaliencyMinR, csmin / avgE);
-            
+
 
             features.Add(Features.ErrorWeightedSegment, errorSegSal);
             features.Add(Features.ErrorUnweightedSegment, errorSeg);
@@ -1806,6 +1826,8 @@ namespace Engine
             features.Add(Features.NSqErrorSegSD, nsqerrorsegsd);
             features.Add(Features.SoftErrorSegSD, softerrorsegsd);
             features.Add(Features.NSoftErrorSegSD, nsofterrorsegsd);
+
+            features.Add(Features.ConvexCoverage, convexCoverage);
 
 
 
