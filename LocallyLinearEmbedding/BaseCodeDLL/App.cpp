@@ -77,6 +77,13 @@ void App::Recolorize()
 BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &constraints)
 {
 	 AllocConsole();
+
+#ifdef DEBUG
+     Console::WriteLine("DLL compiled in release mode");
+#else
+     Console::WriteLine("DLL compiled in debug mode");
+#endif
+
     _parameters.Init("../Parameters.txt");
 	
     if(usingRecolorizer)
@@ -101,7 +108,27 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 
 	LayerSet layers;
 
-	_extractor.InitLayersFromPalette(_parameters, bmp, palette, layers);
+    if(constraints.Length() == 0)
+    {
+	    _extractor.InitLayersFromPalette(_parameters, bmp, palette, layers);
+    }
+    else
+    {
+        Vector<PixelConstraint> targetPixelColors;
+        Vector<String> parts = constraints.Partition("|");
+        for(int i = 0; i < parts.Length(); i++)
+        {
+            Vector<String> pixels = parts[i].Partition(";");
+            for(String s : pixels)
+            {
+                PixelConstraint p;
+                p.coord = Vec2i(s.Partition(",")[0].ConvertToInteger(), s.Partition(",")[1].ConvertToInteger());
+                p.targetColor = palette[i];
+                targetPixelColors.PushEnd(p);
+            }
+        }
+        _extractor.InitLayersFromPixelConstraints(_parameters, bmp, targetPixelColors, layers);
+    }
 
 	_extractor.ExtractLayers(_parameters, bmp, layers);
     _extractor.AddNegativeConstraints(_parameters, bmp, layers);

@@ -72,8 +72,11 @@ namespace BaseCodeApp
         [DllImport(BaseCodeDLL)]
         private static extern IntPtr BCSegmentImage(IntPtr context, BCBitmapInfo bitmap);
 
-
         IntPtr baseCodeDLLContext = (IntPtr)0;
+
+        Image activeImage;
+        Bitmap pictureBoxBitmap;
+        Graphics g;
 
         public enum ColorSpace
         {
@@ -100,13 +103,24 @@ namespace BaseCodeApp
 
         public class LayerConstraints
         {
-            public List< List<Vec2i> > constraints;
+            public LayerConstraints(int layerCount)
+            {
+                constraints = new List<List<Point>>();
+                foreach (int i in Enumerable.Range(1, layerCount)) constraints.Add(new List<Point>());
+            }
+            public List<List<Point>> constraints;
+
+            public bool Valid()
+            {
+                return constraints.All(x => x.Count > 0);
+            }
             public override string ToString()
             {
+                if (!Valid()) return "";
                 StringBuilder sb = new StringBuilder();
                 foreach (var v in constraints)
                 {
-                    foreach (var p in v) sb.Append(p.x + "," + p.y + ";");
+                    foreach (var p in v) sb.Append(p.X + "," + p.Y + ";");
                     sb.Remove(sb.Length - 1, 1);
                     sb.Append("|");
                 }
@@ -115,6 +129,7 @@ namespace BaseCodeApp
             }
         }
         LayerConstraints constraints;
+        int activePaletteIndex;
         
 
         public MainWindow()
@@ -533,7 +548,6 @@ namespace BaseCodeApp
             }
         }
 
-
         private void UpdatePaletteDisplay(bool enableEvents=true)
         {
             palettePanel.Controls.Clear();
@@ -559,31 +573,45 @@ namespace BaseCodeApp
                     {
                         Button btn = (Button)sender;
                         int index = palette.IndexOf(btn);
+                        activePaletteIndex = index;
 
-                        //preview the layer
-                        layerBox.Image = layers.previews[index];
+                        if (layers.colors.Count == 0)
+                        {
+                            UpdateConstraintVisualization();
+                        }
+                        else
+                        {
+                            //preview the layer
+                            layerBox.Image = layers.previews[index];
+                        }
 
                     };
 
-                    element.Click += delegate(Object sender, EventArgs e)
+                    element.MouseUp += delegate(Object sender, MouseEventArgs e)
                     {
-                        //Open the color picker and recolor 
+                        //Open the color picker and recolor
                         Button btn = ((Button)sender);
-
-                        colorPicker.Color = btn.BackColor;
-                        colorPicker.ShowDialog();
-
-                        if (colorPicker.Color != btn.BackColor)
+                        int index = palette.IndexOf(btn);
+                        if (e.Button == MouseButtons.Left)
                         {
-                            btn.BackColor = colorPicker.Color;
+                            colorPicker.Color = btn.BackColor;
+                            colorPicker.ShowDialog();
 
-                            //recolor
-                            pictureBox.Image = Recolor(palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);
+                            if (colorPicker.Color != btn.BackColor)
+                            {
+                                btn.BackColor = colorPicker.Color;
 
-
+                                if (layers.colors.Count > 0)
+                                {
+                                    //recolor
+                                    pictureBox.Image = Recolor(palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);
+                                }
+                            }
                         }
-
-
+                        else if (e.Button == MouseButtons.Right)
+                        {
+                            constraints.constraints[index].Clear();
+                        }
                     };
                 }
 
@@ -770,8 +798,10 @@ namespace BaseCodeApp
             if (dialog.FileName != "")
             {
                 String filepath = dialog.FileName;
-                Image image = Image.FromFile(filepath);
-                pictureBox.Image = image;
+                activeImage = Image.FromFile(filepath);
+                pictureBox.Image = activeImage;
+                pictureBoxBitmap = new Bitmap(pictureBox.Image.Width, pictureBox.Image.Height);
+                g = Graphics.FromImage(pictureBoxBitmap);
                 currImageFile = filepath;
 
                 String basename = new FileInfo(filepath).Name;
@@ -854,7 +884,8 @@ namespace BaseCodeApp
             };
             bw.RunWorkerCompleted += delegate
             {
-                UpdatePaletteDisplay(false);
+                constraints = new LayerConstraints(currPalette.colors.Count);
+                UpdatePaletteDisplay(true);
                 this.Cursor = Cursors.Default;
             };
             bw.RunWorkerAsync();
@@ -1032,8 +1063,35 @@ namespace BaseCodeApp
 
         }
 
+        private void pictureBox_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                constraints.constraints[activePaletteIndex].Add(new Point(e.X, e.Y));
+            }
+            catch { }
+            UpdateConstraintVisualization();
+        }
 
+        private void pictureBox_Click(object sender, EventArgs e)
+        {
 
+        }
 
+        private void UpdateConstraintVisualization()
+        {
+            if (g == null) return;
+            //g.DrawImage(activeImage, new Rectangle(0, 0, pictureBoxBitmap.Width, pictureBoxBitmap.Height), new Rectangle(0, 0, activeImage.Width, activeImage.Height), GraphicsUnit.Pixel);
+            g.DrawImage(activeImage, new Point(0, 0));
+            Pen p = new Pen(Color.Black, 2.0f);
+            Brush b = new SolidBrush(palette[activePaletteIndex].BackColor);
+            foreach (Point v in constraints.constraints[activePaletteIndex])
+            {
+                Rectangle r = new Rectangle(new Point(v.X - 5, v.Y - 5), new Size(10, 10));
+                g.DrawEllipse(p, r);
+                g.FillEllipse(b, r);
+            }
+            pictureBox.Image = pictureBoxBitmap;
+        }
     }
 }
