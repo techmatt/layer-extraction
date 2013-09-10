@@ -12,12 +12,6 @@ using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace Engine
 {
-    public struct Vec2i
-    {
-        public int x;
-        public int y;
-    }
-
     public class Util
     {
 
