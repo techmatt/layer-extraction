@@ -68,7 +68,7 @@ namespace BaseCodeApp
         [DllImport(BaseCodeDLL)]
         private static extern Int32 BCQueryIntegerByName(IntPtr context, [In, MarshalAs(UnmanagedType.LPStr)] String integerName);
         [DllImport(BaseCodeDLL)]
-        private static extern IntPtr BCExtractLayers(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize);
+        private static extern IntPtr BCExtractLayers(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize, [In, MarshalAs(UnmanagedType.LPStr)] String layerConstraints);
         [DllImport(BaseCodeDLL)]
         private static extern IntPtr BCSegmentImage(IntPtr context, BCBitmapInfo bitmap);
 
@@ -97,6 +97,25 @@ namespace BaseCodeApp
         private int CHITrials = 5;
         private PaletteCache paletteCache = new PaletteCache("../PaletteCache");
         private PaletteData currPalette = new PaletteData();
+
+        public class LayerConstraints
+        {
+            public List< List<Vec2i> > constraints;
+            public override string ToString()
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var v in constraints)
+                {
+                    foreach (var p in v) sb.Append(p.x + "," + p.y + ";");
+                    sb.Remove(sb.Length - 1, 1);
+                    sb.Append("|");
+                }
+                sb.Remove(sb.Length - 1, 1);
+                return sb.ToString();
+            }
+        }
+        LayerConstraints constraints;
+        
 
         public MainWindow()
         {
@@ -325,6 +344,9 @@ namespace BaseCodeApp
             ExtractPalette(pmethod);
             PaletteData data = currPalette;
 
+            string constraintString = "";
+            if (constraints != null) constraintString = constraints.ToString();
+
             if (lmethod == 0)
             {
                 if (space == ColorSpace.RGB)
@@ -363,7 +385,7 @@ namespace BaseCodeApp
                     {
                     }
 
-                    IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count);
+                    IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, constraintString);
                     Marshal.FreeHGlobal(bmpInfo.colorData);
                     Marshal.FreeHGlobal(palettePtr);
 
@@ -405,7 +427,7 @@ namespace BaseCodeApp
                     {
                     }
 
-                    IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count);
+                    IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, constraintString);
                     Marshal.FreeHGlobal(bmpInfo.colorData);
                     Marshal.FreeHGlobal(palettePtr);
 
@@ -1003,6 +1025,11 @@ namespace BaseCodeApp
             }
 
             return temp;
+        }
+
+        private void buttonSaveConstraints_Click(object sender, EventArgs e)
+        {
+
         }
 
 

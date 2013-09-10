@@ -29,7 +29,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 // random color
 rgb random_rgb(){ 
   rgb c;
-  double r;
   
   c.r = (uchar)rand();//random();
   c.g = (uchar)rand();//random();

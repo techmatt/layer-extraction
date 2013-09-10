@@ -74,7 +74,7 @@ void App::Recolorize()
     result.SavePNG("../Results/result.png");
 }
 
-BCLayers* App::ExtractLayers(BCBitmapInfo bcbmp, Vector<Vec3f> palette)
+BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &constraints)
 {
 	 AllocConsole();
     _parameters.Init("../Parameters.txt");
@@ -164,7 +164,7 @@ BCBitmapInfo* App::QueryBitmapByName(const String &s)
     return &_queryBitmapInfo;
 }
 
-BCBitmapInfo* App::SegmentImage(BCBitmapInfo bcbmp)
+BCBitmapInfo* App::SegmentImage(const BCBitmapInfo &bcbmp)
 {
 	Bitmap bmp;
 	bmp.Allocate(bcbmp.width, bcbmp.height);

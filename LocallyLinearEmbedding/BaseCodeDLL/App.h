@@ -7,8 +7,8 @@ public:
     BCBitmapInfo* QueryBitmapByName(const String &s);
     int QueryIntegerByName(const String &s);
     const char *QueryStringByName(const String &s);
-	BCLayers* ExtractLayers(BCBitmapInfo bitmap, Vector<Vec3f> palette);
-	BCBitmapInfo* SegmentImage(BCBitmapInfo bitmap);
+	BCLayers* ExtractLayers(const BCBitmapInfo &bitmap, const Vector<Vec3f> &palette, const String &constraints);
+	BCBitmapInfo* SegmentImage(const BCBitmapInfo &bitmap);
     void Recolorize();
     
 private:

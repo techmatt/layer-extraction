@@ -1,6 +1,6 @@
 
-imageFile=bird.png
-maskFile=birdLayerA.png
+imageFile=angel.png
+maskFile=angelSkyMaskB.png
 
 #
 # Superpixel terms
@@ -31,6 +31,6 @@ negativeSupressionWeight=0.01
 #
 weightRegularizationTerm=0.000001
 userConstraintWeight=0.00001
-distantConstraintWeight=0.00000
-colorInertiaWeight=0.00000000
+distantConstraintWeight=0.000001
+colorInertiaWeight=0.000000001
 periodicBasisCount=3

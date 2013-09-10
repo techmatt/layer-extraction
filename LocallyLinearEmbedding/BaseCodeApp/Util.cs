@@ -12,8 +12,15 @@ using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace Engine
 {
- public class Util
+    public struct Vec2i
     {
+        public int x;
+        public int y;
+    }
+
+    public class Util
+    {
+
         public static Color LABtoRGB(CIELAB lab)
         {
             double gamma = 2.2;
@@ -368,8 +375,6 @@ namespace Engine
             }
             return count;
         }
-
-
     }
 }
 
