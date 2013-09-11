@@ -49,6 +49,7 @@
             this.buttonSaveConstraints = new System.Windows.Forms.Button();
             this.buttonLoadConstraints = new System.Windows.Forms.Button();
             this.statusBox = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -56,9 +57,10 @@
             // 
             // pictureBox
             // 
-            this.pictureBox.Location = new System.Drawing.Point(588, 12);
+            this.pictureBox.Location = new System.Drawing.Point(555, 12);
             this.pictureBox.Name = "pictureBox";
             this.pictureBox.Size = new System.Drawing.Size(576, 464);
+            this.pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
             this.pictureBox.TabIndex = 0;
             this.pictureBox.TabStop = false;
             this.pictureBox.Click += new System.EventHandler(this.pictureBox_Click);
@@ -74,7 +76,7 @@
             // 
             // openButton
             // 
-            this.openButton.Location = new System.Drawing.Point(28, 511);
+            this.openButton.Location = new System.Drawing.Point(29, 526);
             this.openButton.Name = "openButton";
             this.openButton.Size = new System.Drawing.Size(139, 35);
             this.openButton.TabIndex = 2;
@@ -84,7 +86,7 @@
             // 
             // extractLayersButton
             // 
-            this.extractLayersButton.Location = new System.Drawing.Point(172, 553);
+            this.extractLayersButton.Location = new System.Drawing.Point(173, 568);
             this.extractLayersButton.Name = "extractLayersButton";
             this.extractLayersButton.Size = new System.Drawing.Size(136, 35);
             this.extractLayersButton.TabIndex = 3;
@@ -104,7 +106,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(99, 644);
+            this.label1.Location = new System.Drawing.Point(100, 659);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(30, 19);
             this.label1.TabIndex = 5;
@@ -112,7 +114,7 @@
             // 
             // KBox
             // 
-            this.KBox.Location = new System.Drawing.Point(135, 640);
+            this.KBox.Location = new System.Drawing.Point(136, 655);
             this.KBox.Name = "KBox";
             this.KBox.Size = new System.Drawing.Size(72, 27);
             this.KBox.TabIndex = 6;
@@ -120,7 +122,7 @@
             // 
             // saveButton
             // 
-            this.saveButton.Location = new System.Drawing.Point(313, 511);
+            this.saveButton.Location = new System.Drawing.Point(314, 526);
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(136, 34);
             this.saveButton.TabIndex = 3;
@@ -130,9 +132,9 @@
             // 
             // resetImageButton
             // 
-            this.resetImageButton.Location = new System.Drawing.Point(28, 552);
+            this.resetImageButton.Location = new System.Drawing.Point(29, 567);
             this.resetImageButton.Name = "resetImageButton";
-            this.resetImageButton.Size = new System.Drawing.Size(138, 37);
+            this.resetImageButton.Size = new System.Drawing.Size(139, 37);
             this.resetImageButton.TabIndex = 7;
             this.resetImageButton.Text = "Reset Image";
             this.resetImageButton.UseVisualStyleBackColor = true;
@@ -146,7 +148,7 @@
             "CHI-Resize",
             "ConvexHull",
             "CHI-Patch"});
-            this.paletteMethodBox.Location = new System.Drawing.Point(419, 641);
+            this.paletteMethodBox.Location = new System.Drawing.Point(378, 655);
             this.paletteMethodBox.Name = "paletteMethodBox";
             this.paletteMethodBox.Size = new System.Drawing.Size(162, 27);
             this.paletteMethodBox.TabIndex = 8;
@@ -154,7 +156,7 @@
             // paletteLabel
             // 
             this.paletteLabel.AutoSize = true;
-            this.paletteLabel.Location = new System.Drawing.Point(324, 644);
+            this.paletteLabel.Location = new System.Drawing.Point(310, 658);
             this.paletteLabel.Name = "paletteLabel";
             this.paletteLabel.Size = new System.Drawing.Size(57, 19);
             this.paletteLabel.TabIndex = 9;
@@ -163,7 +165,7 @@
             // layerLabel
             // 
             this.layerLabel.AutoSize = true;
-            this.layerLabel.Location = new System.Drawing.Point(24, 685);
+            this.layerLabel.Location = new System.Drawing.Point(25, 700);
             this.layerLabel.Name = "layerLabel";
             this.layerLabel.Size = new System.Drawing.Size(105, 19);
             this.layerLabel.TabIndex = 10;
@@ -175,14 +177,14 @@
             this.layerMethodBox.Items.AddRange(new object[] {
             "Manifold",
             "Pixel-ConvexConstraint"});
-            this.layerMethodBox.Location = new System.Drawing.Point(133, 682);
+            this.layerMethodBox.Location = new System.Drawing.Point(134, 697);
             this.layerMethodBox.Name = "layerMethodBox";
             this.layerMethodBox.Size = new System.Drawing.Size(162, 27);
             this.layerMethodBox.TabIndex = 11;
             // 
             // extractPaletteButton
             // 
-            this.extractPaletteButton.Location = new System.Drawing.Point(172, 511);
+            this.extractPaletteButton.Location = new System.Drawing.Point(173, 526);
             this.extractPaletteButton.Name = "extractPaletteButton";
             this.extractPaletteButton.Size = new System.Drawing.Size(135, 35);
             this.extractPaletteButton.TabIndex = 12;
@@ -202,7 +204,7 @@
             // colorSpaceLabel
             // 
             this.colorSpaceLabel.AutoSize = true;
-            this.colorSpaceLabel.Location = new System.Drawing.Point(324, 686);
+            this.colorSpaceLabel.Location = new System.Drawing.Point(310, 700);
             this.colorSpaceLabel.Name = "colorSpaceLabel";
             this.colorSpaceLabel.Size = new System.Drawing.Size(89, 19);
             this.colorSpaceLabel.TabIndex = 15;
@@ -214,14 +216,14 @@
             this.colorSpaceBox.Items.AddRange(new object[] {
             "RGB",
             "LAB"});
-            this.colorSpaceBox.Location = new System.Drawing.Point(419, 682);
+            this.colorSpaceBox.Location = new System.Drawing.Point(419, 697);
             this.colorSpaceBox.Name = "colorSpaceBox";
             this.colorSpaceBox.Size = new System.Drawing.Size(121, 27);
             this.colorSpaceBox.TabIndex = 16;
             // 
             // buttonSaveConstraints
             // 
-            this.buttonSaveConstraints.Location = new System.Drawing.Point(28, 595);
+            this.buttonSaveConstraints.Location = new System.Drawing.Point(29, 610);
             this.buttonSaveConstraints.Name = "buttonSaveConstraints";
             this.buttonSaveConstraints.Size = new System.Drawing.Size(139, 34);
             this.buttonSaveConstraints.TabIndex = 17;
@@ -231,7 +233,7 @@
             // 
             // buttonLoadConstraints
             // 
-            this.buttonLoadConstraints.Location = new System.Drawing.Point(172, 594);
+            this.buttonLoadConstraints.Location = new System.Drawing.Point(173, 609);
             this.buttonLoadConstraints.Name = "buttonLoadConstraints";
             this.buttonLoadConstraints.Size = new System.Drawing.Size(136, 34);
             this.buttonLoadConstraints.TabIndex = 17;
@@ -242,16 +244,26 @@
             // 
             this.statusBox.BackColor = System.Drawing.SystemColors.Control;
             this.statusBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.statusBox.Location = new System.Drawing.Point(-2, 715);
+            this.statusBox.Location = new System.Drawing.Point(-1, 730);
             this.statusBox.Name = "statusBox";
             this.statusBox.Size = new System.Drawing.Size(1230, 20);
             this.statusBox.TabIndex = 14;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(15, 500);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(438, 19);
+            this.label2.TabIndex = 18;
+            this.label2.Text = "Right-click: Reset constraints.  Shift-click on image: eyedropper";
             // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1328, 800);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.pictureBox);
             this.Controls.Add(this.buttonLoadConstraints);
             this.Controls.Add(this.buttonSaveConstraints);
@@ -309,6 +321,7 @@
         private System.Windows.Forms.Button buttonSaveConstraints;
         private System.Windows.Forms.Button buttonLoadConstraints;
         private System.Windows.Forms.TextBox statusBox;
+        private System.Windows.Forms.Label label2;
     }
 }
 

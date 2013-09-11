@@ -12,6 +12,7 @@ using MathNet.Numerics.LinearAlgebra.Double;
 using Engine;
 using System.Linq;
 using System.Diagnostics;
+using System.Windows.Input;
 
 namespace BaseCodeApp
 {
@@ -605,7 +606,7 @@ namespace BaseCodeApp
 
                     };
 
-                    element.MouseUp += delegate(Object sender, MouseEventArgs e)
+                    element.MouseUp += delegate(Object sender, System.Windows.Forms.MouseEventArgs e)
                     {
                         //Open the color picker and recolor
                         Button btn = ((Button)sender);
@@ -629,6 +630,7 @@ namespace BaseCodeApp
                         else if (e.Button == MouseButtons.Right)
                         {
                             constraints.constraints[index].Clear();
+                            UpdateConstraintVisualization();
                         }
                     };
                 }
@@ -837,7 +839,7 @@ namespace BaseCodeApp
             if (bw.IsBusy)
                 return;
 
-            this.Cursor = Cursors.WaitCursor;
+            this.Cursor = System.Windows.Forms.Cursors.WaitCursor;
             int method = paletteMethodBox.SelectedIndex;
             int layerMethod = layerMethodBox.SelectedIndex;
             ColorSpace space = (colorSpaceBox.SelectedIndex == 0) ? ColorSpace.RGB : ColorSpace.LAB;
@@ -851,7 +853,7 @@ namespace BaseCodeApp
                 pictureBox.Image = Recolor(layers.colors, layers.space);
                 UpdatePaletteDisplay(true);
                 pictureBoxOriginal.Image = new Bitmap(currImageFile);
-                this.Cursor = Cursors.Default;
+                this.Cursor = System.Windows.Forms.Cursors.Default;
             };
             bw.RunWorkerAsync();
         }
@@ -890,7 +892,7 @@ namespace BaseCodeApp
             if (bw.IsBusy)
                 return;
 
-            this.Cursor = Cursors.WaitCursor;
+            this.Cursor = System.Windows.Forms.Cursors.WaitCursor;
             int method = paletteMethodBox.SelectedIndex;
             ClearPalette();
             resetImageButton_Click(sender, e);
@@ -904,7 +906,7 @@ namespace BaseCodeApp
             {
                 constraints = new LayerConstraints(currPalette.colors.Count);
                 UpdatePaletteDisplay(true);
-                this.Cursor = Cursors.Default;
+                this.Cursor = System.Windows.Forms.Cursors.Default;
             };
             bw.RunWorkerAsync();
         }
@@ -1081,11 +1083,19 @@ namespace BaseCodeApp
 
         }
 
-        private void pictureBox_MouseDown(object sender, MouseEventArgs e)
+        private void pictureBox_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             try
             {
-                constraints.constraints[activePaletteIndex].Add(new Point(e.X, e.Y));
+                bool shiftPressed = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+                if (shiftPressed)
+                {
+                    palette[activePaletteIndex].BackColor = pictureBoxBitmap.GetPixel(e.X, e.Y);
+                }
+                else
+                {
+                    constraints.constraints[activePaletteIndex].Add(new Point(e.X, e.Y));
+                }
             }
             catch { }
             UpdateConstraintVisualization();
