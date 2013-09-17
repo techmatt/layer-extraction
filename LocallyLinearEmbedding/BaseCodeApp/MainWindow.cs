@@ -323,6 +323,8 @@ namespace BaseCodeApp
                     //Save saliency and segmentation images if needed
                     SaveSaliencyMap(dir, key);
                     SaveSegmentation(dir, key);
+                    Bitmap resized = Util.GetImage(Path.Combine(dir, key), true);
+                    resized.Save(key);
 
                     PaletteExtractor extractor = new PaletteExtractor(dir, "../Weights", "../Weights/c3_data.json");
                     data = extractor.HillClimbPalette(key, "_Judd", true, k, CHITrials);
@@ -1120,6 +1122,12 @@ namespace BaseCodeApp
                 g.FillEllipse(b, r);
             }
             pictureBox.Image = pictureBoxBitmap;
+        }
+
+        private void layerSynthesisButton_Click(object sender, EventArgs e)
+        {
+            LayerSynthesisWindow window = new LayerSynthesisWindow();
+            window.ShowDialog();
         }
     }
 }

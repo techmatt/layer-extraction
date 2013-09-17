@@ -50,6 +50,7 @@
             this.buttonLoadConstraints = new System.Windows.Forms.Button();
             this.statusBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.layerSynthesisButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -258,11 +259,22 @@
             this.label2.TabIndex = 18;
             this.label2.Text = "Right-click: Reset constraints.  Shift-click on image: eyedropper";
             // 
+            // layerSynthesisButton
+            // 
+            this.layerSynthesisButton.Location = new System.Drawing.Point(1157, 750);
+            this.layerSynthesisButton.Name = "layerSynthesisButton";
+            this.layerSynthesisButton.Size = new System.Drawing.Size(159, 38);
+            this.layerSynthesisButton.TabIndex = 19;
+            this.layerSynthesisButton.Text = "Layer Synthesis";
+            this.layerSynthesisButton.UseVisualStyleBackColor = true;
+            this.layerSynthesisButton.Click += new System.EventHandler(this.layerSynthesisButton_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1328, 800);
+            this.Controls.Add(this.layerSynthesisButton);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.pictureBox);
             this.Controls.Add(this.buttonLoadConstraints);
@@ -322,6 +334,7 @@
         private System.Windows.Forms.Button buttonLoadConstraints;
         private System.Windows.Forms.TextBox statusBox;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button layerSynthesisButton;
     }
 }
 

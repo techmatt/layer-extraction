@@ -13,6 +13,7 @@ struct PixelLayer
 	int height;
 };
 
+typedef Vector<PixelLayer> PixelLayerSet;
 
 struct SuperpixelLayerConstraint
 {
@@ -47,6 +48,7 @@ public:
     void Init(const AppParameters &parameters, const Bitmap &bmp);
     void InitLayersFromPixelConstraints(const AppParameters &parameters, const Bitmap &bmp, const Vector<PixelConstraint> &targetPixelColors, LayerSet &result);
     void InitLayersFromPalette(const AppParameters &parameters, const Bitmap &bmp, const Vector<Vec3f> &palette, LayerSet &result);
+	void AddLayerPreferenceConstraints(const AppParameters &parameters, const Bitmap &bmp,LayerSet &result);
     void AddNegativeConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result);
     void ExtractLayers(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers);
 

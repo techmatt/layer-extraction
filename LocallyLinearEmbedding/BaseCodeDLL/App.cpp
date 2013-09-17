@@ -130,6 +130,9 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
         _extractor.InitLayersFromPixelConstraints(_parameters, bmp, targetPixelColors, layers);
     }
 
+	//add preferences
+	_extractor.AddLayerPreferenceConstraints(_parameters, bmp, layers);
+
 	_extractor.ExtractLayers(_parameters, bmp, layers);
     _extractor.AddNegativeConstraints(_parameters, bmp, layers);
     _extractor.ExtractLayers(_parameters, bmp, layers);
