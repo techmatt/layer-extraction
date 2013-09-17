@@ -78,6 +78,9 @@ void LayerExtractor::AddNegativeConstraints(const AppParameters &parameters, con
     pass++;
 }
 
+
+
+
 void LayerExtractor::InitLayersFromPixelConstraints(const AppParameters &parameters, const Bitmap &bmp, const Vector<PixelConstraint> &targetPixelColors, LayerSet &result)
 {
     ComponentTimer timer("Making layers from pixel constraints");
@@ -189,6 +192,38 @@ void LayerExtractor::InitLayersFromPalette(const AppParameters &parameters, cons
     }
 
     VisualizeLayerConstraints(parameters, bmp, result);
+}
+
+
+void LayerExtractor::AddLayerPreferenceConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result)
+{
+	Console::WriteLine("Initializing pixel-layer preferences");
+
+	//make superpixel prefer the closest palette color
+	const UINT layerCount = result.layers.Length();
+	const UINT superpixelCount = superpixelColors.Length();
+
+	for (UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+	{
+		int bestLayerIndex = 0;
+		double bestDist = std::numeric_limits<double>::max();
+
+		//find the best/worst layer
+		for (UINT layerIndex = 0; layerIndex < layerCount; layerIndex++)
+		{
+			double dist = Vec3f::Dist(result.layers[layerIndex].color, Vec3f(superpixelColors[superpixelIndex].color));
+			if (dist < bestDist)
+			{
+				bestDist = dist;
+				bestLayerIndex = layerIndex;
+			}
+		}
+
+		//add the constraint
+		result.constraints.PushEnd(SuperpixelLayerConstraint(superpixelIndex, bestLayerIndex, 1.0, parameters.preferenceWeight));
+
+	}
+	
 }
 
 void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers)

@@ -67,6 +67,12 @@
     <ClInclude Include="..\..\FelzenszwalbSegmentation\segment-image.h">
       <Filter>FelzenszwalbSegmentation</Filter>
     </ClInclude>
+    <ClInclude Include="LayerSynthesis.h">
+      <Filter>LayerSynthesizer</Filter>
+    </ClInclude>
+    <ClInclude Include="NeighborhoodGenerator.h">
+      <Filter>LayerSynthesizer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -99,6 +105,12 @@
     <ClCompile Include="EigenSolver.cpp">
       <Filter>LayerExtractor</Filter>
     </ClCompile>
+    <ClCompile Include="LayerSynthesis.cpp">
+      <Filter>LayerSynthesizer</Filter>
+    </ClCompile>
+    <ClCompile Include="NeighborhoodGenerator.cpp">
+      <Filter>LayerSynthesizer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Base">
@@ -115,6 +127,9 @@
     </Filter>
     <Filter Include="FelzenszwalbSegmentation">
       <UniqueIdentifier>{12c6088a-f93d-47ff-9be9-04c3b3118790}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LayerSynthesizer">
+      <UniqueIdentifier>{854e1efb-1888-415b-bad3-facdbe4fcc0e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

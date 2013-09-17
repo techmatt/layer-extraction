@@ -25,6 +25,7 @@ sumToOneWeight=0.1
 reconstructionWeight=0.5
 regularizationWeight=0.0
 negativeSupressionWeight=0.01
+preferenceWeight = 0.00
 
 #
 # These terms are only used for recolorizing (have no effect on LayerExtractor)

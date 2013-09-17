@@ -28,6 +28,8 @@ struct AppParameters
         reconstructionWeight = file.GetDouble("reconstructionWeight");
         regularizationWeight = file.GetDouble("regularizationWeight");
         negativeSupressionWeight = file.GetDouble("negativeSupressionWeight");
+		preferenceWeight = file.GetDouble("preferenceWeight");
+
 
         useKMeansPalette = file.GetBoolean("useKMeansPalette");
         KMeansPaletteSize = file.GetInteger("KMeansPaletteSize");
@@ -59,4 +61,5 @@ struct AppParameters
     double reconstructionWeight;
     double regularizationWeight;
     double negativeSupressionWeight;
+	double preferenceWeight;
 };
