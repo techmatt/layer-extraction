@@ -363,8 +363,11 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
         }
     }
 
-    VisualizeLayers(parameters, bmp, layers);
-    VisualizeReconstruction(parameters, bmp, layers);
+    if(Constants::dumpLayerImages)
+    {
+        VisualizeLayers(parameters, bmp, layers);
+        VisualizeReconstruction(parameters, bmp, layers);
+    }
 }
 
 Bitmap LayerExtractor::RecolorSuperpixels(const Bitmap &bmp, const Vector<Vec3f> &newSuperpixelColors) const
