@@ -1,5 +1,4 @@
 #include "Main.h"
-#include "LayerSynthesis.h"
 
 /*
 

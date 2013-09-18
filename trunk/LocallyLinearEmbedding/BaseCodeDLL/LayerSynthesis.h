@@ -14,6 +14,8 @@ private:
     void InitPCA(const PixelLayerSet &layers, const NeighborhoodGenerator &generator);
 	void InitKDTree(const PixelLayerSet &layers, const NeighborhoodGenerator &generator, UINT reducedDimension);
 
+    void SynthesizeStepInPlace(const AppParameters &parameters, const PixelLayerSet &target, const Vector<Vec2i> &pixels, const Vector<double> &updateSchedule);
+
 	UINT _reducedDimension;
 	PCA<double> _pca;
 	KDTree _tree;

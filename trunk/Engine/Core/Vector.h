@@ -414,6 +414,15 @@ public:
             std::sort(_Data, _Data + _Length, Function);
         }
     }
+    template<class mapFunction> Vector<typename mapFunction::result_type> Map(mapFunction function)
+    {
+        Vector<mapFunction::result_type> result(_Length);
+        for(UINT i = 0; i < _Length; i++)
+        {
+            result[i] = function(_Data[i]);
+        }
+        return result;
+    }
     void Clear(const T &T);
 
     //
