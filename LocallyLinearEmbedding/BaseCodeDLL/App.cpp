@@ -61,6 +61,9 @@ void App::Init()
 
 void App::Recolorize()
 {
+    
+
+
     Bitmap bmp, mask;
     bmp.LoadPNG("../Data/" + _parameters.imageFile);
     mask.LoadPNG("../Data/" + _parameters.maskFile);
@@ -77,6 +80,10 @@ void App::Recolorize()
 BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &constraints)
 {
 	 AllocConsole();
+
+     Vector<int> v(5);
+    for(int i = 0; i < 5; i++) v[i] = i;
+    auto mappedVector = v.Map(function<int(int)>([](int a) { return a * a; }));
 
 #ifdef DEBUG
      Console::WriteLine("DLL compiled in release mode");
