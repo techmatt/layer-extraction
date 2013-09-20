@@ -62,3 +62,11 @@ BASECODEDLL_API BCBitmapInfo* __stdcall BCSegmentImage(void* context, BCBitmapIn
 	return app->SegmentImage(bitmap);
 
 }
+
+BASECODEDLL_API BCLayers* __stdcall BCSynthesizeLayers(void* context)
+{
+	if (context == NULL) return 0;
+	App *app = (App*) context;
+
+	return app->SynthesizeLayers();
+}

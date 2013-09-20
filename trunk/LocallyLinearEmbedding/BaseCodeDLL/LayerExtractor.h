@@ -8,9 +8,63 @@ struct Layer
 struct PixelLayer
 {
 	Vec3f color;
-	Vector<double> pixelWeights;
-	int width;
-	int height;
+	Grid<double> pixelWeights;
+
+	void WriteToFile(const String &filename)
+	{
+		ofstream File(filename.CString());
+        PersistentAssert(!File.fail(), "Failed to open file");
+        File << pixelWeights.Rows() << '\t' << pixelWeights.Cols() << endl;
+		File << color.TabSeparatedString() << endl;
+        for(unsigned int Row = 0; Row < pixelWeights.Rows(); Row++)
+        {
+            for(unsigned int Col = 0; Col < pixelWeights.Cols(); Col++)
+            {
+                File << pixelWeights(Row, Col) << '\t';
+            }
+            File << endl;
+        }		
+	}
+
+	PixelLayer(){}
+
+	PixelLayer(const String &filename)
+	{
+		Vector<String> lines = Utility::GetFileLines(filename);
+		//get the row and cols
+		Vector<String> fields = lines.First().Partition('\t');
+		pixelWeights.Allocate(fields[0].ConvertToUnsignedInteger(), fields[1].ConvertToUnsignedInteger()); 
+
+		Vector<String> colorFields = lines[1].Partition('\t');
+		color = Vec3f(colorFields[0].ConvertToFloat(), colorFields[1].ConvertToFloat(), colorFields[2].ConvertToFloat());
+
+		for (unsigned int Row = 0; Row < pixelWeights.Rows(); Row++)
+		{
+			Vector<String> curRow = lines[Row+2].Partition('\t');
+
+			for (unsigned int Col = 0; Col < pixelWeights.Cols(); Col++)
+			{
+				pixelWeights(Row, Col) = curRow[Col].ConvertToDouble();
+			}
+		}
+	}
+
+	void SavePNG(const String &filename)
+	{
+		Bitmap image(pixelWeights.Cols(), pixelWeights.Rows());
+		for (UINT x=0; x<image.Width(); x++)
+			for (UINT y=0; y<image.Height(); y++)
+				image[y][x] = RGBColor(Utility::BoundToByte(pixelWeights(y,x)*255),Utility::BoundToByte(pixelWeights(y,x)*255), Utility::BoundToByte(pixelWeights(y,x)*255));
+
+		//draw a color strip
+		int strip = 0.10*image.Width();
+		for (UINT x=0; x<strip; x++)
+			for (UINT y=0; y<image.Height(); y++)
+				image[y][x] = RGBColor(color);
+
+		image.SavePNG(filename);
+	}
+
 };
 
 typedef Vector<PixelLayer> PixelLayerSet;

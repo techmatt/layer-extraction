@@ -51,6 +51,7 @@
             this.statusBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.layerSynthesisButton = new System.Windows.Forms.Button();
+            this.saveLayersButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -261,7 +262,7 @@
             // 
             // layerSynthesisButton
             // 
-            this.layerSynthesisButton.Location = new System.Drawing.Point(1157, 750);
+            this.layerSynthesisButton.Location = new System.Drawing.Point(29, 756);
             this.layerSynthesisButton.Name = "layerSynthesisButton";
             this.layerSynthesisButton.Size = new System.Drawing.Size(159, 38);
             this.layerSynthesisButton.TabIndex = 19;
@@ -269,11 +270,22 @@
             this.layerSynthesisButton.UseVisualStyleBackColor = true;
             this.layerSynthesisButton.Click += new System.EventHandler(this.layerSynthesisButton_Click);
             // 
+            // saveLayersButton
+            // 
+            this.saveLayersButton.Location = new System.Drawing.Point(314, 567);
+            this.saveLayersButton.Name = "saveLayersButton";
+            this.saveLayersButton.Size = new System.Drawing.Size(136, 37);
+            this.saveLayersButton.TabIndex = 20;
+            this.saveLayersButton.Text = "Save Layers";
+            this.saveLayersButton.UseVisualStyleBackColor = true;
+            this.saveLayersButton.Click += new System.EventHandler(this.saveLayersButton_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1328, 800);
+            this.Controls.Add(this.saveLayersButton);
             this.Controls.Add(this.layerSynthesisButton);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.pictureBox);
@@ -335,6 +347,7 @@
         private System.Windows.Forms.TextBox statusBox;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button layerSynthesisButton;
+        private System.Windows.Forms.Button saveLayersButton;
     }
 }
 

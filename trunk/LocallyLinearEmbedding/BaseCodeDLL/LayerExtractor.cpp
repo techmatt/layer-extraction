@@ -415,9 +415,7 @@ Vector<PixelLayer> LayerExtractor::GetPixelLayers(const Bitmap &bmp, const Layer
 	{
 		PixelLayer layer;
 		layer.color = layers.layers[layerIndex].color;
-		layer.width = bmp.Width();
-		layer.height = bmp.Height();
-		layer.pixelWeights = Vector<double>(layer.width*layer.height, 0);
+		layer.pixelWeights = Grid<double>(bmp.Height(), bmp.Width(), 0);
 		result.PushEnd(layer);
 	}
 	for (UINT y=0; y<bmp.Height(); y++)
@@ -426,7 +424,6 @@ Vector<PixelLayer> LayerExtractor::GetPixelLayers(const Bitmap &bmp, const Layer
 		{
 			const PixelNeighborhood &curPixel = pixelNeighborhoods(y, x);
 			const UINT k = curPixel.indices.Length();
-			const int idx = y*bmp.Width()+x;
 
 			for (UINT neighborIndex = 0; neighborIndex < k; neighborIndex++)
 			{
@@ -434,7 +431,7 @@ Vector<PixelLayer> LayerExtractor::GetPixelLayers(const Bitmap &bmp, const Layer
 				{
 					UINT superpixelIndex = curPixel.indices[neighborIndex];
 					double superpixelWeight = curPixel.weights[neighborIndex];
-					result[layerIndex].pixelWeights[idx] += layers.layers[layerIndex].superpixelWeights[superpixelIndex]*superpixelWeight;
+					result[layerIndex].pixelWeights(y,x) += layers.layers[layerIndex].superpixelWeights[superpixelIndex]*superpixelWeight;
 				}
 			}
 

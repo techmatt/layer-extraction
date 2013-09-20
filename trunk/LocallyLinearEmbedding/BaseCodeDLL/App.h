@@ -10,6 +10,7 @@ public:
 	BCLayers* ExtractLayers(const BCBitmapInfo &bitmap, const Vector<Vec3f> &palette, const String &constraints);
 	BCBitmapInfo* SegmentImage(const BCBitmapInfo &bitmap);
     void Recolorize();
+	BCLayers* SynthesizeLayers();
     
 private:
     AppParameters _parameters;
@@ -25,4 +26,6 @@ private:
     Bitmap _queryBitmapResultA;
     Bitmap _queryBitmapResultB;
     Bitmap _queryBitmapResultC;
+
+	BCLayers* PixelLayersToBCLayers(const PixelLayerSet &layers);
 };

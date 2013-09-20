@@ -8,3 +8,4 @@ EXPORTS
 	BCQueryBitmapByName
 	BCExtractLayers
 	BCSegmentImage
+	BCSynthesizeLayers

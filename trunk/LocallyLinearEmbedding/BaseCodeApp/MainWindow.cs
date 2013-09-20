@@ -72,6 +72,8 @@ namespace BaseCodeApp
         private static extern IntPtr BCExtractLayers(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize, [In, MarshalAs(UnmanagedType.LPStr)] String layerConstraints);
         [DllImport(BaseCodeDLL)]
         private static extern IntPtr BCSegmentImage(IntPtr context, BCBitmapInfo bitmap);
+        [DllImport(BaseCodeDLL)]
+        private static extern IntPtr BCSynthesizeLayers(IntPtr context);
 
         IntPtr baseCodeDLLContext = (IntPtr)0;
 
@@ -425,7 +427,7 @@ namespace BaseCodeApp
                     Marshal.FreeHGlobal(bmpInfo.colorData);
                     Marshal.FreeHGlobal(palettePtr);
 
-                    ProcessLayers(layersUnmanaged, space);
+                    layers = ProcessLayers(layersUnmanaged, space);
                 }
                 else
                 {
@@ -467,7 +469,7 @@ namespace BaseCodeApp
                     Marshal.FreeHGlobal(bmpInfo.colorData);
                     Marshal.FreeHGlobal(palettePtr);
 
-                    ProcessLayers(layersUnmanaged, space);
+                    layers = ProcessLayers(layersUnmanaged, space);
                 }
             }
             else
@@ -495,12 +497,12 @@ namespace BaseCodeApp
             CreatePreviews();
         }
 
-        private void ProcessLayers(IntPtr layersUnmanaged, ColorSpace space)
+        private Layers ProcessLayers(IntPtr layersUnmanaged, ColorSpace space)
         {
 
-            if (layersUnmanaged == (IntPtr)0) return;
+            if (layersUnmanaged == (IntPtr)0) return new Layers();
 
-            layers = new Layers();
+            Layers layers = new Layers();
             layers.space = space;
 
             BCLayers layerSet = (BCLayers)Marshal.PtrToStructure(layersUnmanaged, typeof(BCLayers));
@@ -533,6 +535,8 @@ namespace BaseCodeApp
                 
                 layers.colors.Add(color);
             }
+
+            return layers;
 
         }
 
@@ -625,7 +629,7 @@ namespace BaseCodeApp
                                 if (layers.colors.Count > 0)
                                 {
                                     //recolor
-                                    pictureBox.Image = Recolor(palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);
+                                    pictureBox.Image = Recolor(layers, palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);
                                 }
                             }
                         }
@@ -734,7 +738,7 @@ namespace BaseCodeApp
 
 
 
-        private Bitmap Recolor(List<DenseVector> newColors, ColorSpace cspace)
+        private Bitmap Recolor(Layers layers, List<DenseVector> newColors, ColorSpace cspace)
         {
             int numLayers = layers.layers.Count;
             int width = layers.width;
@@ -852,7 +856,7 @@ namespace BaseCodeApp
             };
             bw.RunWorkerCompleted += delegate
             {
-                pictureBox.Image = Recolor(layers.colors, layers.space);
+                pictureBox.Image = Recolor(layers, layers.colors, layers.space);
                 UpdatePaletteDisplay(true);
                 pictureBoxOriginal.Image = new Bitmap(currImageFile);
                 this.Cursor = System.Windows.Forms.Cursors.Default;
@@ -883,7 +887,7 @@ namespace BaseCodeApp
       
             }
             if (layers.layers.Count > 0)
-                pictureBox.Image = Recolor(palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);
+                pictureBox.Image = Recolor(layers, palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);
             else
                 pictureBox.Image = new Bitmap(currImageFile);
 
@@ -1126,8 +1130,54 @@ namespace BaseCodeApp
 
         private void layerSynthesisButton_Click(object sender, EventArgs e)
         {
+            //do a test for now
+            IntPtr layersUnmanaged = BCSynthesizeLayers(baseCodeDLLContext);
+            Layers synth = ProcessLayers(layersUnmanaged, ColorSpace.RGB);
+            Bitmap result = Recolor(synth, synth.colors, ColorSpace.RGB);
+            result.Save("synthesized.png");
+
             LayerSynthesisWindow window = new LayerSynthesisWindow();
             window.ShowDialog();
+        }
+
+        private void saveLayersButton_Click(object sender, EventArgs e)
+        {
+            Directory.CreateDirectory("../Layers");
+            String basename = new FileInfo(currImageFile).Name;
+
+            //save the layers as pngs
+            int layerIndex = 0;
+            foreach (Bitmap layer in layers.previews)
+            {
+                Bitmap result = new Bitmap(layer);
+                Graphics g = Graphics.FromImage(result);
+                g.FillRectangle(new SolidBrush(currPalette.colors[layerIndex]), 0, 0, 20, layer.Height);
+    
+
+                List<String> lines = new List<String>();
+                lines.Add(layers.height + "\t" + layers.width);
+                lines.Add(String.Join("\t", layers.colors[layerIndex].Select(d => d/255.0).ToArray<double>()));
+                //save the layer text file
+                for (int y = 0; y < layer.Height; y++)
+                {
+                    String[] fields = new String[layer.Width];
+
+                    for (int x = 0; x < layer.Width; x++)
+                        fields[x] = layers.layers[layerIndex][x, y].ToString();
+
+                    lines.Add(String.Join("\t", fields));
+
+                }
+                File.AppendAllLines(Path.Combine("../Layers", Util.ConvertFileName(basename, "_" + layerIndex, ".txt")), lines.ToArray<String>());   
+                            
+                result.Save(Path.Combine("../Layers", Util.ConvertFileName(basename, "_"+layerIndex)));
+                result.Dispose();
+                layerIndex++;
+            }
+
+            Bitmap reconstructed = Recolor(layers, layers.colors, layers.space);
+            reconstructed.Save(Path.Combine("../Layers", Util.ConvertFileName(basename, "_r")));
+
         }
     }
 }
