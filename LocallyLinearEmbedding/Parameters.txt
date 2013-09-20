@@ -35,3 +35,15 @@ userConstraintWeight=0.00001
 distantConstraintWeight=0.000001
 colorInertiaWeight=0.000000001
 periodicBasisCount=3
+
+#
+# For synthesis tests
+#
+allTargetLayers=targetEye_0.txt, targetEye_1.txt, targetEye_2.txt, targetEye_3.txt, targetEye_4.txt
+targetLayers=targetEye_0.txt, targetEye_4.txt
+refLayers=refEye_0.txt, refEye_3.txt
+updateSchedule=1.0,0.1
+targetImageFile=targetEye.png
+targetMaskFile=targetEye_mask.png
+reducedDimension=32
+neighborhoodSize=5

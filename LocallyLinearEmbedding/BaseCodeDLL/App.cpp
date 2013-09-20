@@ -154,15 +154,20 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 
 	_layers = layers;
 
-
-	BCLayers *result = new BCLayers();
-
 	Vector<PixelLayer> pixellayers = _extractor.GetPixelLayers(_image, _layers);
+	BCLayers *result = PixelLayersToBCLayers(pixellayers);
+
+	return result;
+}
+
+BCLayers* App::PixelLayersToBCLayers(const PixelLayerSet &pixellayers)
+{
+	BCLayers *result = new BCLayers();
 	result->layers = new BCLayerInfo[pixellayers.Length()];
 	result->numLayers = pixellayers.Length();
 
-	UINT width = pixellayers.First().width;
-	UINT height = pixellayers.First().height;
+	UINT width = pixellayers.First().pixelWeights.Cols();
+	UINT height = pixellayers.First().pixelWeights.Rows();
 	
 	for (UINT i=0; i<pixellayers.Length(); i++)
 	{
@@ -175,9 +180,76 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 		result->layers[i].weights = new double[width*height];
 		memcpy(result->layers[i].weights, pixellayers[i].pixelWeights.CArray(), width*height*sizeof(double));
 	}
-
 	return result;
 }
+
+BCLayers* App::SynthesizeLayers()
+{
+	_parameters.Init("../Parameters.txt");
+
+	//setup the layers
+	int reducedDimension = _parameters.reducedDimension;
+	int iters = 10;
+	int neighborhoodSize = _parameters.neighborhoodSize;
+
+	String layerDir = "../Layers/";
+	String dataDir = "../SynthesisData/";
+	PixelLayerSet target;
+	for (UINT i=0; i<_parameters.targetLayers.Length(); i++)
+		target.PushEnd(PixelLayer(layerDir+_parameters.targetLayers[i]));
+		
+	PixelLayerSet reference;
+	for (UINT i=0; i<_parameters.refLayers.Length(); i++)
+		reference.PushEnd(PixelLayer(layerDir+_parameters.refLayers[i]));
+
+
+	Grid<double> updateSchedule(iters, target.Length(), 0);
+
+	for (UINT i=0; i<iters; i++)
+	{
+		/*if (i % 2 == 0)
+			updateSchedule(i,0) = 1;
+		else
+		{
+			updateSchedule(i,1) = 0.5;
+		}*/
+		updateSchedule.SetRow(i, _parameters.updateSchedule);
+	}
+
+	Bitmap orig, mask;
+	orig.LoadPNG(dataDir+_parameters.targetImageFile);
+	mask.LoadPNG(dataDir+_parameters.targetMaskFile);
+
+	Vector<Vec2i> pixels;
+	UINT width = target.First().pixelWeights.Cols();
+	UINT height = target.First().pixelWeights.Rows();
+	for (UINT x=0; x<width; x++)
+		for (UINT y=0; y<height; y++)
+			if (orig[y][x] != mask[y][x])
+				pixels.PushEnd(Vec2i(x,y));
+
+	NeighborhoodGenerator generator(neighborhoodSize, target.Length());
+	LayerSynthesis synthesizer;
+	synthesizer.Init(reference, generator, reducedDimension);
+	PixelLayerSet synth = synthesizer.Synthesize(_parameters, reference, target, pixels, updateSchedule, generator);
+
+
+	//index back into original
+	PixelLayerSet result;
+	for (UINT i=0; i<_parameters.allTargetLayers.Length(); i++)
+	{
+		int index = _parameters.targetLayers.FindFirstIndex(_parameters.allTargetLayers[i]);
+		if (index >= 0)
+			result.PushEnd(synth[index]);
+		else
+			result.PushEnd(PixelLayer(layerDir+_parameters.allTargetLayers[i]));
+	}
+
+
+	return PixelLayersToBCLayers(result);
+
+}
+
 
 
 

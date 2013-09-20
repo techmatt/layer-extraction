@@ -33,6 +33,20 @@ struct AppParameters
 
         useKMeansPalette = file.GetBoolean("useKMeansPalette");
         KMeansPaletteSize = file.GetInteger("KMeansPaletteSize");
+
+		allTargetLayers = file.GetString("allTargetLayers","").FindAndReplace(" ","").Partition(",");
+		targetLayers = file.GetString("targetLayers","").FindAndReplace(" ","").Partition(",");
+		refLayers = file.GetString("refLayers","").FindAndReplace(" ","").Partition(",");
+		Vector<String> temp = file.GetString("updateSchedule","").FindAndReplace(" ","").Partition(",");
+		for (UINT i=0; i<temp.Length(); i++)
+			updateSchedule.PushEnd(temp[i].ConvertToDouble());
+
+		targetImageFile = file.GetRequiredString("targetImageFile");
+        targetMaskFile = file.GetRequiredString("targetMaskFile");
+
+		neighborhoodSize = file.GetDouble("neighborhoodSize");
+		reducedDimension = file.GetInteger("reducedDimension");
+
     }
 
     String imageFile;
@@ -61,5 +75,16 @@ struct AppParameters
     double reconstructionWeight;
     double regularizationWeight;
     double negativeSupressionWeight;
-	double preferenceWeight;
+	double preferenceWeight;	
+	Vector<String> allTargetLayers;
+	Vector<String> targetLayers;
+	Vector<String> refLayers;
+	String mask;
+	Vector<double> updateSchedule;
+
+	String targetImageFile;
+	String targetMaskFile;
+
+	double neighborhoodSize;
+	int reducedDimension;
 };
