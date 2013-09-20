@@ -14,6 +14,9 @@ private:
 	void InitKDTree(const PixelLayerSet &layers, const NeighborhoodGenerator &generator, UINT reducedDimension);
 
 	void SynthesizeStepInPlace(const AppParameters &parameters, const PixelLayerSet &reference, PixelLayerSet &target, const Vector<Vec2i> &pixels, const Vector<double> &updateSchedule, NeighborhoodGenerator &generator);
+	void VisualizeLayers(const PixelLayerSet &layers, Bitmap &result);
+	void VisualizeMatches(const PixelLayerSet &reference, const PixelLayerSet &target, Vec2i targetPt, NeighborhoodGenerator &generator, String &filename);
+
 
 	UINT _reducedDimension;
 	PCA<double> _pca;
