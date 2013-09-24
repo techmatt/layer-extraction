@@ -83,7 +83,7 @@ void PCA<T>::InitFromCorrelationMatrix(const DenseMatrix<T> &C)
     {
         Console::WriteLine("Outputting MATLAB matrix and exiting...");
         C.SaveToMATLAB("C:\\MATLAB7\\work\\PCA.txt");
-        _Means.SaveToASCIIFile("C:\\JReaderData\\RawMeanVector.txt");
+        //_Means.SaveToASCIIFile("C:\\JReaderData\\RawMeanVector.txt");
         exit(0);
     }
     else

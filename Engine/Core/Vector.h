@@ -414,15 +414,34 @@ public:
             std::sort(_Data, _Data + _Length, Function);
         }
     }
-    template<class mapFunction> Vector<typename mapFunction::result_type> Map(mapFunction function)
+    //template<class mapFunction> Vector<typename mapFunction::result_type> Map(mapFunction function)
+    //{
+    //    Vector<mapFunction::result_type> result(_Length);
+    //    for(UINT i = 0; i < _Length; i++)
+    //    {
+    //        result[i] = function(_Data[i]);
+    //    }
+    //    return result;
+    //}
+    //Usage: auto mappedVector = v.Map(function<double(int)>([](int a) { return a * 2.0; }));
+    //template<class returnType, class mapFunction> Vector<returnType> Map(mapFunction function)
+    //{
+    //    Vector<returnType> result(_Length);
+    //    for(UINT i = 0; i < _Length; i++)
+    //    {
+    //        result[i] = function(_Data[i]);
+    //    }
+    //    return result;
+    //}
+    //Usage: auto mappedVector = v.Map<double>([](int a) { return a * 2.0; });
+    template<class mapFunction>
+    auto Map(mapFunction function) -> Vector<decltype(function(std::declval<T>()))>
     {
-        Vector<mapFunction::result_type> result(_Length);
-        for(UINT i = 0; i < _Length; i++)
-        {
-            result[i] = function(_Data[i]);
-        }
+        Vector<decltype(function(std::declval<T>()))> result(_Length);
+        for(UINT i = 0; i < _Length; i++) result[i] = function(_Data[i]);
         return result;
     }
+    
     void Clear(const T &T);
 
     //
