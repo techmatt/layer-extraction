@@ -120,7 +120,7 @@ void LayerSynthesis::InitPCA(const PixelLayerSet &layers, const NeighborhoodGene
 			int xCenter = rand() % width;
 			int yCenter = rand() % height;
             success = generator.Generate(layers, xCenter, yCenter, curNeighborhood);
-			for(int i = 0; i < dimension; i++)
+			for(UINT i = 0; i < dimension; i++)
 			{
 				if(curNeighborhood[i] < -10000.0 || curNeighborhood[i] > 10000.0)
 				{
@@ -254,8 +254,8 @@ void LayerSynthesis::VisualizeMatches(const PixelLayerSet &reference, const Pixe
 		for (int y=0; y<height; y++)
 			if (targetImage.ValidCoordinates(x,y))
 				result[y][x] = targetImage[y][x];
-	for (int x=width; x<result.Width(); x++)
-		for(int y=0; y<result.Height(); y++)
+	for (int x=width; x<(int)result.Width(); x++)
+		for(int y=0; y<(int)result.Height(); y++)
 			if (refImage.ValidCoordinates(x-width,y))
 				result[y][x] = refImage[y][x-width];
 	
@@ -298,8 +298,8 @@ void LayerSynthesis::VisualizeMatches(const PixelLayerSet &reference, const Pixe
 
 void LayerSynthesis::VisualizeLayers(const PixelLayerSet &layers, Bitmap &result)
 {
-	UINT width = layers.First().pixelWeights.Cols();
-	UINT height = layers.First().pixelWeights.Rows();
+	int width = layers.First().pixelWeights.Cols();
+	int height = layers.First().pixelWeights.Rows();
 	result.Allocate(width, height);
 	
 	for (int x=0; x<width; x++)
@@ -307,8 +307,8 @@ void LayerSynthesis::VisualizeLayers(const PixelLayerSet &layers, Bitmap &result
 		for (int y=0; y<height; y++)
 		{
 			Vec3f value(0,0,0);
-			for (int layerIndex=0; layerIndex<layers.Length(); layerIndex++)
-				value += layers[layerIndex].pixelWeights(y,x)*layers[layerIndex].color;
+			for (UINT layerIndex=0; layerIndex<layers.Length(); layerIndex++)
+				value += (float)layers[layerIndex].pixelWeights(y,x)*layers[layerIndex].color;
 			result[y][x] = RGBColor(value);
 		}
 	}

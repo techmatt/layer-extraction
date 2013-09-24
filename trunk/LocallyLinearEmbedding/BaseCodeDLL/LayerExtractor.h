@@ -52,14 +52,14 @@ struct PixelLayer
 	void SavePNG(const String &filename)
 	{
 		Bitmap image(pixelWeights.Cols(), pixelWeights.Rows());
-		for (UINT x=0; x<image.Width(); x++)
-			for (UINT y=0; y<image.Height(); y++)
+		for (int x=0; x<image.Width(); x++)
+			for (int y=0; y<image.Height(); y++)
 				image[y][x] = RGBColor(Utility::BoundToByte(pixelWeights(y,x)*255),Utility::BoundToByte(pixelWeights(y,x)*255), Utility::BoundToByte(pixelWeights(y,x)*255));
 
 		//draw a color strip
 		int strip = 0.10*image.Width();
-		for (UINT x=0; x<strip; x++)
-			for (UINT y=0; y<image.Height(); y++)
+		for (int x=0; x<strip; x++)
+			for (int y=0; y<image.Height(); y++)
 				image[y][x] = RGBColor(color);
 
 		image.SavePNG(filename);
