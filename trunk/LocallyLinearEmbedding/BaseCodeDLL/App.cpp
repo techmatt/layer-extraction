@@ -203,6 +203,31 @@ BCLayers* App::SynthesizeLayers()
 		reference.PushEnd(PixelLayer(layerDir+_parameters.refLayers[i]));
 
 
+	PersistentAssert(target.Length()==reference.Length(), "Target layer count and reference layer count don't match");
+
+	//let's standardize the reference layers so that the mean and variance value match the target
+	//(like in image analogies)
+	/*for (UINT i=0; i<target.Length(); i++)
+	{
+		double stdT = sqrt(target[i].WeightVariance());
+		double stdR = sqrt(reference[i].WeightVariance());
+		double meanT = target[i].WeightMean();
+		double meanR = reference[i].WeightMean();
+
+		for (UINT r=0; r<reference[i].pixelWeights.Rows(); r++)
+			for (UINT c=0; c<reference[i].pixelWeights.Cols(); c++)
+				reference[i].pixelWeights(r,c) = stdT*(reference[i].pixelWeights(r,c)-meanR)/stdR + meanT; 
+	}*/
+
+
+	//output the target and reference layers
+	for(UINT i=0; i<target.Length(); i++)
+	{
+		target[i].SavePNG("target"+String(i)+".png", false);
+		reference[i].SavePNG("reference"+String(i)+".png", false);
+	}
+
+
 	Grid<double> updateSchedule(iters, target.Length(), 0);
 
 	for (UINT i=0; i<iters; i++)

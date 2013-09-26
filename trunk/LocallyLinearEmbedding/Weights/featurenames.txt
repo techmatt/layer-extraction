@@ -77,4 +77,3 @@ saliency-theme-max
 saliency-theme-mean
 clusterstats-withinvar
 clusterstats-betweenvar
-convexcoverage

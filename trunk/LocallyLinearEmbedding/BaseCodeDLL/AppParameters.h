@@ -47,6 +47,9 @@ struct AppParameters
 		neighborhoodSize = file.GetDouble("neighborhoodSize");
 		reducedDimension = file.GetInteger("reducedDimension");
 
+		coherenceParameter = file.GetDouble("coherenceParameter");
+
+
     }
 
     String imageFile;
@@ -87,4 +90,6 @@ struct AppParameters
 
 	double neighborhoodSize;
 	int reducedDimension;
+
+	double coherenceParameter;
 };
