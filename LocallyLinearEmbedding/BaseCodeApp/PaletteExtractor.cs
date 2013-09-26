@@ -95,7 +95,7 @@ namespace Engine
         //cluster statistics
         WithinVar, BetweenVar,
 
-        ConvexCoverage
+        //ConvexCoverage
     }
 
     public class FeatureNamePair
@@ -174,7 +174,7 @@ namespace Engine
                     Features.SqErrorSegSD,
                     Features.ErrorSegSD,
 
-                    Features.ConvexCoverage
+                    //Features.ConvexCoverage
                 
                 
     
@@ -322,7 +322,7 @@ namespace Engine
                     new FeatureNamePair(Features.NErrorSegSD, "error-segment-hard-saliencydens-names"),
                     new FeatureNamePair(Features.NSqErrorSegSD, "error-segment-hard-saliencydens-sqnames"),
 
-                    new FeatureNamePair(Features.ConvexCoverage, "convexcoverage")
+                    //new FeatureNamePair(Features.ConvexCoverage, "convexcoverage")
                 };
 
             featureToName = new Dictionary<Features, String>();
@@ -1173,7 +1173,7 @@ namespace Engine
 
             double[,] nsubs = new double[width, height];
             double[,] subs = new double[width, height];
-            double convexCoverage = 0;
+            //double convexCoverage = 0;
 
             if (included.Overlaps(options.NameCovFeatures) ||
                 included.Overlaps(options.CoverageFeatures) ||
@@ -1191,8 +1191,8 @@ namespace Engine
 
                 int[,] nassignment = new int[width, height];
 
-                var hull = Util.GetConvexHull(data.lab);
-                int[,] inhull = new int[width, height];
+                //var hull = Util.GetConvexHull(data.lab);
+                //int[,] inhull = new int[width, height];
 
                 Parallel.For(0, width, i =>
                 {
@@ -1214,7 +1214,7 @@ namespace Engine
                         //clusterSqError[bestIdx] += bestDist;
                         clusterSqErrorTemp[i, j, bestIdx] = bestDist;
 
-                        inhull[i, j] = (Util.InHull(imageLAB[i, j], hull)) ? 1 : 0;
+                        //inhull[i, j] = (Util.InHull(imageLAB[i, j], hull)) ? 1 : 0;
 
                     }
 
@@ -1289,10 +1289,10 @@ namespace Engine
 
 
                 //calculate convex coverage
-                for (int i = 0; i < width; i++)
+                /*for (int i = 0; i < width; i++)
                     for (int j = 0; j < height; j++)
                         convexCoverage += inhull[i, j];
-                convexCoverage /= (width * height);
+                convexCoverage /= (width * height);*/
 
 
 
@@ -1827,7 +1827,7 @@ namespace Engine
             features.Add(Features.SoftErrorSegSD, softerrorsegsd);
             features.Add(Features.NSoftErrorSegSD, nsofterrorsegsd);
 
-            features.Add(Features.ConvexCoverage, convexCoverage);
+            //features.Add(Features.ConvexCoverage, convexCoverage);
 
 
 

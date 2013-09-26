@@ -10,6 +10,28 @@ struct PixelLayer
 	Vec3f color;
 	Grid<double> pixelWeights;
 
+	double WeightMean()
+	{
+		double mean = 0;
+		for (UINT r=0; r<pixelWeights.Rows(); r++)
+			for (UINT c=0; c<pixelWeights.Cols(); c++)
+				mean += pixelWeights(r,c);
+		mean /= (pixelWeights.Rows()*pixelWeights.Cols());
+		return mean;
+	}
+
+	double WeightVariance()
+	{
+		double variance = 0;
+		double mean = WeightMean();
+		for (UINT r=0; r<pixelWeights.Rows(); r++)
+				for (UINT c=0; c<pixelWeights.Cols(); c++)
+					variance += Math::Square(pixelWeights(r,c)-mean);
+
+		variance/= (pixelWeights.Rows()*pixelWeights.Cols());
+		return variance;
+	}
+
 	void WriteToFile(const String &filename)
 	{
 		ofstream File(filename.CString());
@@ -49,18 +71,21 @@ struct PixelLayer
 		}
 	}
 
-	void SavePNG(const String &filename)
+	void SavePNG(const String &filename, bool renderColor=true)
 	{
 		Bitmap image(pixelWeights.Cols(), pixelWeights.Rows());
-		for (int x=0; x<image.Width(); x++)
-			for (int y=0; y<image.Height(); y++)
+		for (UINT x=0; x<image.Width(); x++)
+			for (UINT y=0; y<image.Height(); y++)
 				image[y][x] = RGBColor(Utility::BoundToByte(pixelWeights(y,x)*255),Utility::BoundToByte(pixelWeights(y,x)*255), Utility::BoundToByte(pixelWeights(y,x)*255));
 
 		//draw a color strip
-		int strip = 0.10*image.Width();
-		for (int x=0; x<strip; x++)
-			for (int y=0; y<image.Height(); y++)
-				image[y][x] = RGBColor(color);
+		if (renderColor)
+		{
+			int strip = 0.10*image.Width();
+			for (UINT x=0; x<strip; x++)
+				for (UINT y=0; y<image.Height(); y++)
+					image[y][x] = RGBColor(color);
+		}
 
 		image.SavePNG(filename);
 	}

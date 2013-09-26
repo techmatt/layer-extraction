@@ -137,13 +137,12 @@ void LayerSynthesis::InitPCA(const PixelLayerSet &layers, const NeighborhoodGene
 
 void LayerSynthesis::InitKDTree(const PixelLayerSet &layers, const NeighborhoodGenerator &generator, UINT reducedDimension)
 {
-	//TODO: select mask/window for the reference layers?
-
 	_reducedDimension = reducedDimension;
 
 	const UINT width = layers.First().pixelWeights.Cols();
 	const UINT height = layers.First().pixelWeights.Rows();
     const UINT dimension = generator.Dimension();
+	const UINT neighbors = 5;
 
     Vector<const double*> allNeighborhoods;
     
@@ -163,7 +162,7 @@ void LayerSynthesis::InitKDTree(const PixelLayerSet &layers, const NeighborhoodG
     }
     delete[] neighborhood;
     Console::WriteLine(String("Building KDTree, ") + String(allNeighborhoods.Length()) + String(" neighborhoods..."));
-    _tree.BuildTree(allNeighborhoods, reducedDimension, 1);
+    _tree.BuildTree(allNeighborhoods, reducedDimension, neighbors);
     allNeighborhoods.DeleteMemory();
 }
 
@@ -175,6 +174,8 @@ PixelLayerSet LayerSynthesis::Synthesize(const AppParameters &parameters, const 
 
     //...
 	Console::WriteLine("Synthesizing layers...");
+	Grid<Vec2i> sourceCoordinates(original.First().pixelWeights.Rows(), original.First().pixelWeights.Cols(), Vec2i(-1,-1));
+
     PixelLayerSet target = original;
 	for (UINT i=0; i<target.Length(); i++)
 	{
@@ -185,9 +186,12 @@ PixelLayerSet LayerSynthesis::Synthesize(const AppParameters &parameters, const 
 		int step = pixels.Length()/5;
 		int stepIdx=0;
 		for (UINT pixelIndex=0; pixelIndex<pixels.Length(); pixelIndex+=step)
-			VisualizeMatches(reference, target, pixels[pixelIndex], generator, "NMatch_"+String(stepIdx++)+"_iter"+String(row)+".png");
+		{
+			//VisualizeNeighbors(reference, target, pixels[pixelIndex], generator, "Neighbors_"+String(stepIdx)+"_iter"+String(row)+".png");
+			VisualizeMatches(parameters, reference, target, pixels[pixelIndex], generator, "NMatch_"+String(stepIdx++)+"_iter"+String(row)+".png", sourceCoordinates);			
+		}
 
-        SynthesizeStepInPlace(parameters, reference, target, pixels, updateSchedule.ExtractRow(row), generator);
+        SynthesizeStepInPlace(parameters, reference, target, pixels, updateSchedule.ExtractRow(row), generator, sourceCoordinates);
 		for (UINT i=0; i<target.Length(); i++)
 		{
 			target[i].SavePNG("layer_"+String(i)+"_iter"+String(row+1)+".png");
@@ -197,49 +201,147 @@ PixelLayerSet LayerSynthesis::Synthesize(const AppParameters &parameters, const 
     return target;
 }
 
-void LayerSynthesis::SynthesizeStepInPlace(const AppParameters &parameters, const PixelLayerSet &reference, PixelLayerSet &target, const Vector<Vec2i> &pixels, const Vector<double> &updateSchedule, NeighborhoodGenerator &generator)
+void LayerSynthesis::SynthesizeStepInPlace(const AppParameters &parameters, const PixelLayerSet &reference, PixelLayerSet &target, const Vector<Vec2i> &pixels, const Vector<double> &updateSchedule, NeighborhoodGenerator &generator, Grid<Vec2i> &sourceCoordinates)
 {
-    //Math::Lerp(start, end, 1.0);
 	//find the pixel with the nearest transformed neighborhood, and replace with that
 	UINT layerCount = target.Length();
 	UINT width = target.First().pixelWeights.Cols();
 	UINT height = target.First().pixelWeights.Rows();
 	UINT dimension = generator.Dimension();
 
-	double* neighborhood = new double[dimension]; 
-	double* transformedNeighborhood = new double[_reducedDimension];
-	Vector<UINT> indices;
-
+	double coherenceParam = parameters.coherenceParameter;
+	double coherentUsed = 0;
 	for (UINT pixelIndex=0; pixelIndex < pixels.Length(); pixelIndex++)
 	{
 		int x = pixels[pixelIndex].x;
 		int y = pixels[pixelIndex].y;
 
-		generator.Generate(target, x, y, neighborhood);
-		_pca.Transform(transformedNeighborhood, neighborhood, _reducedDimension);
+		Vec2i approximateMatchPt, coherentMatchPt;
+		double nearestDist = BestApproximateMatch(pixels[pixelIndex], reference, target, generator, approximateMatchPt);
+		double nearestCoherentDist = BestCoherentMatch(pixels[pixelIndex], reference, target, generator, sourceCoordinates, coherentMatchPt);
 
-		//find nearest pixel neighborhood			
-		_tree.KNearest(transformedNeighborhood, 1, indices, 0.0f);
-		Vec2i sourceCoordinate = _treeCoordinates[indices[0]];
+		Vec2i bestPt;
+		if (nearestCoherentDist < (nearestDist + coherenceParam))
+		{
+			bestPt = coherentMatchPt;
+			coherentUsed++;
+		} else
+			bestPt = approximateMatchPt;
+
+		sourceCoordinates(y,x) = bestPt;
 
 		for (UINT layerIndex=0; layerIndex < layerCount; layerIndex++)
 		{
-			double weight = reference[layerIndex].pixelWeights(sourceCoordinate.y, sourceCoordinate.x);
+			double weight = reference[layerIndex].pixelWeights(bestPt.y, bestPt.x);
 			double start = target[layerIndex].pixelWeights(y,x);
 
 			target[layerIndex].pixelWeights(y,x) = Math::Lerp(start, weight, updateSchedule[layerIndex]);
 		}
 	}
-
-
-
-	delete[] neighborhood;
-    delete[] transformedNeighborhood;
+	Console::WriteLine("Frac Coherent pixels used " + String(coherentUsed/pixels.Length()));
 
 }
 
 
-void LayerSynthesis::VisualizeMatches(const PixelLayerSet &reference, const PixelLayerSet &target, Vec2i targetPt, NeighborhoodGenerator &generator, String &filename)
+Vector<Vec2i> LayerSynthesis::GetCandidateSourceNeighbors(Vec2i targetPt, const Grid<Vec2i> &sourceCoordinates, const PixelLayerSet &reference)
+{
+	//search for candidate coherent neighbors to inspect
+	Vector<Vec2i> candidatePts;
+
+	for (int dx=-1; dx<=1; dx++)
+	{
+		for (int dy=-1; dy<=1; dy++)
+		{
+			if (dx == 0 && dy == 0)
+				continue;
+
+			//hasn't been assigned yet, or out of bounds
+			if (sourceCoordinates(targetPt.y, targetPt.x).x < 0 || sourceCoordinates(targetPt.y, targetPt.x).y < 0 || !sourceCoordinates.ValidCoordinates(targetPt.y+dy, targetPt.x+dx) || sourceCoordinates(targetPt.y+dy, targetPt.x+dx).x < 0 || sourceCoordinates(targetPt.y+dy, targetPt.x+dx).y < 0 )
+				continue;
+
+			Vec2i candidate = sourceCoordinates(targetPt.y+dy, targetPt.x+dx) - Vec2i(dx,dy);
+			if (reference.First().pixelWeights.ValidCoordinates(candidate.y, candidate.x))
+				candidatePts.PushEnd(candidate);
+		}
+	}
+	return candidatePts;
+}
+
+double LayerSynthesis::BestCoherentMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates, Vec2i &outPt)
+{
+	Vector<Vec2i> candidates = GetCandidateSourceNeighbors(targetPt, sourceCoordinates, reference);
+
+	UINT dimension = generator.Dimension();
+
+	double* targetNeighborhood = new double[dimension]; 
+	double* targetTransformedNeighborhood = new double[_reducedDimension];
+
+	generator.Generate(target, targetPt.x, targetPt.y, targetNeighborhood);
+	_pca.Transform(targetTransformedNeighborhood, targetNeighborhood, _reducedDimension);
+
+	double bestDist = numeric_limits<double>::max();
+	double* neighborhood = new double[dimension]; 
+	double* transformedNeighborhood = new double[_reducedDimension];
+
+	for (UINT candidateIndex=0; candidateIndex < candidates.Length(); candidateIndex++)
+	{
+		Vec2i candidate = candidates[candidateIndex];
+
+		generator.Generate(target, candidate.x, candidate.y, neighborhood);
+		_pca.Transform(transformedNeighborhood, neighborhood, _reducedDimension);
+
+		double dist = NeighborhoodDistance(targetTransformedNeighborhood, transformedNeighborhood, _reducedDimension);
+		if (dist < bestDist)
+		{
+			bestDist = dist;
+			outPt.x = candidate.x;
+			outPt.y = candidate.y;
+		}
+	}
+
+	delete[] targetNeighborhood;
+    delete[] targetTransformedNeighborhood;
+
+	delete[] neighborhood;
+    delete[] transformedNeighborhood;
+
+	return bestDist;
+}
+
+double LayerSynthesis::BestApproximateMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, Vec2i &outPt)
+{
+	UINT dimension = generator.Dimension();
+	double* neighborhood = new double[dimension]; 
+	double* transformedNeighborhood = new double[_reducedDimension];
+	Vector<UINT> indices;
+
+	generator.Generate(target, targetPt.x, targetPt.y, neighborhood);
+	_pca.Transform(transformedNeighborhood, neighborhood, _reducedDimension);
+
+	//find nearest pixel neighborhood			
+	_tree.KNearest(transformedNeighborhood, 1, indices, 0.0f);
+	Vec2i sourceCoordinate = _treeCoordinates[indices[0]];
+
+	outPt.x = sourceCoordinate.x;
+	outPt.y = sourceCoordinate.y;
+
+
+	double distance = NeighborhoodDistance(transformedNeighborhood, _tree.GetDataPoint(indices[0]), _reducedDimension);
+	delete[] neighborhood;
+    delete[] transformedNeighborhood;
+
+	return distance;
+}
+
+double LayerSynthesis::NeighborhoodDistance(double* neighborhoodA, double* neighborhoodB, UINT dimension)
+{
+	double result = 0;
+	for (UINT i=0; i<dimension; i++)
+		result += Math::Square(neighborhoodA[i]-neighborhoodB[i]);
+	return result;
+}
+
+void LayerSynthesis::VisualizeNeighbors(const PixelLayerSet &reference, const PixelLayerSet &target, Vec2i targetPt, NeighborhoodGenerator &generator, String &filename)
 {
 	//visualize the match for the given target Pt, and the matches for the neighbors
 	UINT width = target.First().pixelWeights.Cols();
@@ -263,6 +365,59 @@ void LayerSynthesis::VisualizeMatches(const PixelLayerSet &reference, const Pixe
 	AliasRender render;
 	
 	Vector<RGBColor> colors;
+	colors.PushEnd(RGBColor::Red);
+	colors.PushEnd(RGBColor::Yellow);
+	colors.PushEnd(RGBColor::Green);
+	colors.PushEnd(RGBColor::Blue);
+	colors.PushEnd(RGBColor::Purple);
+
+	UINT dimension = generator.Dimension();
+	double* neighborhood = new double[dimension]; 
+	double* transformedNeighborhood = new double[_reducedDimension];
+	Vector<UINT> indices;
+
+	generator.Generate(target, targetPt.x, targetPt.y, neighborhood);
+	_pca.Transform(transformedNeighborhood, neighborhood, _reducedDimension);
+
+	//find nearest pixel neighborhood			
+	_tree.KNearest(transformedNeighborhood, 5, indices, 0.0f);
+	Vec2i sourceCoordinate = _treeCoordinates[indices[0]];		
+	render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(sourceCoordinate, Vec2i(2, 2)), colors[0], colors[0]);
+	
+	for (int i=0; i<indices.Length(); i++)
+	{
+		Vec2i sourceCoordinate = _treeCoordinates[indices[i]];		
+		render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(sourceCoordinate+Vec2i(width,0), Vec2i(2, 2)), colors[i], colors[i]);
+	}
+
+	result.SavePNG(filename);
+}
+
+
+void LayerSynthesis::VisualizeMatches(const AppParameters &parameters, const PixelLayerSet &reference, const PixelLayerSet &target, Vec2i targetPt, NeighborhoodGenerator &generator, String &filename, const Grid<Vec2i> &sourceCoordinates)
+{
+	//visualize the match for the given target Pt, and the matches for the neighbors
+	UINT width = target.First().pixelWeights.Cols();
+	UINT height = target.First().pixelWeights.Rows();
+
+	//initialize the base image
+	Bitmap result(width + reference.First().pixelWeights.Cols(), Math::Max(height, reference.First().pixelWeights.Rows()), RGBColor(255,255,255));
+	Bitmap targetImage, refImage;
+	VisualizeLayers(target, targetImage);
+	VisualizeLayers(reference, refImage);
+	for (int x=0; x<width; x++)
+		for (int y=0; y<height; y++)
+			if (targetImage.ValidCoordinates(x,y))
+				result[y][x] = targetImage[y][x];
+	for (int x=width; x<result.Width(); x++)
+		for(int y=0; y<result.Height(); y++)
+			if (refImage.ValidCoordinates(x-width,y))
+				result[y][x] = refImage[y][x-width];
+	
+
+	AliasRender render;
+	
+	Vector<RGBColor> colors;
 	colors.PushEnd(RGBColor::Cyan);
 	colors.PushEnd(RGBColor::Magenta);
 	colors.PushEnd(RGBColor::Yellow);
@@ -276,23 +431,29 @@ void LayerSynthesis::VisualizeMatches(const PixelLayerSet &reference, const Pixe
 	double* transformedNeighborhood = new double[_reducedDimension];
 	Vector<UINT> indices;
 
+	double coherenceParam = parameters.coherenceParameter;
+
 	for (int i=0; i<colors.Length(); i++)
 	{
 		Vec2i neighbor = targetPt + 5*deltas[i];
-		if (neighbor.x >= 0 && neighbor.x < width && neighbor.y >=0 && neighbor.x < height)
+		
+		if (neighbor.x >= 0 && neighbor.x < width && neighbor.y >=0 && neighbor.y < height)
 		{
-			generator.Generate(target, neighbor.x, neighbor.y, neighborhood);
-			_pca.Transform(transformedNeighborhood, neighborhood, _reducedDimension);
+			Vec2i approximateMatchPt, coherentMatchPt;
+			double nearestDist = BestApproximateMatch(neighbor, reference, target, generator, approximateMatchPt);
+			double nearestCoherentDist = BestCoherentMatch(neighbor, reference, target, generator, sourceCoordinates, coherentMatchPt);
 
-			//find nearest pixel neighborhood			
-			_tree.KNearest(transformedNeighborhood, 1, indices, 0.0f);
-			Vec2i sourceCoordinate = _treeCoordinates[indices[0]];
+			Vec2i bestPt;
+			if (nearestCoherentDist < (nearestDist + coherenceParam))
+				bestPt = coherentMatchPt;
+			else
+				bestPt = approximateMatchPt;
+			Vec2i sourceCoordinate = bestPt;
 
 			render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(neighbor, Vec2i(2, 2)), colors[i], colors[i]);
 			render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(sourceCoordinate+Vec2i(width,0), Vec2i(2, 2)), colors[i], colors[i]);
 		}
 	}
-
 	result.SavePNG(filename);
 }
 
