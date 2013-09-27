@@ -22,6 +22,8 @@ private:
 	double BestCoherentMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates, Vec2i &outPt);
 	double BestApproximateMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, Vec2i &outPt);
 	double NeighborhoodDistance(double* neighborhoodA, double* neighborhoodB, UINT dimension);
+	double BestNeighborVotedMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, Vec2i &outPt, int range);
+	Vec2i BestMatch(const AppParameters &parameters, Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates);
 
 
 	UINT _reducedDimension;
@@ -30,4 +32,5 @@ private:
 	Vector<Vec2i> _treeCoordinates;
 
 };
+
 

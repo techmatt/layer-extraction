@@ -61,9 +61,6 @@ void App::Init()
 
 void App::Recolorize()
 {
-    
-
-
     Bitmap bmp, mask;
     bmp.LoadPNG("../Data/" + _parameters.imageFile);
     mask.LoadPNG("../Data/" + _parameters.maskFile);
@@ -189,7 +186,7 @@ BCLayers* App::SynthesizeLayers()
 
 	//setup the layers
 	int reducedDimension = _parameters.reducedDimension;
-	int iters = 10;
+	int iters = 20;
 	int neighborhoodSize = _parameters.neighborhoodSize;
 
 	String layerDir = "../Layers/";
