@@ -48,6 +48,8 @@ struct AppParameters
 		reducedDimension = file.GetInteger("reducedDimension");
 
 		coherenceParameter = file.GetDouble("coherenceParameter");
+		useMajorityVote = file.GetBoolean("useMajorityVote");
+		neighborRange = file.GetInteger("neighborRange");
 
 
     }
@@ -92,4 +94,6 @@ struct AppParameters
 	int reducedDimension;
 
 	double coherenceParameter;
+	bool useMajorityVote;
+	int neighborRange;
 };

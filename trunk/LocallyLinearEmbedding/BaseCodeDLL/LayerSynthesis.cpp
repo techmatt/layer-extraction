@@ -210,24 +210,12 @@ void LayerSynthesis::SynthesizeStepInPlace(const AppParameters &parameters, cons
 	UINT dimension = generator.Dimension();
 
 	double coherenceParam = parameters.coherenceParameter;
-	double coherentUsed = 0;
 	for (UINT pixelIndex=0; pixelIndex < pixels.Length(); pixelIndex++)
 	{
 		int x = pixels[pixelIndex].x;
 		int y = pixels[pixelIndex].y;
 
-		Vec2i approximateMatchPt, coherentMatchPt;
-		double nearestDist = BestApproximateMatch(pixels[pixelIndex], reference, target, generator, approximateMatchPt);
-		double nearestCoherentDist = BestCoherentMatch(pixels[pixelIndex], reference, target, generator, sourceCoordinates, coherentMatchPt);
-
-		Vec2i bestPt;
-		if (nearestCoherentDist < (nearestDist + coherenceParam))
-		{
-			bestPt = coherentMatchPt;
-			coherentUsed++;
-		} else
-			bestPt = approximateMatchPt;
-
+		Vec2i bestPt = BestMatch(parameters, pixels[pixelIndex], reference, target, generator, sourceCoordinates);
 		sourceCoordinates(y,x) = bestPt;
 
 		for (UINT layerIndex=0; layerIndex < layerCount; layerIndex++)
@@ -238,8 +226,113 @@ void LayerSynthesis::SynthesizeStepInPlace(const AppParameters &parameters, cons
 			target[layerIndex].pixelWeights(y,x) = Math::Lerp(start, weight, updateSchedule[layerIndex]);
 		}
 	}
-	Console::WriteLine("Frac Coherent pixels used " + String(coherentUsed/pixels.Length()));
 
+}
+
+
+Vec2i LayerSynthesis::BestMatch(const AppParameters &parameters, Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates)
+{
+	double coherenceParam = parameters.coherenceParameter;
+	
+	Vec2i bestPt;
+	if (!parameters.useMajorityVote)
+	{
+		Vec2i approximateMatchPt, coherentMatchPt;
+		double nearestDist = BestApproximateMatch(targetPt, reference, target, generator, approximateMatchPt);
+		double nearestCoherentDist = BestCoherentMatch(targetPt, reference, target, generator, sourceCoordinates, coherentMatchPt);
+		
+		if (nearestCoherentDist < (nearestDist + coherenceParam))
+			bestPt = coherentMatchPt;
+		else
+			bestPt = approximateMatchPt;
+
+	} else
+		BestNeighborVotedMatch(targetPt, reference, target, generator, bestPt, parameters.neighborRange);
+
+	return bestPt;
+}
+
+
+
+//See where the neighbors would match to, and pick the match that is spatially close to the majority neighbor matches and is feature-wise close to the target neighborhood
+double LayerSynthesis::BestNeighborVotedMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, Vec2i &outPt, int range)
+{
+	Vector<Vec2i> candidatePts;
+	UINT dimension = generator.Dimension();
+	
+	for (int dx=-range; dx<=range; dx+=range)
+	{
+		for (int dy=-range; dy<=range; dy+=range)
+		{
+			//if neighbor is out of bounds, ignore it
+			if (!target.First().pixelWeights.ValidCoordinates(targetPt.y+dy, targetPt.x+dx))
+				continue;
+
+			//find the best match for the neighbor
+			Vec2i neighbor = targetPt + Vec2i(dx,dy);
+			Vec2i neighborMatch;
+			BestApproximateMatch(neighbor, reference, target, generator, neighborMatch);
+
+			Vec2i candidate = neighborMatch - Vec2i(dx,dy);
+
+			if (reference.First().pixelWeights.ValidCoordinates(candidate.y, candidate.x))
+				candidatePts.PushEnd(candidate);
+		}
+	}
+
+	double* targetNeighborhood = new double[dimension]; 
+	double* targetTransformedNeighborhood = new double[_reducedDimension];
+	generator.Generate(target, targetPt.x, targetPt.y, targetNeighborhood);
+	_pca.Transform(targetTransformedNeighborhood, targetNeighborhood, _reducedDimension);
+
+	double* neighborhood = new double[dimension]; 
+	double* transformedNeighborhood = new double[_reducedDimension];
+	double bestScore = numeric_limits<double>::max();
+
+	for (UINT candidateIndex = 0; candidateIndex < candidatePts.Length(); candidateIndex++)
+	{
+		Vec2i candidate = candidatePts[candidateIndex];
+
+		//get the neighborhood distance
+		generator.Generate(reference, candidate.x, candidate.y, neighborhood);
+		_pca.Transform(transformedNeighborhood, neighborhood, _reducedDimension);
+		double neighborhoodDistance = NeighborhoodDistance(targetTransformedNeighborhood, transformedNeighborhood, _reducedDimension);
+
+		//get the distance to the other candidates
+		Vector<Vec2i> sortedCandidates(candidatePts);
+		sortedCandidates.Sort([&candidate](const Vec2i &a, const Vec2i &b){ return Vec2i::Dist(a, candidate) < Vec2i::Dist(b, candidate); });
+
+		//only consider the top 60% of candidates
+		int topNum = (int)Math::Round(0.6*sortedCandidates.Length());
+		double neighborMatchDistance = 0;
+		
+		if (topNum > 0)
+		{
+			for (UINT neighborIndex=0; neighborIndex < topNum; neighborIndex++)
+				neighborMatchDistance += Vec2i::Dist(candidate, sortedCandidates[neighborIndex]);
+			neighborMatchDistance /= topNum;
+		}
+
+		double score = neighborhoodDistance + neighborMatchDistance;
+		if (score < bestScore)
+		{
+			bestScore = score;
+			outPt.x = candidate.x;
+			outPt.y = candidate.y;
+		}
+
+	}
+
+	//outPt.x = 0;
+	//outPt.y = 0;
+
+	delete[] targetNeighborhood;
+	delete[] targetTransformedNeighborhood;
+
+	delete[] neighborhood;
+	delete[] transformedNeighborhood;
+
+	return bestScore;
 }
 
 
@@ -266,6 +359,7 @@ Vector<Vec2i> LayerSynthesis::GetCandidateSourceNeighbors(Vec2i targetPt, const 
 	}
 	return candidatePts;
 }
+
 
 double LayerSynthesis::BestCoherentMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates, Vec2i &outPt)
 {
@@ -325,8 +419,9 @@ double LayerSynthesis::BestApproximateMatch(Vec2i targetPt, const PixelLayerSet 
 	outPt.x = sourceCoordinate.x;
 	outPt.y = sourceCoordinate.y;
 
+	double* matchedNeighborhood = _tree.GetDataPoint(indices[0]);
 
-	double distance = NeighborhoodDistance(transformedNeighborhood, _tree.GetDataPoint(indices[0]), _reducedDimension);
+	double distance = NeighborhoodDistance(transformedNeighborhood, matchedNeighborhood, _reducedDimension);
 	delete[] neighborhood;
     delete[] transformedNeighborhood;
 
@@ -439,19 +534,10 @@ void LayerSynthesis::VisualizeMatches(const AppParameters &parameters, const Pix
 		
 		if (neighbor.x >= 0 && neighbor.x < width && neighbor.y >=0 && neighbor.y < height)
 		{
-			Vec2i approximateMatchPt, coherentMatchPt;
-			double nearestDist = BestApproximateMatch(neighbor, reference, target, generator, approximateMatchPt);
-			double nearestCoherentDist = BestCoherentMatch(neighbor, reference, target, generator, sourceCoordinates, coherentMatchPt);
-
-			Vec2i bestPt;
-			if (nearestCoherentDist < (nearestDist + coherenceParam))
-				bestPt = coherentMatchPt;
-			else
-				bestPt = approximateMatchPt;
-			Vec2i sourceCoordinate = bestPt;
+			Vec2i bestPt = BestMatch(parameters, neighbor, reference, target, generator, sourceCoordinates);
 
 			render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(neighbor, Vec2i(2, 2)), colors[i], colors[i]);
-			render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(sourceCoordinate+Vec2i(width,0), Vec2i(2, 2)), colors[i], colors[i]);
+			render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(bestPt+Vec2i(width,0), Vec2i(2, 2)), colors[i], colors[i]);
 		}
 	}
 	result.SavePNG(filename);
