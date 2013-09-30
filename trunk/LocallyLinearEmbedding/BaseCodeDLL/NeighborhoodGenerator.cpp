@@ -22,7 +22,7 @@ bool NeighborhoodGenerator::Generate(const PixelLayerSet &layers, int xCenter, i
     UINT dimensionIndex = 0;
 	bool inBounds = true;
 
-	for(int layerIndex = 0; layerIndex < layerCount; layerIndex++)
+	for(UINT layerIndex = 0; layerIndex < layerCount; layerIndex++)
 	{
 		for(int y = yCenter - _neighborhoodSize; y <= yCenter + _neighborhoodSize; y++)
 		{

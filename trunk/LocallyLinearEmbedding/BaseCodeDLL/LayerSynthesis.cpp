@@ -308,7 +308,7 @@ double LayerSynthesis::BestNeighborVotedMatch(Vec2i targetPt, const PixelLayerSe
 		
 		if (topNum > 0)
 		{
-			for (UINT neighborIndex=0; neighborIndex < topNum; neighborIndex++)
+			for (int neighborIndex=0; neighborIndex < topNum; neighborIndex++)
 				neighborMatchDistance += Vec2i::Dist(candidate, sortedCandidates[neighborIndex]);
 			neighborMatchDistance /= topNum;
 		}
@@ -447,8 +447,8 @@ void LayerSynthesis::VisualizeNeighbors(const PixelLayerSet &reference, const Pi
 	Bitmap targetImage, refImage;
 	VisualizeLayers(target, targetImage);
 	VisualizeLayers(reference, refImage);
-	for (int x=0; x<width; x++)
-		for (int y=0; y<height; y++)
+	for (int x=0; x<(int)width; x++)
+		for (int y=0; y<(int)height; y++)
 			if (targetImage.ValidCoordinates(x,y))
 				result[y][x] = targetImage[y][x];
 	for (int x=width; x<(int)result.Width(); x++)
@@ -479,7 +479,7 @@ void LayerSynthesis::VisualizeNeighbors(const PixelLayerSet &reference, const Pi
 	Vec2i sourceCoordinate = _treeCoordinates[indices[0]];		
 	render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(sourceCoordinate, Vec2i(2, 2)), colors[0], colors[0]);
 	
-	for (int i=0; i<indices.Length(); i++)
+	for (UINT i=0; i<indices.Length(); i++)
 	{
 		Vec2i sourceCoordinate = _treeCoordinates[indices[i]];		
 		render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(sourceCoordinate+Vec2i(width,0), Vec2i(2, 2)), colors[i], colors[i]);
@@ -500,12 +500,12 @@ void LayerSynthesis::VisualizeMatches(const AppParameters &parameters, const Pix
 	Bitmap targetImage, refImage;
 	VisualizeLayers(target, targetImage);
 	VisualizeLayers(reference, refImage);
-	for (int x=0; x<width; x++)
-		for (int y=0; y<height; y++)
+	for (int x=0; x<(int)width; x++)
+		for (int y=0; y<(int)height; y++)
 			if (targetImage.ValidCoordinates(x,y))
 				result[y][x] = targetImage[y][x];
-	for (int x=width; x<result.Width(); x++)
-		for(int y=0; y<result.Height(); y++)
+	for (int x=width; x<(int)result.Width(); x++)
+		for(int y=0; y<(int)result.Height(); y++)
 			if (refImage.ValidCoordinates(x-width,y))
 				result[y][x] = refImage[y][x-width];
 	
@@ -528,11 +528,11 @@ void LayerSynthesis::VisualizeMatches(const AppParameters &parameters, const Pix
 
 	double coherenceParam = parameters.coherenceParameter;
 
-	for (int i=0; i<colors.Length(); i++)
+	for (UINT i=0; i<colors.Length(); i++)
 	{
 		Vec2i neighbor = targetPt + 5*deltas[i];
 		
-		if (neighbor.x >= 0 && neighbor.x < width && neighbor.y >=0 && neighbor.y < height)
+		if (neighbor.x >= 0 && neighbor.x < (int)width && neighbor.y >=0 && neighbor.y < (int)height)
 		{
 			Vec2i bestPt = BestMatch(parameters, neighbor, reference, target, generator, sourceCoordinates);
 

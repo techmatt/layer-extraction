@@ -81,7 +81,7 @@ struct PixelLayer
 		//draw a color strip
 		if (renderColor)
 		{
-			int strip = 0.10*image.Width();
+            UINT strip = Math::Floor(0.10*image.Width());
 			for (UINT x=0; x<strip; x++)
 				for (UINT y=0; y<image.Height(); y++)
 					image[y][x] = RGBColor(color);
