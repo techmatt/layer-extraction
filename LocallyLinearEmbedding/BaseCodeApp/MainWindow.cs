@@ -840,6 +840,11 @@ namespace BaseCodeApp
             }
         }
 
+        private void textureSynthesisButton_Click(object sender, EventArgs e)
+        {
+            BCProcessCommand(baseCodeDLLContext, "SynthesizeTexture");
+        }
+
         private void extractLayersButton_Click(object sender, EventArgs e)
         {
             if (bw.IsBusy)

@@ -68,3 +68,9 @@ pyramidDepth=3
 #useMajorityVote=false
 #neighborRange=5
 #pyramidDepth=3
+
+# texture synthesis
+texsyn_outputwidth=256
+texsyn_outputheight=256
+nlevels=1
+

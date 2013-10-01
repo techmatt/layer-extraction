@@ -50,10 +50,11 @@ struct AppParameters
 		coherenceParameter = file.GetDouble("coherenceParameter");
 		useMajorityVote = file.GetBoolean("useMajorityVote");
 		neighborRange = file.GetInteger("neighborRange");
-
 		pyramidDepth = file.GetInteger("pyramidDepth");
 
-
+		texsyn_outputwidth = file.GetInteger("texsyn_outputwidth");
+		texsyn_outputheight = file.GetInteger("texsyn_outputheight");
+		nlevels = file.GetInteger("nlevels");
     }
 
     String imageFile;
@@ -99,4 +100,8 @@ struct AppParameters
 	bool useMajorityVote;
 	int neighborRange;
 	int pyramidDepth;
+
+	int texsyn_outputwidth;
+	int texsyn_outputheight;
+	int nlevels;
 };

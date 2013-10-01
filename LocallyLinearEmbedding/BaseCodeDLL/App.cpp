@@ -281,6 +281,51 @@ BCLayers* App::SynthesizeLayers()
 
 UINT32 App::ProcessCommand(const String &command)
 {
+	Console::WriteLine("process command");
+	if (command == "SynthesizeTexture") {
+		// texture synthesis
+		Console::WriteLine("button");
+	}
+	else {
+		// params
+		_parameters.Init("../Parameters.txt");
+		int reducedDimension = _parameters.reducedDimension;
+		int neighborhoodSize = _parameters.neighborhoodSize;
+		int outputwidth = _parameters.texsyn_outputwidth;
+		int outputheight = _parameters.texsyn_outputheight;
+		int nlevels = _parameters.nlevels;
+		
+		String layerDir = "../Layers/";
+		String dataDir = "../TextureSynthesisExemplars/";
+		// read in layers
+		PixelLayerSet input;
+		/*for (UINT i=0; i<_parameters.targetLayers.Length(); i++)
+		    input.PushEnd(PixelLayer(layerDir+_parameters.targetLayers[i]));*/
+		
+		Bitmap rgbimg;
+		rgbimg.LoadPNG(dataDir+_parameters.targetImageFile);
+		// split colour image to rgb pixel layers
+		PixelLayer red, green, blue;
+		red.color = Vec3f(1, 0, 0);
+		green.color = Vec3f(0, 1, 0);
+		blue.color = Vec3f(0, 0, 1);
+		for (UINT y = 0; y < rgbimg.Height(); y++) {
+			for (UINT x = 0; x < rgbimg.Width(); x++) {
+				RGBColor colour = rgbimg[y][x];
+				red.pixelWeights(y,x) = colour.r;
+				green.pixelWeights(y,x) = colour.g;
+				blue.pixelWeights(y,x) = colour.b;
+			}
+		}
+		input.PushEnd(red);
+		input.PushEnd(green);
+		input.PushEnd(blue);
+		
+		NeighborhoodGenerator generator(neighborhoodSize, input.Length(), nlevels);
+		TextureSynthesis synthesizer;
+		//synthesizer.Init(input, generator, nlevels, reducedDimension);
+		//synthesizer.Synthesize(_parameters, input, outputwidth, outputheight, generator);
+	}
     return 0;
 }
 
