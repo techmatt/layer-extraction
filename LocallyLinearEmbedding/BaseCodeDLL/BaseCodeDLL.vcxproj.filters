@@ -73,6 +73,12 @@
     <ClInclude Include="NeighborhoodGenerator.h">
       <Filter>LayerSynthesizer</Filter>
     </ClInclude>
+    <ClInclude Include="GaussianPyramid.h">
+      <Filter>LayerSynthesizer</Filter>
+    </ClInclude>
+    <ClInclude Include="Layers.h">
+      <Filter>LayerExtractor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -109,6 +115,9 @@
       <Filter>LayerSynthesizer</Filter>
     </ClCompile>
     <ClCompile Include="NeighborhoodGenerator.cpp">
+      <Filter>LayerSynthesizer</Filter>
+    </ClCompile>
+    <ClCompile Include="GaussianPyramid.cpp">
       <Filter>LayerSynthesizer</Filter>
     </ClCompile>
   </ItemGroup>
