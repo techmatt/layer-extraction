@@ -79,6 +79,9 @@
     <ClInclude Include="Layers.h">
       <Filter>LayerExtractor</Filter>
     </ClInclude>
+    <ClInclude Include="TextureSynthesis.h">
+      <Filter>TextureSynthesis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -120,6 +123,9 @@
     <ClCompile Include="GaussianPyramid.cpp">
       <Filter>LayerSynthesizer</Filter>
     </ClCompile>
+    <ClCompile Include="TextureSynthesis.cpp">
+      <Filter>TextureSynthesis</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Base">
@@ -139,6 +145,9 @@
     </Filter>
     <Filter Include="LayerSynthesizer">
       <UniqueIdentifier>{854e1efb-1888-415b-bad3-facdbe4fcc0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TextureSynthesis">
+      <UniqueIdentifier>{84bee6c7-9301-4b60-83a1-789d147078a9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

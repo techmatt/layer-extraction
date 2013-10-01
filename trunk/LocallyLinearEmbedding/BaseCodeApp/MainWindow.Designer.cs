@@ -52,6 +52,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.layerSynthesisButton = new System.Windows.Forms.Button();
             this.saveLayersButton = new System.Windows.Forms.Button();
+            this.textureSynthesisButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -108,7 +109,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(100, 659);
+            this.label1.Location = new System.Drawing.Point(25, 654);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(30, 19);
             this.label1.TabIndex = 5;
@@ -116,9 +117,9 @@
             // 
             // KBox
             // 
-            this.KBox.Location = new System.Drawing.Point(136, 655);
+            this.KBox.Location = new System.Drawing.Point(61, 650);
             this.KBox.Name = "KBox";
-            this.KBox.Size = new System.Drawing.Size(72, 27);
+            this.KBox.Size = new System.Drawing.Size(69, 27);
             this.KBox.TabIndex = 6;
             this.KBox.Text = "5";
             // 
@@ -150,7 +151,7 @@
             "CHI-Resize",
             "ConvexHull",
             "CHI-Patch"});
-            this.paletteMethodBox.Location = new System.Drawing.Point(378, 655);
+            this.paletteMethodBox.Location = new System.Drawing.Point(291, 650);
             this.paletteMethodBox.Name = "paletteMethodBox";
             this.paletteMethodBox.Size = new System.Drawing.Size(162, 27);
             this.paletteMethodBox.TabIndex = 8;
@@ -158,7 +159,7 @@
             // paletteLabel
             // 
             this.paletteLabel.AutoSize = true;
-            this.paletteLabel.Location = new System.Drawing.Point(310, 658);
+            this.paletteLabel.Location = new System.Drawing.Point(223, 653);
             this.paletteLabel.Name = "paletteLabel";
             this.paletteLabel.Size = new System.Drawing.Size(57, 19);
             this.paletteLabel.TabIndex = 9;
@@ -198,7 +199,7 @@
             // 
             this.pictureBoxOriginal.Location = new System.Drawing.Point(13, 258);
             this.pictureBoxOriginal.Name = "pictureBoxOriginal";
-            this.pictureBoxOriginal.Size = new System.Drawing.Size(347, 218);
+            this.pictureBoxOriginal.Size = new System.Drawing.Size(348, 218);
             this.pictureBoxOriginal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBoxOriginal.TabIndex = 13;
             this.pictureBoxOriginal.TabStop = false;
@@ -280,11 +281,22 @@
             this.saveLayersButton.UseVisualStyleBackColor = true;
             this.saveLayersButton.Click += new System.EventHandler(this.saveLayersButton_Click);
             // 
+            // textureSynthesisButton
+            // 
+            this.textureSynthesisButton.Location = new System.Drawing.Point(457, 526);
+            this.textureSynthesisButton.Name = "textureSynthesisButton";
+            this.textureSynthesisButton.Size = new System.Drawing.Size(83, 34);
+            this.textureSynthesisButton.TabIndex = 21;
+            this.textureSynthesisButton.Text = "texture";
+            this.textureSynthesisButton.UseVisualStyleBackColor = true;
+            this.textureSynthesisButton.Click += new System.EventHandler(this.textureSynthesisButton_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1328, 800);
+            this.Controls.Add(this.textureSynthesisButton);
             this.Controls.Add(this.saveLayersButton);
             this.Controls.Add(this.layerSynthesisButton);
             this.Controls.Add(this.label2);
@@ -348,6 +360,7 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button layerSynthesisButton;
         private System.Windows.Forms.Button saveLayersButton;
+        private System.Windows.Forms.Button textureSynthesisButton;
     }
 }
 

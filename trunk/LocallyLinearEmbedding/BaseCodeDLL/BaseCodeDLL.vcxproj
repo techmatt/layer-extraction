@@ -44,6 +44,7 @@
     <ClInclude Include="BaseCodeDLL.h" />
     <ClInclude Include="NeighborhoodGenerator.h" />
     <ClInclude Include="Recolorizer.h" />
+    <ClInclude Include="TextureSynthesis.h" />
     <ClInclude Include="Utility.h" />
   </ItemGroup>
   <ItemGroup>
@@ -71,6 +72,7 @@
     <ClCompile Include="BaseCodeDLL.cpp" />
     <ClCompile Include="NeighborhoodGenerator.cpp" />
     <ClCompile Include="Recolorizer.cpp" />
+    <ClCompile Include="TextureSynthesis.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\bin\Console.txt" />

@@ -108,6 +108,17 @@ struct PixelLayer
 		}
 	}
 
+	PixelLayer(const PixelLayer& p)
+	{
+		color = Vec3f(p.color);
+		pixelWeights.Allocate(p.pixelWeights.Rows(), p.pixelWeights.Cols());
+		for (unsigned int Row = 0; Row < pixelWeights.Rows(); Row++) {
+			for (unsigned int Col = 0; Col < pixelWeights.Cols(); Col++) {
+				pixelWeights(Row, Col) = p.pixelWeights(Row, Col);
+			}
+		}
+	}
+
 	PixelLayer(Vec3f col, int width, int height)
 	{
 		color = col;
