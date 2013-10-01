@@ -120,7 +120,7 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
     {
         Vector<PixelConstraint> targetPixelColors;
         Vector<String> parts = constraints.Partition("|");
-        for(int i = 0; i < parts.Length(); i++)
+        for(UINT i = 0; i < parts.Length(); i++)
         {
             Vector<String> pixels = parts[i].Partition(";");
             for(String s : pixels)
@@ -186,7 +186,7 @@ BCLayers* App::SynthesizeLayers()
 
 	//setup the layers
 	int reducedDimension = _parameters.reducedDimension;
-	int iters = 20;
+	UINT iters = 10;
 	int neighborhoodSize = _parameters.neighborhoodSize;
 
 	String layerDir = "../Layers/";
@@ -198,6 +198,10 @@ BCLayers* App::SynthesizeLayers()
 	PixelLayerSet reference;
 	for (UINT i=0; i<_parameters.refLayers.Length(); i++)
 		reference.PushEnd(PixelLayer(layerDir+_parameters.refLayers[i]));
+
+	int depth = _parameters.pyramidDepth;
+	GaussianPyramid targetPyramid(target, depth);
+	GaussianPyramid referencePyramid(reference, depth);
 
 
 	PersistentAssert(target.Length()==reference.Length(), "Target layer count and reference layer count don't match");
@@ -250,10 +254,10 @@ BCLayers* App::SynthesizeLayers()
 			if (orig[y][x] != mask[y][x])
 				pixels.PushEnd(Vec2i(x,y));
 
-	NeighborhoodGenerator generator(neighborhoodSize, target.Length());
+	NeighborhoodGenerator generator(neighborhoodSize, target.Length(), depth);
 	LayerSynthesis synthesizer;
-	synthesizer.Init(reference, generator, reducedDimension);
-	PixelLayerSet synth = synthesizer.Synthesize(_parameters, reference, target, pixels, updateSchedule, generator);
+	synthesizer.Init(referencePyramid, generator, reducedDimension);
+	PixelLayerSet synth = synthesizer.Synthesize(_parameters, referencePyramid, targetPyramid, pixels, updateSchedule, generator);
 
 
 	//index back into original

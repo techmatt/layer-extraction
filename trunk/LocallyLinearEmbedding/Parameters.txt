@@ -41,28 +41,30 @@ periodicBasisCount=3
 # useMajorityVote will take the majority vote of neighboring pixels to find a match, otherwise it'll use 
 # the image analogies coherence method
 #
-#allTargetLayers=targetEye_0.txt, targetEye_1.txt, targetEye_2.txt, targetEye_3.txt, targetEye_4.txt
-#targetLayers=targetEye_0.txt, targetEye_4.txt, targetEye_1.txt
-#refLayers=refEye_0.txt, refEye_3.txt, refEye_1.txt
-#updateSchedule=1.0,0.2,0.2
-#targetImageFile=targetEye.png
-#targetMaskFile=targetEye_mask.png
-#reducedDimension=32
-#neighborhoodSize=5
-#coherenceParameter=0
-#useMajorityVote=true
-#neighborRange=5
-
-
-
-allTargetLayers=targetCloud_0.txt, targetCloud_1.txt
-targetLayers=targetCloud_0.txt, targetCloud_1.txt
-refLayers=refCloud_0.txt, refCloud_1.txt
-updateSchedule=1.0,0.1
-targetImageFile=targetCloud.png
-targetMaskFile=targetCloud_mask.png
+allTargetLayers=targetEye_0.txt, targetEye_1.txt, targetEye_2.txt, targetEye_3.txt, targetEye_4.txt
+targetLayers=targetEye_0.txt, targetEye_4.txt, targetEye_1.txt
+refLayers=refEye_0.txt, refEye_3.txt, refEye_1.txt
+updateSchedule=1.0,0.2,0.2
+targetImageFile=targetEye.png
+targetMaskFile=targetEye_mask.png
 reducedDimension=32
-neighborhoodSize=5
+neighborhoodSize=2
 coherenceParameter=0
 useMajorityVote=true
 neighborRange=5
+pyramidDepth=3
+
+
+
+#allTargetLayers=targetCloud_0.txt, targetCloud_1.txt
+#targetLayers=targetCloud_0.txt, targetCloud_1.txt
+#refLayers=refCloud_0.txt, refCloud_1.txt
+#updateSchedule=1.0,0.1
+#targetImageFile=targetCloud.png
+#targetMaskFile=targetCloud_mask.png
+#reducedDimension=32
+#neighborhoodSize=5
+#coherenceParameter=0
+#useMajorityVote=false
+#neighborRange=5
+#pyramidDepth=3

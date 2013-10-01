@@ -44,12 +44,14 @@ struct AppParameters
 		targetImageFile = file.GetRequiredString("targetImageFile");
         targetMaskFile = file.GetRequiredString("targetMaskFile");
 
-		neighborhoodSize = file.GetDouble("neighborhoodSize");
+		neighborhoodSize = file.GetInteger("neighborhoodSize");
 		reducedDimension = file.GetInteger("reducedDimension");
 
 		coherenceParameter = file.GetDouble("coherenceParameter");
 		useMajorityVote = file.GetBoolean("useMajorityVote");
 		neighborRange = file.GetInteger("neighborRange");
+
+		pyramidDepth = file.GetInteger("pyramidDepth");
 
 
     }
@@ -90,10 +92,11 @@ struct AppParameters
 	String targetImageFile;
 	String targetMaskFile;
 
-	double neighborhoodSize;
+	int neighborhoodSize;
 	int reducedDimension;
 
 	double coherenceParameter;
 	bool useMajorityVote;
 	int neighborRange;
+	int pyramidDepth;
 };

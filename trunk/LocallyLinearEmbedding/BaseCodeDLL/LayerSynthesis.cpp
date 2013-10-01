@@ -94,13 +94,13 @@ synthesis_mask.png
 
 */
 
-void LayerSynthesis::Init(const PixelLayerSet &layers, const NeighborhoodGenerator &generator, UINT reducedDimension)
+void LayerSynthesis::Init(const GaussianPyramid &layers, const NeighborhoodGenerator &generator, UINT reducedDimension)
 {
     InitPCA(layers, generator);
     InitKDTree(layers, generator, reducedDimension);
 }
 
-void LayerSynthesis::InitPCA(const PixelLayerSet &layers, const NeighborhoodGenerator &generator)
+void LayerSynthesis::InitPCA(const GaussianPyramid &layers, const NeighborhoodGenerator &generator)
 {
     Console::WriteLine("Initializing PCA...");
 
@@ -108,8 +108,10 @@ void LayerSynthesis::InitPCA(const PixelLayerSet &layers, const NeighborhoodGene
     Vector<const double*> neighborhoods(neighborhoodCount);
     
     const UINT dimension = generator.Dimension();
-	const UINT width = layers.First().pixelWeights.Cols();
-	const UINT height = layers.First().pixelWeights.Rows();
+	const UINT width = layers.Base().First().Width();
+	const UINT height = layers.Base().First().Height();
+	
+	const int nRadius = generator.NeighborhoodRadius()*pow(2,layers.Depth()-1);
 
     for(UINT neighborhoodIndex = 0; neighborhoodIndex < neighborhoodCount; neighborhoodIndex++)
     {
@@ -117,30 +119,31 @@ void LayerSynthesis::InitPCA(const PixelLayerSet &layers, const NeighborhoodGene
         bool success = false;
         while(!success)
         {
-			int xCenter = rand() % width;
-			int yCenter = rand() % height;
+			Vec2i centerPt = Vec2i(rand() % (width-nRadius*2)+nRadius, rand() % (height-nRadius*2)+nRadius);
+			int xCenter = centerPt.x;
+			int yCenter = centerPt.y;
+
             success = generator.Generate(layers, xCenter, yCenter, curNeighborhood);
 			for(UINT i = 0; i < dimension; i++)
 			{
-				if(curNeighborhood[i] < -10000.0 || curNeighborhood[i] > 10000.0)
-				{
-					success = generator.Generate(layers, xCenter, yCenter, curNeighborhood);
-				}
+				success = generator.Generate(layers, xCenter, yCenter, curNeighborhood);
 			}
         }
         neighborhoods[neighborhoodIndex] = curNeighborhood;
+		if (neighborhoodIndex % 1000 == 0)
+			Console::WriteLine("Initialized "+String(neighborhoodIndex)+" neighborhoods");
     }
-
+	
     _pca.InitFromDensePoints(neighborhoods, dimension);
     neighborhoods.DeleteMemory();
 }
 
-void LayerSynthesis::InitKDTree(const PixelLayerSet &layers, const NeighborhoodGenerator &generator, UINT reducedDimension)
+void LayerSynthesis::InitKDTree(const GaussianPyramid &layers, const NeighborhoodGenerator &generator, UINT reducedDimension)
 {
 	_reducedDimension = reducedDimension;
 
-	const UINT width = layers.First().pixelWeights.Cols();
-	const UINT height = layers.First().pixelWeights.Rows();
+	const UINT width = layers.Base().First().pixelWeights.Cols();
+	const UINT height = layers.Base().First().pixelWeights.Rows();
     const UINT dimension = generator.Dimension();
 	const UINT neighbors = 5;
 
@@ -166,7 +169,7 @@ void LayerSynthesis::InitKDTree(const PixelLayerSet &layers, const NeighborhoodG
     allNeighborhoods.DeleteMemory();
 }
 
-PixelLayerSet LayerSynthesis::Synthesize(const AppParameters &parameters, const PixelLayerSet &reference, const PixelLayerSet &original, const Vector<Vec2i> &pixels, const Grid<double> &updateSchedule, NeighborhoodGenerator &generator)
+PixelLayerSet LayerSynthesis::Synthesize(const AppParameters &parameters, const GaussianPyramid &reference, const GaussianPyramid &original, const Vector<Vec2i> &pixels, const Grid<double> &updateSchedule, NeighborhoodGenerator &generator)
 {
 	//original - the original (incomplete) set of layers
 	//pixels - the region drawn by the user, where a new layer(s) should be synthesized (including color information).
@@ -174,15 +177,16 @@ PixelLayerSet LayerSynthesis::Synthesize(const AppParameters &parameters, const 
 
     //...
 	Console::WriteLine("Synthesizing layers...");
-	Grid<Vec2i> sourceCoordinates(original.First().pixelWeights.Rows(), original.First().pixelWeights.Cols(), Vec2i(-1,-1));
+	Grid<Vec2i> sourceCoordinates(original.Base().First().Height(), original.Base().First().Width(), Vec2i(-1,-1));
 
-    PixelLayerSet target = original;
-	for (UINT i=0; i<target.Length(); i++)
+    GaussianPyramid target = original;
+	for (UINT i=0; i<target.NumLayers(); i++)
 	{
-		target[i].SavePNG("layer_"+String(i)+"_iter0.png");
+		target[0][i].SavePNG("layer_"+String(i)+"_iter0.png");
 	}
     for(UINT row = 0; row < updateSchedule.Rows(); row++)
     {
+		Console::WriteLine("Synthesizing iter "+ String(row));
 		int step = pixels.Length()/5;
 		int stepIdx=0;
 		for (UINT pixelIndex=0; pixelIndex<pixels.Length(); pixelIndex+=step)
@@ -190,23 +194,26 @@ PixelLayerSet LayerSynthesis::Synthesize(const AppParameters &parameters, const 
 			//VisualizeNeighbors(reference, target, pixels[pixelIndex], generator, "Neighbors_"+String(stepIdx)+"_iter"+String(row)+".png");
 			VisualizeMatches(parameters, reference, target, pixels[pixelIndex], generator, "NMatch_"+String(stepIdx++)+"_iter"+String(row)+".png", sourceCoordinates);			
 		}
-
+		
         SynthesizeStepInPlace(parameters, reference, target, pixels, updateSchedule.ExtractRow(row), generator, sourceCoordinates);
-		for (UINT i=0; i<target.Length(); i++)
+		for (UINT i=0; i<target.NumLayers(); i++)
 		{
-			target[i].SavePNG("layer_"+String(i)+"_iter"+String(row+1)+".png");
+			target.Base()[i].SavePNG("layer_"+String(i)+"_iter"+String(row+1)+".png");
 		}
+		
+		//update the target pyramid
+		target.Init(PixelLayerSet(target.Base()), target.Depth());
     }
 	Console::WriteLine("Done!");
-    return target;
+    return target.Base();
 }
 
-void LayerSynthesis::SynthesizeStepInPlace(const AppParameters &parameters, const PixelLayerSet &reference, PixelLayerSet &target, const Vector<Vec2i> &pixels, const Vector<double> &updateSchedule, NeighborhoodGenerator &generator, Grid<Vec2i> &sourceCoordinates)
+void LayerSynthesis::SynthesizeStepInPlace(const AppParameters &parameters, const GaussianPyramid &reference, GaussianPyramid &target, const Vector<Vec2i> &pixels, const Vector<double> &updateSchedule, NeighborhoodGenerator &generator, Grid<Vec2i> &sourceCoordinates)
 {
 	//find the pixel with the nearest transformed neighborhood, and replace with that
-	UINT layerCount = target.Length();
-	UINT width = target.First().pixelWeights.Cols();
-	UINT height = target.First().pixelWeights.Rows();
+	UINT layerCount = target.NumLayers();
+	UINT width = target.Base().First().Width();
+	UINT height = target.Base().First().Height();
 	UINT dimension = generator.Dimension();
 
 	double coherenceParam = parameters.coherenceParameter;
@@ -220,17 +227,17 @@ void LayerSynthesis::SynthesizeStepInPlace(const AppParameters &parameters, cons
 
 		for (UINT layerIndex=0; layerIndex < layerCount; layerIndex++)
 		{
-			double weight = reference[layerIndex].pixelWeights(bestPt.y, bestPt.x);
-			double start = target[layerIndex].pixelWeights(y,x);
+			double weight = reference[0][layerIndex].pixelWeights(bestPt.y, bestPt.x);
+			double start = target[0][layerIndex].pixelWeights(y,x);
 
-			target[layerIndex].pixelWeights(y,x) = Math::Lerp(start, weight, updateSchedule[layerIndex]);
+			target[0][layerIndex].pixelWeights(y,x) = Math::Lerp(start, weight, updateSchedule[layerIndex]);
 		}
 	}
 
 }
 
 
-Vec2i LayerSynthesis::BestMatch(const AppParameters &parameters, Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates)
+Vec2i LayerSynthesis::BestMatch(const AppParameters &parameters, Vec2i targetPt, const GaussianPyramid &reference, const GaussianPyramid &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates)
 {
 	double coherenceParam = parameters.coherenceParameter;
 	
@@ -255,7 +262,7 @@ Vec2i LayerSynthesis::BestMatch(const AppParameters &parameters, Vec2i targetPt,
 
 
 //See where the neighbors would match to, and pick the match that is spatially close to the majority neighbor matches and is feature-wise close to the target neighborhood
-double LayerSynthesis::BestNeighborVotedMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, Vec2i &outPt, int range)
+double LayerSynthesis::BestNeighborVotedMatch(Vec2i targetPt, const GaussianPyramid &reference, const GaussianPyramid &target, NeighborhoodGenerator &generator, Vec2i &outPt, int range)
 {
 	Vector<Vec2i> candidatePts;
 	UINT dimension = generator.Dimension();
@@ -265,7 +272,7 @@ double LayerSynthesis::BestNeighborVotedMatch(Vec2i targetPt, const PixelLayerSe
 		for (int dy=-range; dy<=range; dy+=range)
 		{
 			//if neighbor is out of bounds, ignore it
-			if (!target.First().pixelWeights.ValidCoordinates(targetPt.y+dy, targetPt.x+dx))
+			if (!target.Base().First().pixelWeights.ValidCoordinates(targetPt.y+dy, targetPt.x+dx))
 				continue;
 
 			//find the best match for the neighbor
@@ -275,7 +282,7 @@ double LayerSynthesis::BestNeighborVotedMatch(Vec2i targetPt, const PixelLayerSe
 
 			Vec2i candidate = neighborMatch - Vec2i(dx,dy);
 
-			if (reference.First().pixelWeights.ValidCoordinates(candidate.y, candidate.x))
+			if (reference.Base().First().pixelWeights.ValidCoordinates(candidate.y, candidate.x))
 				candidatePts.PushEnd(candidate);
 		}
 	}
@@ -303,7 +310,7 @@ double LayerSynthesis::BestNeighborVotedMatch(Vec2i targetPt, const PixelLayerSe
 		sortedCandidates.Sort([&candidate](const Vec2i &a, const Vec2i &b){ return Vec2i::Dist(a, candidate) < Vec2i::Dist(b, candidate); });
 
 		//only consider the top 60% of candidates
-		int topNum = (int)Math::Round(0.6*sortedCandidates.Length());
+		UINT topNum = (int)Math::Round(0.6*sortedCandidates.Length());
 		double neighborMatchDistance = 0;
 		
 		if (topNum > 0)
@@ -336,7 +343,7 @@ double LayerSynthesis::BestNeighborVotedMatch(Vec2i targetPt, const PixelLayerSe
 }
 
 
-Vector<Vec2i> LayerSynthesis::GetCandidateSourceNeighbors(Vec2i targetPt, const Grid<Vec2i> &sourceCoordinates, const PixelLayerSet &reference)
+Vector<Vec2i> LayerSynthesis::GetCandidateSourceNeighbors(Vec2i targetPt, const Grid<Vec2i> &sourceCoordinates, const GaussianPyramid &reference)
 {
 	//search for candidate coherent neighbors to inspect
 	Vector<Vec2i> candidatePts;
@@ -353,7 +360,7 @@ Vector<Vec2i> LayerSynthesis::GetCandidateSourceNeighbors(Vec2i targetPt, const 
 				continue;
 
 			Vec2i candidate = sourceCoordinates(targetPt.y+dy, targetPt.x+dx) - Vec2i(dx,dy);
-			if (reference.First().pixelWeights.ValidCoordinates(candidate.y, candidate.x))
+			if (reference.Base().First().pixelWeights.ValidCoordinates(candidate.y, candidate.x))
 				candidatePts.PushEnd(candidate);
 		}
 	}
@@ -361,7 +368,7 @@ Vector<Vec2i> LayerSynthesis::GetCandidateSourceNeighbors(Vec2i targetPt, const 
 }
 
 
-double LayerSynthesis::BestCoherentMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates, Vec2i &outPt)
+double LayerSynthesis::BestCoherentMatch(Vec2i targetPt, const GaussianPyramid &reference, const GaussianPyramid &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates, Vec2i &outPt)
 {
 	Vector<Vec2i> candidates = GetCandidateSourceNeighbors(targetPt, sourceCoordinates, reference);
 
@@ -402,7 +409,7 @@ double LayerSynthesis::BestCoherentMatch(Vec2i targetPt, const PixelLayerSet &re
 	return bestDist;
 }
 
-double LayerSynthesis::BestApproximateMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, Vec2i &outPt)
+double LayerSynthesis::BestApproximateMatch(Vec2i targetPt, const GaussianPyramid &reference, const GaussianPyramid &target, NeighborhoodGenerator &generator, Vec2i &outPt)
 {
 	UINT dimension = generator.Dimension();
 	double* neighborhood = new double[dimension]; 
@@ -436,14 +443,14 @@ double LayerSynthesis::NeighborhoodDistance(double* neighborhoodA, double* neigh
 	return result;
 }
 
-void LayerSynthesis::VisualizeNeighbors(const PixelLayerSet &reference, const PixelLayerSet &target, Vec2i targetPt, NeighborhoodGenerator &generator, String &filename)
+void LayerSynthesis::VisualizeNeighbors(const GaussianPyramid &reference, const GaussianPyramid &target, Vec2i targetPt, NeighborhoodGenerator &generator, String &filename)
 {
 	//visualize the match for the given target Pt, and the matches for the neighbors
-	UINT width = target.First().pixelWeights.Cols();
-	UINT height = target.First().pixelWeights.Rows();
+	UINT width = target.Base().First().pixelWeights.Cols();
+	UINT height = target.Base().First().pixelWeights.Rows();
 
 	//initialize the base image
-	Bitmap result(width + reference.First().pixelWeights.Cols(), Math::Max(height, reference.First().pixelWeights.Rows()), RGBColor(255,255,255));
+	Bitmap result(width + reference.Base().First().pixelWeights.Cols(), Math::Max(height, reference.Base().First().pixelWeights.Rows()), RGBColor(255,255,255));
 	Bitmap targetImage, refImage;
 	VisualizeLayers(target, targetImage);
 	VisualizeLayers(reference, refImage);
@@ -451,8 +458,8 @@ void LayerSynthesis::VisualizeNeighbors(const PixelLayerSet &reference, const Pi
 		for (int y=0; y<(int)height; y++)
 			if (targetImage.ValidCoordinates(x,y))
 				result[y][x] = targetImage[y][x];
-	for (int x=width; x<(int)result.Width(); x++)
-		for(int y=0; y<(int)result.Height(); y++)
+	for (UINT x=width; x<(int)result.Width(); x++)
+		for(UINT y=0; y<(int)result.Height(); y++)
 			if (refImage.ValidCoordinates(x-width,y))
 				result[y][x] = refImage[y][x-width];
 	
@@ -489,14 +496,14 @@ void LayerSynthesis::VisualizeNeighbors(const PixelLayerSet &reference, const Pi
 }
 
 
-void LayerSynthesis::VisualizeMatches(const AppParameters &parameters, const PixelLayerSet &reference, const PixelLayerSet &target, Vec2i targetPt, NeighborhoodGenerator &generator, String &filename, const Grid<Vec2i> &sourceCoordinates)
+void LayerSynthesis::VisualizeMatches(const AppParameters &parameters, const GaussianPyramid &reference, const GaussianPyramid &target, Vec2i targetPt, NeighborhoodGenerator &generator, String &filename, const Grid<Vec2i> &sourceCoordinates)
 {
 	//visualize the match for the given target Pt, and the matches for the neighbors
-	UINT width = target.First().pixelWeights.Cols();
-	UINT height = target.First().pixelWeights.Rows();
+	UINT width = target.Base().First().pixelWeights.Cols();
+	UINT height = target.Base().First().pixelWeights.Rows();
 
 	//initialize the base image
-	Bitmap result(width + reference.First().pixelWeights.Cols(), Math::Max(height, reference.First().pixelWeights.Rows()), RGBColor(255,255,255));
+	Bitmap result(width + reference.Base().First().pixelWeights.Cols(), Math::Max(height, reference.Base().First().pixelWeights.Rows()), RGBColor(255,255,255));
 	Bitmap targetImage, refImage;
 	VisualizeLayers(target, targetImage);
 	VisualizeLayers(reference, refImage);
@@ -543,10 +550,10 @@ void LayerSynthesis::VisualizeMatches(const AppParameters &parameters, const Pix
 	result.SavePNG(filename);
 }
 
-void LayerSynthesis::VisualizeLayers(const PixelLayerSet &layers, Bitmap &result)
+void LayerSynthesis::VisualizeLayers(const GaussianPyramid &layers, Bitmap &result)
 {
-	int width = layers.First().pixelWeights.Cols();
-	int height = layers.First().pixelWeights.Rows();
+	int width = layers.Base().First().pixelWeights.Cols();
+	int height = layers.Base().First().pixelWeights.Rows();
 	result.Allocate(width, height);
 	
 	for (int x=0; x<width; x++)
@@ -554,8 +561,8 @@ void LayerSynthesis::VisualizeLayers(const PixelLayerSet &layers, Bitmap &result
 		for (int y=0; y<height; y++)
 		{
 			Vec3f value(0,0,0);
-			for (UINT layerIndex=0; layerIndex<layers.Length(); layerIndex++)
-				value += (float)layers[layerIndex].pixelWeights(y,x)*layers[layerIndex].color;
+			for (UINT layerIndex=0; layerIndex<layers.NumLayers(); layerIndex++)
+				value += (float)layers[0][layerIndex].pixelWeights(y,x)*layers[0][layerIndex].color;
 			result[y][x] = RGBColor(value);
 		}
 	}

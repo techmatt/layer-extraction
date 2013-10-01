@@ -4,12 +4,70 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
+using System.Diagnostics;
 
 namespace Engine
 {
+
+    public class ColorMood
+    {
+        public double Activity;
+        public double Weight;
+        public double Heat;
+
+        public ColorMood()
+        {
+            Activity = 0;
+            Weight = 0;
+            Heat = 0;
+        }
+
+        public ColorMood(double a, double w, double h)
+        {
+            Activity = a;
+            Weight = w;
+            Heat = h;
+        }
+
+        public double SqDist(ColorMood cm)
+        {
+            double adiff = this.Activity - cm.Activity;
+            double wdiff = this.Weight - cm.Weight;
+            double hdiff = this.Heat - cm.Heat;
+            return Math.Pow(adiff, 2.0) + Math.Pow(wdiff, 2.0) + Math.Pow(hdiff, 2.0);
+        }
+
+        public static ColorMood operator +(ColorMood a, ColorMood b)
+        {
+            return new ColorMood(a.Activity + b.Activity, a.Weight + b.Weight, a.Heat + b.Heat);
+        }
+
+        public static ColorMood operator *(ColorMood a, ColorMood b)
+        {
+            return new ColorMood(a.Activity * b.Activity, a.Weight * b.Weight, a.Heat * b.Heat);
+        }
+        public static ColorMood operator -(ColorMood a, ColorMood b)
+        {
+            return new ColorMood(a.Activity - b.Activity, a.Weight - b.Weight, a.Heat - b.Heat);
+        }
+
+        public static ColorMood operator /(ColorMood a, double s)
+        {
+            return new ColorMood(a.Activity / s, a.Weight / s, a.Heat / s);
+        }
+
+        public static ColorMood operator *(ColorMood a, double s)
+        {
+            return new ColorMood(a.Activity * s, a.Weight * s, a.Heat * s);
+        }
+
+
+    }
+
+
+
     public class HSV
     {
         public double H;
@@ -67,23 +125,39 @@ namespace Engine
         public double L;
         public double A;
         public double B;
+        public bool Transparent; //just to indicate a fully transparent color (or "no color")
 
         public CIELAB()
         {
             L = 0;
             A = 0;
             B = 0;
+            Transparent = false;
         }
 
-        public CIELAB(double l, double a, double b)
+        public CIELAB(double l, double a, double b, bool transparent = false)
         {
             L = l;
             A = a;
             B = b;
+            Transparent = transparent;
+        }
+
+        public CIELAB(CIELAB other)
+        {
+            L = other.L;
+            A = other.A;
+            B = other.B;
+            Transparent = other.Transparent;
         }
 
         public double SqDist(CIELAB lab)
         {
+            if (Transparent && lab.Transparent)
+                return 0;
+
+            Debug.Assert(!lab.Transparent && !Transparent, "CIELAB SqDist: Cannot compute distance between transparent and opaque color");
+
             double ldiff = this.L - lab.L;
             double adiff = this.A - lab.A;
             double bdiff = this.B - lab.B;
@@ -93,6 +167,11 @@ namespace Engine
         //ported from https://github.com/StanfordHCI/c3/blob/master/lib/d3/d3.color.js
         public double CIEDE2000Dist(CIELAB lab)
         {
+            if (Transparent && lab.Transparent)
+                return 0;
+
+            Debug.Assert(!lab.Transparent && !Transparent, "CIELAB SqDist: Cannot compute distance between transparent and opaque color");
+
             // adapted from Sharma et al's MATLAB implementation at
             //  http://www.ece.rochester.edu/~gsharma/ciede2000/
 
@@ -172,7 +251,10 @@ namespace Engine
 
         public bool Equals(CIELAB other)
         {
-            return L == other.L && A == other.A && B == other.B;
+            if (Transparent && other.Transparent)
+                return true;
+            else
+                return L == other.L && A == other.A && B == other.B;
         }
 
 
@@ -181,46 +263,70 @@ namespace Engine
             //convert to RGB and see
             //CIELAB lab = new CIELAB(L, A, B);
             //Color c = Util.LABtoRGB(lab);
-            int hCode = (int)Math.Round(L) ^ (int)Math.Round(A) ^ (int)Math.Round(B);
-            //int hCode = c.R ^ c.G ^ c.B;
+            int hCode;
+            if (!Transparent)
+                hCode = (int)Math.Round(L) ^ (int)Math.Round(A) ^ (int)Math.Round(B) ^ 0;
+                //int hCode = c.R ^ c.G ^ c.B;     
+            else
+                hCode = 0 ^ 0 ^ 0 ^ 1;
+
             return hCode.GetHashCode();
         }
 
         public static CIELAB operator +(CIELAB a, CIELAB b)
         {
+            if (a.Transparent || b.Transparent)
+                return NoOP(a, b);
             return new CIELAB(a.L + b.L, a.A + b.A, a.B + b.B);
         }
 
         public static CIELAB operator *(CIELAB a, CIELAB b)
         {
+            if (a.Transparent || b.Transparent)
+                return NoOP(a, b);
             return new CIELAB(a.L * b.L, a.A * b.A, a.B * b.B);
         }
 
         public static CIELAB operator /(CIELAB a, CIELAB b)
         {
+            if (a.Transparent || b.Transparent)
+                return NoOP(a, b);
             return new CIELAB(a.L / b.L, a.A / b.A, a.B / b.B);
         }
 
         public static CIELAB operator -(CIELAB a, CIELAB b)
         {
+            if (a.Transparent || b.Transparent)
+                return NoOP(a, b);
             return new CIELAB(a.L - b.L, a.A - b.A, a.B - b.B);
         }
 
         public static CIELAB operator /(CIELAB a, double s)
         {
-            return new CIELAB(a.L / s, a.A / s, a.B / s);
+            return new CIELAB(a.L / s, a.A / s, a.B / s, a.Transparent);
         }
 
         public static CIELAB operator *(CIELAB a, double s)
         {
-            return new CIELAB(a.L * s, a.A * s, a.B * s);
+            return new CIELAB(a.L * s, a.A * s, a.B * s, a.Transparent);
         }
 
         public override string ToString()
         {
             //return base.ToString();
-            return "(" + L + ", " + A + ", " + B + ")";
+            return "("+ L + ", " + A + ", " + B + ")";
+        }
+
+        private static CIELAB NoOP(CIELAB a, CIELAB b)
+        {
+            if (a.Transparent && b.Transparent)
+                return new CIELAB(0, 0, 0, true);
+            else if (a.Transparent)
+                return new CIELAB(b);
+            else
+                return new CIELAB(a);
         }
     }
 
+   
 }
