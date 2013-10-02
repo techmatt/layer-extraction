@@ -124,10 +124,6 @@ void LayerSynthesis::InitPCA(const GaussianPyramid &layers, const NeighborhoodGe
 			int yCenter = centerPt.y;
 
             success = generator.Generate(layers, xCenter, yCenter, curNeighborhood);
-			for(UINT i = 0; i < dimension; i++)
-			{
-				success = generator.Generate(layers, xCenter, yCenter, curNeighborhood);
-			}
         }
         neighborhoods[neighborhoodIndex] = curNeighborhood;
 		if (neighborhoodIndex % 1000 == 0)
