@@ -52,9 +52,15 @@ struct AppParameters
 		neighborRange = file.GetInteger("neighborRange");
 		pyramidDepth = file.GetInteger("pyramidDepth");
 
+		texsyn_exemplar = file.GetString("texsyn_exemplar", "");
 		texsyn_outputwidth = file.GetInteger("texsyn_outputwidth");
 		texsyn_outputheight = file.GetInteger("texsyn_outputheight");
-		nlevels = file.GetInteger("nlevels");
+		texsyn_nlevels = file.GetInteger("texsyn_nlevels");
+		texsyn_neighbourhoodsize = file.GetInteger("texsyn_neighbourhoodsize");
+		texsyn_coherence = file.GetInteger("texsyn_coherence");
+		texsyn_coherenceNeighbourhoodSize = file.GetInteger("texsyn_coherenceNeighbourhoodSize");
+		texsyn_kappa = file.GetDouble("texsyn_kappa");
+		texsyn_pcadim = file.GetInteger("texsyn_pcadim");
     }
 
     String imageFile;
@@ -101,7 +107,13 @@ struct AppParameters
 	int neighborRange;
 	int pyramidDepth;
 
+	String texsyn_exemplar;
 	int texsyn_outputwidth;
 	int texsyn_outputheight;
-	int nlevels;
+	int texsyn_nlevels;
+	int texsyn_neighbourhoodsize;
+	int texsyn_coherence;
+	int texsyn_coherenceNeighbourhoodSize;
+	double texsyn_kappa;
+	int texsyn_pcadim;
 };

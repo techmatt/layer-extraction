@@ -3,30 +3,33 @@ class TextureSynthesis
 {
 public:
 
-	void Init(const PixelLayerSet &exemplar, const NeighborhoodGenerator &generator, UINT nlevels, UINT reducedDimension);
+	void Init(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension, int coherenceK, int coherenceNSize);
 
-	Bitmap Synthesize(const AppParameters &parameters, const PixelLayerSet &exemplar, UINT outputwidth, UINT outputheight, NeighborhoodGenerator &generator);
+	void Synthesize(const GaussianPyramid &exemplar, int outputwidth, int outputheight, NeighborhoodGenerator &generator, double kappa);
 
 private:
-    void InitPCA(const PixelLayerSet &layers, const NeighborhoodGenerator &generator);
-	void InitKDTree(const PixelLayerSet &layers, const NeighborhoodGenerator &generator, UINT reducedDimension);
+    void InitPCA(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator);
+	void InitKDTree(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, UINT reducedDimension);
+	void InitCoherence(const GaussianPyramid &exemplar, int coherenceK, int coherenceNSize);
 
-	void SynthesizeStepInPlace(const AppParameters &parameters, const PixelLayerSet &reference, PixelLayerSet &target, const Vector<Vec2i> &pixels, const Vector<double> &updateSchedule, NeighborhoodGenerator &generator, Grid<Vec2i> &sourceCoordinates);
-	void VisualizeLayers(const PixelLayerSet &layers, Bitmap &result);
-	void VisualizeMatches(const AppParameters &parameters, const PixelLayerSet &reference, const PixelLayerSet &target, Vec2i targetPt, NeighborhoodGenerator &generator, String &filename, const Grid<Vec2i> &sourceCoordinates);
-	void VisualizeNeighbors(const PixelLayerSet &reference, const PixelLayerSet &target, Vec2i targetPt, NeighborhoodGenerator &generator, String &filename);
+	Vec2i BestMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates,
+				    int level, int x, int y, double coherence,
+					double *neighbourhood, double *transformedNeighbourhood, int width, int height);
+	double BestApproximateMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, int level, Vec2i &outPt, double *neighbourhood, double *transformedNeighbourhood);
+	double BestCoherentMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates, int level, int x, int y, Vec2i &outPt, double *neighbourhood, double *transformedNeighbourhood);
 
-	Vector<Vec2i> GetCandidateSourceNeighbors(Vec2i targetPt, const Grid<Vec2i> &sourceCoordinates, const PixelLayerSet &reference);
-	double BestCoherentMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates, Vec2i &outPt);
-	double BestApproximateMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, Vec2i &outPt);
 	double NeighborhoodDistance(double* neighborhoodA, double* neighborhoodB, UINT dimension);
-	double BestNeighborVotedMatch(Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, Vec2i &outPt, int range);
-	Vec2i BestMatch(const AppParameters &parameters, Vec2i targetPt, const PixelLayerSet &reference, const PixelLayerSet &target, NeighborhoodGenerator &generator, const Grid<Vec2i> &sourceCoordinates);
+
+	void WriteImage(const GaussianPyramid &exemplar, const Grid<Vec2i> &coordinates, int level, int width, int height, int pad, String label);
 
 
 	UINT _reducedDimension;
-	PCA<double> _pca;
-	KDTree _tree;
-	Vector<Vec2i> _treeCoordinates;
-};
+	Vector< PCA<double> > _pca;
+	Vector<KDTree> _tree;
+	Vector< Vector<Vec2i> > _treeCoordinates;
+	Grid< Vector<Vec2i> > _coherenceCandidates;
 
+	
+	bool _debug;
+	String _debugoutdir;
+};
