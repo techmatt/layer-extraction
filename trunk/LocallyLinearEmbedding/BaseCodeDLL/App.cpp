@@ -281,50 +281,57 @@ BCLayers* App::SynthesizeLayers()
 
 UINT32 App::ProcessCommand(const String &command)
 {
-	Console::WriteLine("process command");
 	if (command == "SynthesizeTexture") {
-		// texture synthesis
-		Console::WriteLine("button");
-	}
-	else {
 		// params
 		_parameters.Init("../Parameters.txt");
-		int reducedDimension = _parameters.reducedDimension;
-		int neighborhoodSize = _parameters.neighborhoodSize;
+		int reducedDimension = _parameters.texsyn_pcadim;
+		int neighborhoodSize = _parameters.texsyn_neighbourhoodsize; // radius
 		int outputwidth = _parameters.texsyn_outputwidth;
 		int outputheight = _parameters.texsyn_outputheight;
-		int nlevels = _parameters.nlevels;
+		int nlevels = _parameters.texsyn_nlevels;
+		int kcoh = _parameters.texsyn_coherence;
+		int ncoh = _parameters.texsyn_coherenceNeighbourhoodSize;
+		double kappa = _parameters.texsyn_kappa;
 		
 		String layerDir = "../Layers/";
-		String dataDir = "../TextureSynthesisExemplars/";
+		String exemplar_name = "../TextureSynthesisExemplars/" + _parameters.texsyn_exemplar;
 		// read in layers
 		PixelLayerSet input;
 		/*for (UINT i=0; i<_parameters.targetLayers.Length(); i++)
 		    input.PushEnd(PixelLayer(layerDir+_parameters.targetLayers[i]));*/
 		
+		Console::WriteLine("Texture Synthesis: " + exemplar_name);
+
 		Bitmap rgbimg;
-		rgbimg.LoadPNG(dataDir+_parameters.targetImageFile);
+		rgbimg.LoadPNG(exemplar_name);
+		//debugging
+		rgbimg.SavePNG("texsyn-out/input.png");
 		// split colour image to rgb pixel layers
 		PixelLayer red, green, blue;
 		red.color = Vec3f(1, 0, 0);
 		green.color = Vec3f(0, 1, 0);
 		blue.color = Vec3f(0, 0, 1);
+		red.pixelWeights.Allocate(rgbimg.Height(), rgbimg.Width());
+		green.pixelWeights.Allocate(rgbimg.Height(), rgbimg.Width());
+		blue.pixelWeights.Allocate(rgbimg.Height(), rgbimg.Width());
 		for (UINT y = 0; y < rgbimg.Height(); y++) {
 			for (UINT x = 0; x < rgbimg.Width(); x++) {
-				RGBColor colour = rgbimg[y][x];
-				red.pixelWeights(y,x) = colour.r;
-				green.pixelWeights(y,x) = colour.g;
-				blue.pixelWeights(y,x) = colour.b;
+				Vec3f colour = Vec3f(rgbimg[y][x]);
+				red.pixelWeights(y,x) = colour[0];
+				green.pixelWeights(y,x) = colour[1];
+				blue.pixelWeights(y,x) = colour[2];
 			}
 		}
 		input.PushEnd(red);
 		input.PushEnd(green);
 		input.PushEnd(blue);
 		
-		NeighborhoodGenerator generator(neighborhoodSize, input.Length(), nlevels);
+		NeighborhoodGenerator generator(neighborhoodSize, input.Length(), 1);
+		GaussianPyramid pyramid(input, nlevels);
+		//pyramid.Write(String("texsyn-out/pyr"));
 		TextureSynthesis synthesizer;
-		//synthesizer.Init(input, generator, nlevels, reducedDimension);
-		//synthesizer.Synthesize(_parameters, input, outputwidth, outputheight, generator);
+		synthesizer.Init(pyramid, generator, nlevels, reducedDimension, kcoh, ncoh);
+		synthesizer.Synthesize(pyramid, outputwidth, outputheight, generator, kappa);
 	}
     return 0;
 }
