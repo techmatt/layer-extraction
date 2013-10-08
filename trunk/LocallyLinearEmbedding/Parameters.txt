@@ -70,12 +70,13 @@ pyramidDepth=3
 #pyramidDepth=3
 
 # texture synthesis
-texsyn_exemplar=test.png
+texsyn_exemplar=143_tor.ex.rgb.png
+#texsyn_exemplar=test.png
 texsyn_outputwidth=256
 texsyn_outputheight=256
-texsyn_nlevels=1
-texsyn_neighbourhoodsize=5
+texsyn_nlevels=3
+texsyn_neighbourhoodsize=2
 texsyn_coherence=0
 texsyn_coherenceNeighbourhoodSize=3
-texsyn_kappa=0
-texsyn_pcadim=8
+texsyn_kappa=1
+texsyn_pcadim=32

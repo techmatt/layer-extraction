@@ -55,7 +55,8 @@ void TextureSynthesis::InitKDTree(const GaussianPyramid &exemplar, const Neighbo
 {
 	_tree.Allocate(exemplar.Depth());
 	_treeCoordinates.Allocate(exemplar.Depth());
-	_reducedDimension = reducedDimension; ///generator.Dimension();
+	///_reducedDimension = generator.Dimension();
+	_reducedDimension = reducedDimension;
 
 	const UINT dimension = generator.Dimension();
 	const UINT neighbors = 5;
@@ -102,6 +103,8 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &exemplar, int outputwid
 	Grid<Vec2i> coordinates(outputheight+2*pad, outputwidth+2*pad, Vec2i(-1,-1));
 	Grid<Vec2i> upsampcoordinates(outputheight+2*pad, outputwidth+2*pad, Vec2i(-1,-1));
 
+	Grid<Vec2i> prevcoordinates(outputheight+2*pad, outputwidth+2*pad, Vec2i(-1,-1));
+
 	//const UINT subpass = 2; // synthesize in 2x2 squares
 
 	int exemplarwidth = exemplar.Base().First().Width();
@@ -111,8 +114,10 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &exemplar, int outputwid
 	int coarsewidth = outputwidth >> (exemplar.Depth()-1);
 	int coarseheight = outputheight >> (exemplar.Depth()-1);
 	UINT dimension = generator.Dimension();
-	double* neighbourhood = new double[dimension]; 
-	double* transformedNeighbourhood = new double[_reducedDimension];
+	double *neighbourhood = new double[dimension]; 
+	double *transformedNeighbourhood = new double[_reducedDimension];
+	double *coherentneighbourhood = new double[dimension];
+	double *transformedCohNeighbourhood = new double[_reducedDimension];
 
 	for (int row = 0; row < coarseheight+2*pad; row++) {
 		for (int col = 0; col < coarsewidth+2*pad; col++) {
@@ -120,6 +125,8 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &exemplar, int outputwid
 		}
 	}
 	Console::WriteLine(String(excoarseheight) + String(",") + String(excoarsewidth) + String(" | ") + String(coarsewidth) + String(",") + String(coarseheight));
+
+	const double CORRECTION_THRESHOLD = 10;
 
 	for (int level = exemplar.Depth()-1; level >= 0; level--) {
 		int delta = 1 << level; 
@@ -131,22 +138,23 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &exemplar, int outputwid
 		Console::WriteLine(String("[ level ") + String(level) + String(" ] e(") + String(exemplarheight) + String(",") + String(exemplarwidth) + String(") | s(") + String(height) + String(",") + String(width) + String(")"));
 
 		if (level < exemplar.Depth()-1) { // upsample
-			if (pad > 0) {
-				for (int row = 0; row < height; row++) {
-					for (int col = 0; col < width; col++)
-						coordinates(row,col) = coordinates(row+pad,col+pad);
-				}
-				pad = 0;
+			/*if (pad > 0) {
+			for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++)
+			coordinates(row,col) = coordinates(row+pad,col+pad);
 			}
+			pad = 0;
+			}*/
 			int lowidth = width / 2;
 			int loheight = height / 2;
 			int rowoffset, coloffset, lorow, locol;
-			for (int row = 0; row < height; row++) {
+			for (int row = 0; row < height+2*pad; row++) {
 				rowoffset = row % 2;
 				lorow = row / 2;
-				for (int col = 0; col < width; col++) {
+				for (int col = 0; col < width+2*pad; col++) {
 					coloffset = col % 2;
 					locol = col / 2;
+					//if (!(row >= 0 && col >= 0 && row < upsampcoordinates.Rows() && col < upsampcoordinates.Cols())
 					upsampcoordinates(row,col) = Vec2i((2*coordinates(lorow,locol).x+rowoffset) % exemplarheight, (2*coordinates(lorow,locol).y+coloffset) % exemplarwidth);
 				}
 			}
@@ -158,80 +166,138 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &exemplar, int outputwid
 		}
 
 		// synthesis
-		/*for (int sy = 0; sy < subpass; sy++) {
-		for (int sx = 0; sx < subpass; sx++) {*/
-		int sx = 0, sy = 0;
-		int subpass = 1;
+		int iteration = 0;
+		double diff = FLT_MAX, d;
+		while (iteration < 3 && diff > CORRECTION_THRESHOLD) {
 
-		for (int y = sy; y < height; y += subpass) {
-			for (int x = sx; x < width; x += subpass) {
-
-				if (x == 20 && y == 20) {
-					WriteImage(exemplar, coordinates, level, width, height, pad, String("debug"));
+			for (int y = pad; y < height+pad; y++) {
+				for (int x = pad; x < width+pad; x++) {
+					prevcoordinates(y,x).x = coordinates(y,x).x;
+					prevcoordinates(y,x).y = coordinates(y,x).y;
 				}
-
-				//Console::WriteString(String("(") + String(x) + String(",") + String(y) + String(") "));
-				Vec2i pt = BestMatch(exemplar, generator, coordinates, level, x+pad, y+pad, kappa, neighbourhood, transformedNeighbourhood, width+2*pad, height+2*pad);
-				coordinates(y+pad,x+pad) = pt;
-				//coordinates(y,x) = BestMatch(exemplar, generator, coordinates, level, x, y, kappa, neighbourhood, transformedNeighbourhood);
 			}
-		}
 
-		/*}
-		}*/
-		if (_debug) {
-			WriteImage(exemplar, coordinates, level, width, height, pad, String("correct"));
+			/*for (int sy = 0; sy < subpass; sy++) {
+			for (int sx = 0; sx < subpass; sx++) {*/
+			int sx = 0, sy = 0;
+			int subpass = 1;
+			_coherentcount = 0;
+			//if (iteration == 1)
+			//	Console::WriteLine("");
+
+			for (int y = sy; y < height; y += subpass) {
+				for (int x = sx; x < width; x += subpass) {
+
+					//Console::WriteString(String("(") + String(x) + String(",") + String(y) + String(") "));
+					Vec2i pt = BestMatch(exemplar, generator, coordinates, level, x+pad, y+pad, kappa, 
+						neighbourhood, transformedNeighbourhood, width+2*pad, height+2*pad,
+						coherentneighbourhood, transformedCohNeighbourhood);
+					coordinates(y+pad,x+pad) = pt;
+					//coordinates(y,x) = BestMatch(exemplar, generator, coordinates, level, x, y, kappa, neighbourhood, transformedNeighbourhood);
+				}
+			}
+
+			/*}
+			}*/
+			Console::WriteLine(String(" coherent count = ") + String(_coherentcount) + String(" of ") + String(width*height));
+
+			diff = 0;
+			for (int y = pad; y < height+pad; y++) {
+				for (int x = pad; x < width+pad; x++) {
+					for (int k = 0; k < exemplar.Depth(); k++) {
+						d = 255*exemplar[level][k].pixelWeights(coordinates(y,x).y,coordinates(y,x).x) - 255*exemplar[level][k].pixelWeights(prevcoordinates(y,x).y,prevcoordinates(y,x).x);
+						diff = d * d;
+					}
+				}
+			}
+			Console::WriteLine(String("[ level ") + String(level) + String(", iteration ") + String(iteration) + String(" ] diff ") + String(diff));
+			if (_debug) {
+				WriteImage(exemplar, coordinates, level, width, height, pad, String("correct-")+String(iteration));
+			}
+			iteration++;
 		}
 	}
 
 	delete [] neighbourhood;
 	delete [] transformedNeighbourhood;
+	delete [] coherentneighbourhood;
+	delete [] transformedCohNeighbourhood;
 	Console::WriteLine("Done!");
 }
 
 Vec2i TextureSynthesis::BestMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates, int level, int x, int y, double kappa,
-								  double *neighbourhood, double *transformedNeighbourhood, int width, int height)
+								  double *neighbourhood, double *transformedNeighbourhood, int width, int height,
+								  double *coherentneighbourhood, double *transformedCohNeighbourhood)
 {
 	Vec2i approxPt, coherentPt;
 
 	if (!generator.Generate(exemplar, coordinates, level, width, height, x, y, neighbourhood))
 		Console::WriteLine("");
 
-	int count = 0;
-	for (int i = 0; i < generator.Dimension(); i++) {
-		if (neighbourhood[i] != 0)
-			count++;
-		if (neighbourhood[i] != 0 && neighbourhood[i] != 1) {
-			double d = neighbourhood[i];
-			Console::WriteLine("");
-		}
-	}
 	_pca[level].Transform(transformedNeighbourhood, neighbourhood, _reducedDimension);
 	///transformedNeighbourhood = neighbourhood;
 
-	double nearestDist = BestApproximateMatch(exemplar, generator, level, approxPt, neighbourhood, transformedNeighbourhood);
-	/*double nearestCoherentDist = BestCoherentMatch(exemplar, generator, coordinates, level, x, y, coherentPt, neighbourhood, transformedNeighbourhood);
+	double nearestDist = BestApproximateMatch(exemplar, generator, level, approxPt, transformedNeighbourhood);
+	double nearestCoherentDist = BestCoherentMatch(exemplar, generator, coordinates, level, width, height,
+		x, y, coherentPt, transformedNeighbourhood, coherentneighbourhood, transformedCohNeighbourhood);
 
-	if (nearestCoherentDist < (nearestDist + kappa))
-	return coherentPt;*/
-
-	float v = exemplar[level].First().pixelWeights(approxPt.y, approxPt.x);
-
+	if (nearestCoherentDist < (nearestDist + kappa)) {
+		_coherentcount++;
+		if (!(coherentPt.x >= 0 && coherentPt.y >= 0 && coherentPt.x < exemplar[level].First().Width() && coherentPt.y < exemplar[level].First().Height())) {
+			int tx = coherentPt.x;
+			int ty = coherentPt.y;
+			Console::WriteLine("");
+		}
+		return coherentPt;
+	}
 	return approxPt;
 }
 
-double TextureSynthesis::BestCoherentMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates, int level, int x, int y, Vec2i &outPt,
-										   double *neighbourhood, double *transformedNeighbourhood)
+double TextureSynthesis::BestCoherentMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates, 
+										   int level, int width, int height, int x, int y, Vec2i &outPt,
+										   double *transformedNeighbourhood, double *coherentneighbourhood, double *transformedCohNeighbourhood)
 {
-	return FLT_MAX;
+	int xcoord, ycoord;
+	double mindist = FLT_MAX, d;
+	for (int j = -1; j <= 0; j++) {
+		for (int i = -1; i <= 1; i++) {
+			if (i == 0 && j == 0) break; // since scanline order
+
+			if (y+j >= 0 && y+j < height && x+i >= 0 && x+i < width) {
+				xcoord = coordinates(y+j,x+i).x - i;
+				ycoord = coordinates(y+j,x+i).y - j;
+
+				int exh = exemplar[level].First().Height();
+				int exw = exemplar[level].First().Width();
+				if (ycoord >= 0 && ycoord < exemplar[level].First().Height() && xcoord >= 0 && xcoord < exemplar[level].First().Width()) {
+					if (generator.Generate(exemplar, level, xcoord, ycoord, coherentneighbourhood)) {
+						_pca[level].Transform(transformedCohNeighbourhood, coherentneighbourhood, _reducedDimension);
+
+						d = NeighborhoodDistance(transformedNeighbourhood, transformedCohNeighbourhood, _reducedDimension);
+						if (d < mindist) {
+							mindist = d;
+							outPt.x = xcoord;
+							outPt.y = ycoord;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (mindist < FLT_MAX && !(outPt.x >= 0 && outPt.y >= 0 && outPt.x < exemplar[level].First().Width() && outPt.y < exemplar[level].First().Height())) {
+		int tx = outPt.x;
+		int ty = outPt.y;
+		Console::WriteLine("");
+	}
+
+	return mindist;
 }
 
 double TextureSynthesis::BestApproximateMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, int level, Vec2i &outPt,
-											  double *neighbourhood, double *transformedNeighbourhood)
+											  double *transformedNeighbourhood)
 {
-	UINT dimension = generator.Dimension();
-
-	Vector<UINT> indices;
+	Vector<UINT> indices(1);
 
 	//find nearest pixel neighborhood			
 	_tree[level].KNearest(transformedNeighbourhood, 1, indices, 0.0f);
@@ -242,9 +308,7 @@ double TextureSynthesis::BestApproximateMatch(const GaussianPyramid &exemplar, N
 
 	double* matchedNeighbourhood = _tree[level].GetDataPoint(indices[0]);
 
-	//return NeighborhoodDistance(transformedNeighbourhood, matchedNeighbourhood, _reducedDimension);
-	double distance = NeighborhoodDistance(transformedNeighbourhood, matchedNeighbourhood, _reducedDimension);
-	return distance;
+	return NeighborhoodDistance(transformedNeighbourhood, matchedNeighbourhood, _reducedDimension);
 }
 
 double TextureSynthesis::NeighborhoodDistance(double* neighborhoodA, double* neighborhoodB, UINT dimension)

@@ -14,9 +14,13 @@ private:
 
 	Vec2i BestMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates,
 				    int level, int x, int y, double coherence,
-					double *neighbourhood, double *transformedNeighbourhood, int width, int height);
-	double BestApproximateMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, int level, Vec2i &outPt, double *neighbourhood, double *transformedNeighbourhood);
-	double BestCoherentMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates, int level, int x, int y, Vec2i &outPt, double *neighbourhood, double *transformedNeighbourhood);
+					double *neighbourhood, double *transformedNeighbourhood, int width, int height,
+					double *coherentneighbourhood, double *transformedCohNeighbourhood);
+	double BestApproximateMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, int level,
+								Vec2i &outPt, double *transformedNeighbourhood);
+	double BestCoherentMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates,
+							 int level, int width, int height, int x, int y, Vec2i &outPt, double *transformedNeighbourhood,
+							 double *coherentneighbourhood, double *transformedCohNeighbourhood);
 
 	double NeighborhoodDistance(double* neighborhoodA, double* neighborhoodB, UINT dimension);
 
@@ -29,6 +33,7 @@ private:
 	Vector< Vector<Vec2i> > _treeCoordinates;
 	Grid< Vector<Vec2i> > _coherenceCandidates;
 
+	int _coherentcount;
 	
 	bool _debug;
 	String _debugoutdir;
