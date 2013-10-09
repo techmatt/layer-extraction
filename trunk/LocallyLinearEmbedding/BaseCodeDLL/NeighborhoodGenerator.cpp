@@ -102,8 +102,6 @@ bool NeighborhoodGenerator::Generate(const GaussianPyramid &pyramid, int level, 
 			}
 		}
 	}
-	if (dimensionIndex != _dimension)
-		Console::WriteLine("");
 	return inBounds;
 }
 
@@ -140,8 +138,5 @@ bool NeighborhoodGenerator::Generate(const GaussianPyramid &pyramid, const Grid<
 			}
 		}
 	}
-	
-	if (dimensionIndex != _dimension)
-		Console::WriteLine("");
 	return inBounds;
 }

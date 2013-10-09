@@ -3,12 +3,12 @@ class TextureSynthesis
 {
 public:
 
-	void Init(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension, int coherenceK, int coherenceNSize);
+	void Init(const String& exemplarname, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension, int coherenceK, int coherenceNSize);
 
 	void Synthesize(const GaussianPyramid &exemplar, int outputwidth, int outputheight, NeighborhoodGenerator &generator, double kappa);
 
 private:
-    void InitPCA(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator);
+    void InitPCA(const String& exemplarname, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator);
 	void InitKDTree(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, UINT reducedDimension);
 	void InitCoherence(const GaussianPyramid &exemplar, int coherenceK, int coherenceNSize);
 
