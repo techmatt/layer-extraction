@@ -330,7 +330,7 @@ UINT32 App::ProcessCommand(const String &command)
 		GaussianPyramid pyramid(input, nlevels);
 		//pyramid.Write(String("texsyn-out/pyr"));
 		TextureSynthesis synthesizer;
-		synthesizer.Init(pyramid, generator, nlevels, reducedDimension, kcoh, ncoh);
+		synthesizer.Init(_parameters.texsyn_exemplar, pyramid, generator, nlevels, reducedDimension, kcoh, ncoh);
 		synthesizer.Synthesize(pyramid, outputwidth, outputheight, generator, kappa);
 	}
     return 0;

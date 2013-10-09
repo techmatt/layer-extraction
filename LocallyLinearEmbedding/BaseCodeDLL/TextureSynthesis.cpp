@@ -1,19 +1,19 @@
 #include "Main.h"
 
-void TextureSynthesis::Init(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension, int coherenceK, int coherenceNSize)
+void TextureSynthesis::Init(const String& exemplarname, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension, int coherenceK, int coherenceNSize)
 {
 	_debug = true;
 	_debugoutdir = "texsyn-out/";
 
 	clock_t start = clock();
-	InitPCA(exemplar, generator);
+	InitPCA(exemplarname, exemplar, generator);
 	InitKDTree(exemplar, generator, reducedDimension);
 	if (coherenceK > 0)
 		InitCoherence(exemplar, coherenceK, coherenceNSize);
 	Console::WriteLine(String("...initialized in ") + String(((float)(clock()-start))/CLOCKS_PER_SEC) + String(" seconds"));
 }
 
-void TextureSynthesis::InitPCA(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator)
+void TextureSynthesis::InitPCA(const String& exemplarname, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator)
 {
 	Console::WriteLine("Initializing PCA...");
 
@@ -25,28 +25,38 @@ void TextureSynthesis::InitPCA(const GaussianPyramid &exemplar, const Neighborho
 
 	for (int level = 0; level < exemplar.Depth(); level++) {
 
-		const int width = exemplar[level].First().Width();
-		const int height = exemplar[level].First().Height();
-
-		Vector<const double*> neighborhoods(neighborhoodCount);
-
-		for(UINT neighborhoodIndex = 0; neighborhoodIndex < neighborhoodCount; neighborhoodIndex++) {
-			double *curNeighborhood = new double[dimension];
-			bool success = false;
-			while(!success) {
-				Vec2i centerPt = Vec2i(rand() % (width-nRadius*2)+nRadius, rand() % (height-nRadius*2)+nRadius);
-				int xCenter = centerPt.x;
-				int yCenter = centerPt.y;
-
-				success = generator.Generate(exemplar, level, xCenter, yCenter, curNeighborhood);
-			}
-			neighborhoods[neighborhoodIndex] = curNeighborhood;
-			if (neighborhoodIndex % 1000 == 0)
-				Console::WriteLine("Initialized "+String(neighborhoodIndex)+" neighborhoods");
+		String filename = String("../TexSynCache/pca_nr-") + String(nRadius) + String("_nl-") +  String(exemplar.NumLayers()) + String("_lv-") + String(level) + String("_") + String(exemplarname) + String(".txt");
+		if (Utility::FileExists(filename)) {
+			_pca[level].LoadFromFile(filename);
+			Console::WriteLine(String("...loaded level ") + String(level) + String(" from file"));
 		}
+		else {
+			const int width = exemplar[level].First().Width();
+			const int height = exemplar[level].First().Height();
 
-		_pca[level].InitFromDensePoints(neighborhoods, dimension);
-		neighborhoods.DeleteMemory();
+			Vector<const double*> neighborhoods(neighborhoodCount);
+
+			for(UINT neighborhoodIndex = 0; neighborhoodIndex < neighborhoodCount; neighborhoodIndex++) {
+				double *curNeighborhood = new double[dimension];
+				bool success = false;
+				while(!success) {
+					Vec2i centerPt = Vec2i(rand() % (width-nRadius*2)+nRadius, rand() % (height-nRadius*2)+nRadius);
+					int xCenter = centerPt.x;
+					int yCenter = centerPt.y;
+
+					success = generator.Generate(exemplar, level, xCenter, yCenter, curNeighborhood);
+				}
+				neighborhoods[neighborhoodIndex] = curNeighborhood;
+				if (neighborhoodIndex % 1000 == 0)
+					Console::WriteLine("Initialized "+String(neighborhoodIndex)+" neighborhoods");
+			}
+
+			_pca[level].InitFromDensePoints(neighborhoods, dimension);
+			neighborhoods.DeleteMemory();
+
+			// cache
+			_pca[level].SaveToFile(filename);
+		}
 	}
 
 }
@@ -126,7 +136,7 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &exemplar, int outputwid
 	}
 	Console::WriteLine(String(excoarseheight) + String(",") + String(excoarsewidth) + String(" | ") + String(coarsewidth) + String(",") + String(coarseheight));
 
-	const double CORRECTION_THRESHOLD = 10;
+	const double CORRECTION_THRESHOLD = 5;
 
 	for (int level = exemplar.Depth()-1; level >= 0; level--) {
 		int delta = 1 << level; 
@@ -177,16 +187,10 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &exemplar, int outputwid
 				}
 			}
 
-			/*for (int sy = 0; sy < subpass; sy++) {
-			for (int sx = 0; sx < subpass; sx++) {*/
-			int sx = 0, sy = 0;
-			int subpass = 1;
 			_coherentcount = 0;
-			//if (iteration == 1)
-			//	Console::WriteLine("");
 
-			for (int y = sy; y < height; y += subpass) {
-				for (int x = sx; x < width; x += subpass) {
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
 
 					//Console::WriteString(String("(") + String(x) + String(",") + String(y) + String(") "));
 					Vec2i pt = BestMatch(exemplar, generator, coordinates, level, x+pad, y+pad, kappa, 
@@ -204,7 +208,7 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &exemplar, int outputwid
 			diff = 0;
 			for (int y = pad; y < height+pad; y++) {
 				for (int x = pad; x < width+pad; x++) {
-					for (int k = 0; k < exemplar.Depth(); k++) {
+					for (int k = 0; k < exemplar.NumLayers(); k++) {
 						d = 255*exemplar[level][k].pixelWeights(coordinates(y,x).y,coordinates(y,x).x) - 255*exemplar[level][k].pixelWeights(prevcoordinates(y,x).y,prevcoordinates(y,x).x);
 						diff = d * d;
 					}
