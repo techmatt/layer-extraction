@@ -57,10 +57,12 @@ struct AppParameters
 		texsyn_outputheight = file.GetInteger("texsyn_outputheight");
 		texsyn_nlevels = file.GetInteger("texsyn_nlevels");
 		texsyn_neighbourhoodsize = file.GetInteger("texsyn_neighbourhoodsize");
-		texsyn_coherence = file.GetInteger("texsyn_coherence");
-		texsyn_coherenceNeighbourhoodSize = file.GetInteger("texsyn_coherenceNeighbourhoodSize");
 		texsyn_kappa = file.GetDouble("texsyn_kappa");
+		texsyn_usepca = file.GetBoolean("texsyn_usepca");
 		texsyn_pcadim = file.GetInteger("texsyn_pcadim");
+		texsyn_usergb = file.GetBoolean("texsyn_usergb");
+		texsyn_uselayers = file.GetBoolean("texsyn_uselayers");
+		texsyn_klayers = file.GetInteger("texsyn_klayers");
     }
 
     String imageFile;
@@ -112,8 +114,10 @@ struct AppParameters
 	int texsyn_outputheight;
 	int texsyn_nlevels;
 	int texsyn_neighbourhoodsize;
-	int texsyn_coherence;
-	int texsyn_coherenceNeighbourhoodSize;
 	double texsyn_kappa;
+	bool texsyn_usepca;
 	int texsyn_pcadim;
+	bool texsyn_usergb;
+	bool texsyn_uselayers;
+	int texsyn_klayers;
 };
