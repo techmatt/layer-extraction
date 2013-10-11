@@ -126,13 +126,6 @@ bool NeighborhoodGenerator::Generate(const GaussianPyramid &pyramid, const Grid<
 				} else {
 					Assert( coordinates(row,col).x >= 0 &&  coordinates(row,col).x < pyramid[level].First().Width() &&  coordinates(row,col).y >= 0 &&  coordinates(row,col).y < pyramid[level].First().Height(),
 						"coordinates out of bounds");
-					if (!(coordinates(row,col).x >= 0 &&  coordinates(row,col).x < pyramid[level].First().Width() &&  coordinates(row,col).y >= 0 &&  coordinates(row,col).y < pyramid[level].First().Height())) {
-						int tx = coordinates(row,col).x;
-						int ty = coordinates(row,col).y;
-						int tw = pyramid[level].First().Width();
-						int th = pyramid[level].First().Height();
-						Console::WriteLine("");
-					}
 					result[dimensionIndex++] = pyramid[level][layerIndex].pixelWeights(coordinates(row,col).y, coordinates(row,col).x);
 				}
 			}
