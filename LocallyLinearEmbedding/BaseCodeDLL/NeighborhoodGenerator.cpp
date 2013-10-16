@@ -133,3 +133,33 @@ bool NeighborhoodGenerator::Generate(const GaussianPyramid &pyramid, const Grid<
 	}
 	return inBounds;
 }
+
+
+bool NeighborhoodGenerator::Generate(const PixelLayerSet &layers, const Vector<int> &order, int iteration, int xCenter, int yCenter, double* result) const
+{
+	const int width  = layers.First().Width();
+	const int height = layers.First().Height();
+
+	UINT dimensionIndex = 0;
+	bool inBounds = true;
+
+	//Vec2i centerPt = pyramid.TransformCoordinates(Vec2i(xCenter, yCenter), 0, level);
+	for(int i = 0; i <= iteration; i++)
+	{
+		int layerIndex = order[i];
+		for(int row = yCenter - _neighborhoodSize; row <= yCenter + _neighborhoodSize; row++)
+		{
+			for(int col = xCenter - _neighborhoodSize; col <= xCenter + _neighborhoodSize; col++)
+			{
+				if(row < 0 || row >= height || col < 0 || col >= width)
+				{
+					inBounds = false;
+					result[dimensionIndex++] = 0;
+				} else {
+					result[dimensionIndex++] = layers[layerIndex].pixelWeights(row, col);
+				}
+			}
+		}
+	}
+	return inBounds;
+}
