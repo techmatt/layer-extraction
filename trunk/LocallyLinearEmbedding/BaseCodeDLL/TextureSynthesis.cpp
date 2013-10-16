@@ -82,7 +82,6 @@ void TextureSynthesis::InitKDTree(const GaussianPyramid &exemplar, const Neighbo
 		const int height = exemplar[level].First().Height();
 		Vector<const double*> allNeighborhoods;
 
-		int valid = 0;
 		for(int y = 0; y < height; y++) {
 			for(int x = 0; x < width; x++) {
 				if(generator.Generate(exemplar, level, x, y, neighborhood)) {
@@ -92,7 +91,6 @@ void TextureSynthesis::InitKDTree(const GaussianPyramid &exemplar, const Neighbo
 
 					allNeighborhoods.PushEnd(reducedNeighborhood);
 					_treeCoordinates[level].PushEnd(Vec2i(x,y));
-					valid++;
 				}
 			}
 		}
@@ -133,17 +131,31 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 	double *coherentneighbourhood = new double[dimension];
 	double *transformedCohNeighbourhood = new double[_reducedDimension];
 
+	/* initialize to random
 	for (int row = 0; row < coarseheight+2*pad; row++) {
-		for (int col = 0; col < coarsewidth+2*pad; col++) {
-			coordinates(row,col) = Vec2i((int)(((float)std::rand()/RAND_MAX)*(excoarseheight-1)), (int)(((float)std::rand()/RAND_MAX)*(excoarsewidth-1)));
+	for (int col = 0; col < coarsewidth+2*pad; col++) {
+	coordinates(row,col) = Vec2i((int)(((float)std::rand()/RAND_MAX)*(excoarseheight-1)), (int)(((float)std::rand()/RAND_MAX)*(excoarsewidth-1)));
+	}
+	}*/
+	const int skip = parameters.texsyn_initrandsize;
+	int rx, ry;
+	for (int row = 0; row < coarseheight+2*pad; row+=skip) {
+		for (int col = 0; col < coarsewidth+2*pad; col+=skip) {
+			// initialize to random skip x skip 
+			rx = (int)(((float)std::rand()/RAND_MAX)*(excoarseheight-1-skip));
+			ry = (int)(((float)std::rand()/RAND_MAX)*(excoarsewidth-1-skip));
+			for (int j = 0; j < skip; j++) {
+				for (int i = 0; i < skip; i++) 
+					if (row+j < coarseheight+2*pad && col+i < coarsewidth+2*pad)
+						coordinates(row+j,col+i) = Vec2i(rx+i, ry+j);
+			}
 		}
 	}
 	Console::WriteLine("exemplar [" + String(exemplarwidth) + " by " + String(exemplarheight) + "] -> output [" + String(outputwidth) + "," + String(outputheight) + "] | " + String(exemplar.NumLayers()) + " layers, dimension = " + String(_reducedDimension));
 
-	const double CORRECTION_THRESHOLD = 5;
-	const int MAX_ITERS = 3;
+	const double CORRECTION_THRESHOLD = 1;
+	const int MAX_ITERS = 5;
 
-	int prevpaddedwidth = coarsewidth + 2 * pad, prevpaddedheight = coarseheight + 2 * pad;
 	for (int level = exemplar.Depth()-1; level >= 0; level--) {
 		int delta = 1 << level; 
 
@@ -182,8 +194,9 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 
 		// synthesis
 		int iteration = 0;
-		double diff = FLT_MAX, d;
-		while (iteration < MAX_ITERS && diff > CORRECTION_THRESHOLD) {
+		double diff = FLT_MAX, d, prevdiff = FLT_MAX;
+		bool done = false;
+		while (iteration < MAX_ITERS && diff > CORRECTION_THRESHOLD && !done) {
 
 			for (int y = nradius; y < paddedheight-nradius; y++) {
 				for (int x = nradius; x < paddedwidth-nradius; x++) {
@@ -216,18 +229,27 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 			for (int y = nradius; y < paddedheight-nradius; y++) {
 				for (int x = nradius; x < paddedwidth-nradius; x++) {
 					for (int k = 0; k < exemplar.NumLayers(); k++) {
-						d = 255.f*exemplar[level][k].pixelWeights(coordinates(y,x).y,coordinates(y,x).x) - 255.f*exemplar[level][k].pixelWeights(prevcoordinates(y,x).y,prevcoordinates(y,x).x);
-						diff = d * d;
+						d = exemplar[level][k].pixelWeights(coordinates(y,x).y,coordinates(y,x).x) - exemplar[level][k].pixelWeights(prevcoordinates(y,x).y,prevcoordinates(y,x).x);
+						diff += d * d;
 					}
 				}
 			}
 			Console::WriteLine(String("[ level ") + String(level) + String(", iteration ") + String(iteration) + String(" ] diff ") + String(diff));
+			if (diff > prevdiff) { // stop
+				Console::WriteLine(" --- backtracking...");
+				for (int y = nradius; y < paddedheight-nradius; y++) {
+					for (int x = nradius; x < paddedwidth-nradius; x++) {
+						coordinates(y,x).x = prevcoordinates(y,x).x;
+						coordinates(y,x).y = prevcoordinates(y,x).y;
+					}
+				}
+				done = true;
+			}
+			prevdiff = diff;
 			if (_debug) {
 				WriteImage(rgbpyr, exemplar, coordinates, level, width, height, pad, String("correct-")+String(iteration));
 				//WriteImage(rgbpyr, exemplar, coordinates, level, paddedwidth, paddedheight, 0, String("correct-all-")+String(iteration));
 			}
-			prevpaddedwidth = width + 2 * pad;
-			prevpaddedheight = height + 2 * pad;
 			iteration++;
 		}
 	}
@@ -245,18 +267,20 @@ Vec2i TextureSynthesis::BestMatch(const GaussianPyramid &exemplar, NeighborhoodG
 {
 	Vec2i approxPt, coherentPt;
 
-/*	if (!generator.Generate(exemplar, coordinates, level, width, height, x, y, neighbourhood))
-		Console::WriteLine("");*/
+	/*	if (!generator.Generate(exemplar, coordinates, level, width, height, x, y, neighbourhood))
+	Console::WriteLine("");*/
 	generator.Generate(exemplar, coordinates, level, width, height, x, y, neighbourhood);
 
 	if (_usepca) _pca[level].Transform(transformedNeighbourhood, neighbourhood, _reducedDimension);
 	else transformedNeighbourhood = neighbourhood;
 
 	double nearestDist = BestApproximateMatch(exemplar, generator, level, approxPt, transformedNeighbourhood);
+	if (kappa == 0) return approxPt;
+
 	double nearestCoherentDist = BestCoherentMatch(exemplar, generator, coordinates, level, width, height,
 		x, y, coherentPt, transformedNeighbourhood, coherentneighbourhood, transformedCohNeighbourhood);
 
-	if (nearestCoherentDist < (nearestDist + kappa)) {
+	if (nearestCoherentDist < nearestDist * (1 + pow(2.0,-level-1)*kappa)) {
 		_coherentcount++;
 		return coherentPt;
 	}
@@ -340,14 +364,14 @@ void TextureSynthesis::WriteImage(const GaussianPyramid &rgbpyr, const GaussianP
 		for (int col = 0; col < width; col++) {
 
 			/*if (coordinates(row+pad,col+pad).x < 0 || coordinates(row+pad,col+pad).x >= rgbpyr[level][0].pixelWeights.Cols()) {
-				int tx = coordinates(row,col).x;
-				int bound = rgbpyr[level][0].pixelWeights.Cols();
-				Console::WriteLine("xxx");
+			int tx = coordinates(row,col).x;
+			int bound = rgbpyr[level][0].pixelWeights.Cols();
+			Console::WriteLine("xxx");
 			}
 			if (coordinates(row+pad,col+pad).y < 0 || coordinates(row+pad,col+pad).y >= rgbpyr[level][0].pixelWeights.Rows()) {
-				int ty = coordinates(row,col).y;
-				int bound = rgbpyr[level][0].pixelWeights.Rows();
-				Console::WriteLine("yyy");
+			int ty = coordinates(row,col).y;
+			int bound = rgbpyr[level][0].pixelWeights.Rows();
+			Console::WriteLine("yyy");
 			}*/
 
 			coordimage[row][col] = RGBColor(Vec3f(rgbpyr[level][0].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),

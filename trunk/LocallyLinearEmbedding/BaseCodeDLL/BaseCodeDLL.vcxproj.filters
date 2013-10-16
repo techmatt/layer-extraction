@@ -82,6 +82,9 @@
     <ClInclude Include="TextureSynthesis.h">
       <Filter>TextureSynthesis</Filter>
     </ClInclude>
+    <ClInclude Include="LayerTextureSynthesizer.h">
+      <Filter>TextureSynthesis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -124,6 +127,9 @@
       <Filter>LayerSynthesizer</Filter>
     </ClCompile>
     <ClCompile Include="TextureSynthesis.cpp">
+      <Filter>TextureSynthesis</Filter>
+    </ClCompile>
+    <ClCompile Include="LayerTextureSynthesizer.cpp">
       <Filter>TextureSynthesis</Filter>
     </ClCompile>
   </ItemGroup>

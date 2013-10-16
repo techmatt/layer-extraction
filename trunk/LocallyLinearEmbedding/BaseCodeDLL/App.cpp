@@ -277,6 +277,7 @@ BCLayers* App::SynthesizeLayers()
 }
 
 
+
 void App::SynthesizeTexture(void)
 {
 	// params
@@ -347,7 +348,7 @@ void App::SynthesizeTexture(void)
 			for (int i = 0; i < _parameters.texsyn_klayers; i++) {
 				String layerfile = cache + String("layers_k-") + String(_parameters.texsyn_klayers) + String("_l-") + String(i) + String(".txt");
 				input.PushEnd(PixelLayer(layerfile));
-				input[idx+i].SavePNG(outdir + String("input-layer-") + String(i) + String(".png"));
+			    input[idx+i].SavePNG(outdir + String("input-layer-") + String(i) + String(".png"));
 			}
 		}
 		else { // generate palette & layers
@@ -363,11 +364,6 @@ void App::SynthesizeTexture(void)
 			Vector<Vec3f> palette(_parameters.texsyn_klayers);
 			for(int i = 0; i < _parameters.texsyn_klayers; i++) palette[i] = clustering.ClusterCenter(i);
 			palette.Sort([](const Vec3f &a, const Vec3f &b){ return a.y < b.y; });
-
-			AppParameters texsynparams; // layer extractor wants AppParameters, but the file names won't work...
-			texsynparams.Init("../Parameters.txt");
-			texsynparams.imageFile = texsynparams.texsyn_exemplar;
-			texsynparams.maskFile = "";
 
 			_extractor.Init(_parameters, rgbimg);
 			_extractor.InitLayersFromPalette(_parameters, rgbimg, palette, layers);
@@ -393,6 +389,7 @@ void App::SynthesizeTexture(void)
 			}
 		}
 	}
+	Console::WriteLine(String(input.Length()));
 
 	// build gaussian pyramid
 	NeighborhoodGenerator generator(neighborhoodSize, input.Length(), 1);

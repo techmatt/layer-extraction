@@ -63,6 +63,7 @@ struct AppParameters
 		texsyn_usergb = file.GetBoolean("texsyn_usergb");
 		texsyn_uselayers = file.GetBoolean("texsyn_uselayers");
 		texsyn_klayers = file.GetInteger("texsyn_klayers");
+		texsyn_initrandsize = file.GetInteger("texsyn_initrandsize");
     }
 
     String imageFile;
@@ -120,4 +121,5 @@ struct AppParameters
 	bool texsyn_usergb;
 	bool texsyn_uselayers;
 	int texsyn_klayers;
+	int texsyn_initrandsize;
 };
