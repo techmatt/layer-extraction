@@ -74,7 +74,7 @@ void App::Recolorize()
 	result.SavePNG("../Results/result.png");
 }
 
-BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &constraints)
+BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &constraints, const bool autoCorrect)
 {
 	AllocConsole();
 
@@ -136,7 +136,20 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 
 	//add preferences
 	_extractor.AddLayerPreferenceConstraints(_parameters, bmp, layers);
+	_extractor.AddMidpointConstraints(_parameters, bmp, layers);
 
+	if (autoCorrect)
+	{
+		bool changed = true;
+		int iterations = 0;
+		while (changed && iterations < 10)
+		{	
+			_extractor.ExtractLayers(_parameters, bmp, layers);
+			changed = _extractor.CorrectLayerSet(_parameters, bmp, layers);
+			iterations++;
+		}
+		Console::WriteLine("Done correcting");
+	}
 	_extractor.ExtractLayers(_parameters, bmp, layers);
 	_extractor.AddNegativeConstraints(_parameters, bmp, layers);
 	_extractor.ExtractLayers(_parameters, bmp, layers);
@@ -146,6 +159,7 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 	_extractor.ExtractLayers(_parameters, bmp, layers);
 	_extractor.AddNegativeConstraints(_parameters, bmp, layers);
 	_extractor.ExtractLayers(_parameters, bmp, layers);
+
 
 	layers.Dump("../Results/Layers.txt", _extractor.SuperpixelColors());
 

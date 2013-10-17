@@ -23,12 +23,14 @@ struct AppParameters
         distantConstraintWeight = file.GetDouble("distantConstraintWeight");
         colorInertiaWeight = file.GetDouble("colorInertiaWeight");
 
+		manifoldWeight = file.GetDouble("manifoldWeight");
         pixelConstraintWeight = file.GetDouble("pixelConstraintWeight");
         sumToOneWeight = file.GetDouble("sumToOneWeight");
         reconstructionWeight = file.GetDouble("reconstructionWeight");
         regularizationWeight = file.GetDouble("regularizationWeight");
         negativeSupressionWeight = file.GetDouble("negativeSupressionWeight");
 		preferenceWeight = file.GetDouble("preferenceWeight");
+		midpointWeight = file.GetDouble("midpointWeight");
 
 
         useKMeansPalette = file.GetBoolean("useKMeansPalette");
@@ -64,6 +66,7 @@ struct AppParameters
 		texsyn_uselayers = file.GetBoolean("texsyn_uselayers");
 		texsyn_klayers = file.GetInteger("texsyn_klayers");
 		texsyn_initrandsize = file.GetInteger("texsyn_initrandsize");
+
     }
 
     String imageFile;
@@ -71,6 +74,8 @@ struct AppParameters
 
     bool useKMeansPalette;
     int KMeansPaletteSize;
+
+	bool useTextureFeatures;
 
     int periodicBasisCount;
     int superpixelIterations;
@@ -93,6 +98,9 @@ struct AppParameters
     double regularizationWeight;
     double negativeSupressionWeight;
 	double preferenceWeight;	
+	double midpointWeight;
+	double manifoldWeight;
+
 	Vector<String> allTargetLayers;
 	Vector<String> targetLayers;
 	Vector<String> refLayers;

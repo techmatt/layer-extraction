@@ -43,14 +43,17 @@ namespace BaseCodeApp
 
 
 
-        public static List<double[,]> SolveLayersGradDescent(Bitmap image, List<DenseVector> palette)
+        public static List<double[,]> SolveLayersGradDescent(DenseVector[,] image, List<DenseVector> palette)
         {
             //store the layers
+            int width = image.GetLength(0);
+            int height = image.GetLength(1);
+
             List<double[,]> layers = new List<double[,]>();
             for (int l = 0; l < palette.Count(); l++)
-                layers.Add(new double[image.Width, image.Height]);
+                layers.Add(new double[width, height]);
 
-            double[,] errors = new double[image.Width, image.Height];
+            double[,] errors = new double[width, height];
 
             int n = palette.Count();
 
@@ -76,17 +79,17 @@ namespace BaseCodeApp
             Stopwatch watch = new Stopwatch();
             watch.Start();
 
-            for (int x = 0; x < image.Width; x++)
+            for (int x = 0; x < width; x++)
             {
-                for (int y = 0; y < image.Height; y++)
+                for (int y = 0; y < height; y++)
                 {
-                    Color pixel = image.GetPixel(x, y);
+                    DenseVector pixel = image[x,y];
                     DenseMatrix P = new DenseMatrix(3, palette.Count);
                     for (int c = 0; c < palette.Count(); c++)
                     {
-                        P[0, c] = pixel.R;
-                        P[1, c] = pixel.G;
-                        P[2, c] = pixel.B;
+                        P[0, c] = pixel[0];
+                        P[1, c] = pixel[1];
+                        P[2, c] = pixel[2];
                     }
                     DenseMatrix Zp = Z - P;
                     var C = Zp.TransposeThisAndMultiply(Zp);
@@ -193,9 +196,9 @@ namespace BaseCodeApp
                 }
             }
             double time = watch.ElapsedMilliseconds;
-            Console.WriteLine("average iters:" + sumIters / (image.Width * image.Height));
+            Console.WriteLine("average iters:" + sumIters / (width * height));
             Console.WriteLine("elapsed(s) " + time / 1000.0);
-            Console.WriteLine("time per pixel (ms): " + time / (image.Width * image.Height));
+            Console.WriteLine("time per pixel (ms): " + time / (width * height));
 
 
             return layers;

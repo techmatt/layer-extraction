@@ -2,6 +2,76 @@ struct Layer
 {
     Vec3f color;
     Vector<double> superpixelWeights;
+
+	double Overlap(Layer other) const
+	{
+		//compute dot product
+		PersistentAssert(superpixelWeights.Length() == other.superpixelWeights.Length(), "Superpixel count is not the same");
+		
+		double overlap = 0;
+
+		for (int i=0; i<superpixelWeights.Length(); i++)
+			overlap += superpixelWeights[i] * other.superpixelWeights[i];
+
+		return overlap;
+	};
+
+	double AveragePositive() const
+	{
+		double pos = 0;
+		for (int i=0; i<superpixelWeights.Length(); i++)
+		{
+			if (superpixelWeights[i] > 0)
+				pos += superpixelWeights[i];
+		}
+		if (superpixelWeights.Length() > 0)
+			return pos/superpixelWeights.Length();
+		return 0;
+	}
+
+	double MaxWeight() const
+	{
+		return superpixelWeights.MaxValue();
+	}
+
+	double MinWeight() const
+	{
+		return superpixelWeights.MinValue();
+	}
+
+	double WeightMean() const
+	{
+		if (superpixelWeights.Length() == 0)
+			return 0;
+		return superpixelWeights.Sum()/superpixelWeights.Length();
+	};
+
+	double PercentNegative() const
+	{
+		if (superpixelWeights.Length() == 0)
+			return 0;
+
+		double negCount = 0;
+		for (int i=0; i<superpixelWeights.Length(); i++)
+			if (superpixelWeights[i] < 0)
+				negCount++;
+		return negCount/superpixelWeights.Length();
+	};
+
+	double AverageNegative() const
+	{
+		double neg = 0;
+		for (int i=0; i<superpixelWeights.Length(); i++)
+		{
+			if (superpixelWeights[i] < 0)
+				neg += superpixelWeights[i];
+		}
+		if (superpixelWeights.Length() > 0)
+			return neg/superpixelWeights.Length();
+		return 0;
+	}
+
+	
 };
 
 struct SuperpixelLayerConstraint
@@ -29,7 +99,7 @@ struct LayerSet
 {
     void Dump(const String &filename, const Vector<ColorCoordinate> &superpixelColors) const;
     Vector<Layer> layers;
-    Vector<SuperpixelLayerConstraint> constraints;
+    Dictionary<String, Vector<SuperpixelLayerConstraint>> constraints;
 };
 
 struct PixelLayer

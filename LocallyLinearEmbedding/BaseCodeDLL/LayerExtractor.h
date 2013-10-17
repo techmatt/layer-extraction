@@ -8,6 +8,8 @@ public:
 	void AddLayerPreferenceConstraints(const AppParameters &parameters, const Bitmap &bmp,LayerSet &result);
     void AddNegativeConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result);
     void ExtractLayers(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers);
+	bool CorrectLayerSet(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers);
+	void AddMidpointConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result);
 
     void TestLayerRecoloring(const Bitmap &bmp, const LayerSet &layers) const;
     Bitmap RecolorSuperpixels(const Bitmap &bmp, const Vector<Vec3f> &newSuperpixelColors) const;
@@ -33,6 +35,9 @@ private:
     void VisualizeLayerConstraints(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const;
     void VisualizeSuperpixels(const AppParameters &parameters, const Bitmap &bmp, const Vector<Vec3f> *newSuperpixelColors, const String &filename) const;
     void VisualizeNearestNeighbors(const AppParameters &parameters, const Bitmap &bmp) const;
+	void VisualizeLayerPalette(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers, int index, int superpixelIndex) const;
+	void VisualizeLayerPreferences(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const;
+
     void TestNeighborWeights(const AppParameters &parameters, const Bitmap &bmp) const;
 
     Vector<ColorCoordinate> superpixelColors;
@@ -42,4 +47,5 @@ private:
 
     SparseMatrix<double> WBase;
     int pass;
+	int correctionPass;
 };

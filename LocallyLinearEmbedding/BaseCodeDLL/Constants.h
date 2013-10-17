@@ -1,4 +1,4 @@
 namespace Constants
 {
-    const bool dumpLayerImages = false;
+    const bool dumpLayerImages = true;
 }

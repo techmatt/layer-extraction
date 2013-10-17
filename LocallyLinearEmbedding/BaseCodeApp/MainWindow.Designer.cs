@@ -53,6 +53,7 @@
             this.layerSynthesisButton = new System.Windows.Forms.Button();
             this.saveLayersButton = new System.Windows.Forms.Button();
             this.textureSynthesisButton = new System.Windows.Forms.Button();
+            this.autoBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -151,7 +152,7 @@
             "CHI-Resize",
             "ConvexHull",
             "CHI-Patch"});
-            this.paletteMethodBox.Location = new System.Drawing.Point(291, 650);
+            this.paletteMethodBox.Location = new System.Drawing.Point(378, 649);
             this.paletteMethodBox.Name = "paletteMethodBox";
             this.paletteMethodBox.Size = new System.Drawing.Size(162, 27);
             this.paletteMethodBox.TabIndex = 8;
@@ -159,7 +160,7 @@
             // paletteLabel
             // 
             this.paletteLabel.AutoSize = true;
-            this.paletteLabel.Location = new System.Drawing.Point(223, 653);
+            this.paletteLabel.Location = new System.Drawing.Point(310, 652);
             this.paletteLabel.Name = "paletteLabel";
             this.paletteLabel.Size = new System.Drawing.Size(57, 19);
             this.paletteLabel.TabIndex = 9;
@@ -291,11 +292,22 @@
             this.textureSynthesisButton.UseVisualStyleBackColor = true;
             this.textureSynthesisButton.Click += new System.EventHandler(this.textureSynthesisButton_Click);
             // 
+            // autoBox
+            // 
+            this.autoBox.AutoSize = true;
+            this.autoBox.Location = new System.Drawing.Point(137, 653);
+            this.autoBox.Name = "autoBox";
+            this.autoBox.Size = new System.Drawing.Size(160, 23);
+            this.autoBox.TabIndex = 22;
+            this.autoBox.Text = "AutoCorrectPalette";
+            this.autoBox.UseVisualStyleBackColor = true;
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1328, 800);
+            this.Controls.Add(this.autoBox);
             this.Controls.Add(this.textureSynthesisButton);
             this.Controls.Add(this.saveLayersButton);
             this.Controls.Add(this.layerSynthesisButton);
@@ -361,6 +373,7 @@
         private System.Windows.Forms.Button layerSynthesisButton;
         private System.Windows.Forms.Button saveLayersButton;
         private System.Windows.Forms.Button textureSynthesisButton;
+        private System.Windows.Forms.CheckBox autoBox;
     }
 }
 
