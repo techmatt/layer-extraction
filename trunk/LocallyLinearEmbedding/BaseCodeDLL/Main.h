@@ -26,7 +26,7 @@ Main.h is included by all source files and includes every header file in the cor
 #include "Eigen3_2/Sparse"
 #include "EigenSolver.h"
 
-
+#include "Dictionary.h"
 #include "BasisColorExtractor.h"
 #include "Recolorizer.h"
 #include "Layers.h"
@@ -40,3 +40,6 @@ Main.h is included by all source files and includes every header file in the cor
 #include "LayerSynthesis.h"
 
 #include "TextureSynthesis.h"
+#include "LayerModel.h"
+
+

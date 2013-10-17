@@ -261,7 +261,7 @@ void Recolorizer::ComputeNearestNeighbors(const AppParameters &parameters, const
     {
         for(UINT x = 0; x < bmp.Width(); x++)
         {
-            ColorCoordinate curCoord(parameters, bmp[y][x], Vec2i(x, y));
+            ColorCoordinate curCoord(parameters, bmp[y][x], Vec2i(x, y), bmp.Width(), bmp.Height());
             tree.KNearest(curCoord.features, parameters.pixelNeighborCount, pixelNeighborhoods(y, x).indices, 0.0f);
         }
     }
@@ -393,7 +393,7 @@ void Recolorizer::ComputeNeighborWeights(const AppParameters &parameters, const 
             PixelNeighborhood &curPixel = pixelNeighborhoods(y, x);
             const UINT k = curPixel.indices.Length();
 
-            ColorCoordinate curPixelCoordinate(parameters, bmp[y][x], Vec2i(x, y));
+            ColorCoordinate curPixelCoordinate(parameters, bmp[y][x], Vec2i(x, y), bmp.Width(), bmp.Height());
             curPixel.weights = ComputeWeights(parameters, curPixel.indices, curPixelCoordinate.features);
         }
     }

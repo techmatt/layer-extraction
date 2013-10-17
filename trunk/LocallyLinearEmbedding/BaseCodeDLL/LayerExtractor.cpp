@@ -34,7 +34,7 @@ void LayerExtractor::Init(const AppParameters &parameters, const Bitmap &bmp)
     VisualizeSuperpixels(parameters, bmp, NULL, "superpixels");
 
     ComputeNearestNeighbors(parameters, bmp);
-    //VisualizeNearestNeighbors(parameters, bmp);
+    VisualizeNearestNeighbors(parameters, bmp);
 
     ComputeNeighborWeights(parameters, bmp);
     //TestNeighborWeights(parameters, bmp);
@@ -42,14 +42,19 @@ void LayerExtractor::Init(const AppParameters &parameters, const Bitmap &bmp)
     ComputeWeightMatrix(parameters);
 
     pass = 0;
+	correctionPass = 0;
 }
 
 void LayerExtractor::AddNegativeConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result)
 {
+	String key = "negative";
+	if (!result.constraints.ContainsKey(key))
+		result.constraints.Add(key, Vector<SuperpixelLayerConstraint>());
+
     map<UINT64,UINT> activeConstraints;
-    for(UINT constraintIndex = 0; constraintIndex < result.constraints.Length(); constraintIndex++)
+    for(UINT constraintIndex = 0; constraintIndex < result.constraints[key].Length(); constraintIndex++)
     {
-        const auto &c = result.constraints[constraintIndex];
+        const auto &c = result.constraints[key][constraintIndex];
         activeConstraints[UINT64(c.index) + (UINT64(c.layerIndex) << 32)] = constraintIndex;
     }
 
@@ -65,11 +70,11 @@ void LayerExtractor::AddNegativeConstraints(const AppParameters &parameters, con
             {
                 if(activeConstraints.count(constraintHash) == 0)
                 {
-                    result.constraints.PushEnd(SuperpixelLayerConstraint(superpixelIndex, layerIndex, 0.0, parameters.negativeSupressionWeight));
+                    result.constraints[key].PushEnd(SuperpixelLayerConstraint(superpixelIndex, layerIndex, 0.0, parameters.negativeSupressionWeight));
                 }
                 else
                 {
-                    auto &c = result.constraints[activeConstraints[constraintHash]];
+                    auto &c = result.constraints[key][activeConstraints[constraintHash]];
                     if(c.target == 0.0) c.weight += parameters.negativeSupressionWeight;
                 }
             }
@@ -79,12 +84,121 @@ void LayerExtractor::AddNegativeConstraints(const AppParameters &parameters, con
 }
 
 
+bool LayerExtractor::CorrectLayerSet(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers)
+{
+	//Operations: add color, remove color, or merge colors
+	//Remove layer colors that have a contribution less than a threshold
+	//If the mean negative weight is greater than a threshold, add the superpixel color that has the most negative weight from all layers
+	//TODO: If two layers have an overlap greater than a threshold and have similar enough colors, merge the two layers
+	Console::WriteLine("Correcting layers");
+
+	Vector<int> toRemove;
+	double weightThresh = 0.1;
+	double negativeThresh = -0.02;
+
+	double meanNegativity = 0;
+	double worstNegWeight = 0;
+	int superpixelIndexToAdd = -1;
+	bool changed = false;
+
+	
+	int origLayerCount = layers.layers.Length();
+	int* newLayerIndices = new int[origLayerCount];
+	for (int i=0; i<layers.layers.Length(); i++)
+		newLayerIndices[i] = i;
+
+	
+	Vector<Layer> newLayers;
+	for (int layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+	{
+		double weight = layers.layers[layerIndex].MaxWeight();
+		Console::WriteLine("Layer " + String(layerIndex) + ":" + String(weight));
+		if (weight < weightThresh)
+		{
+			Console::WriteLine("Removing layer: "+String(layerIndex) + " " + layers.layers[layerIndex].color.CommaSeparatedString());
+			toRemove.PushEnd(layerIndex);
+			newLayerIndices[layerIndex] = -1;
+			changed = true;
+		} else
+			newLayers.PushEnd(layers.layers[layerIndex]);
+		meanNegativity = Math::Min(layers.layers[layerIndex].AverageNegative(), meanNegativity);
+	}
+
+
+	int negatives = 0;
+	for (int i = 0; i < origLayerCount; i++)
+	{
+		if (newLayerIndices[i] == -1)
+			negatives--;
+		else
+			newLayerIndices[i] += negatives;
+	}
+
+	//update the layer constraints and indices
+
+	Dictionary<String, Vector<SuperpixelLayerConstraint>> newConstraints;
+	/*for (int constraintIndex = 0; constraintIndex < layers.constraints.Length(); constraintIndex++)
+	{
+		SuperpixelLayerConstraint& constraint = layers.constraints[constraintIndex];
+		if (newLayerIndices[constraint.layerIndex] >= 0)
+		{
+			constraint.layerIndex = newLayerIndices[constraint.layerIndex];
+			newConstraints.PushEnd(constraint);
+		}
+	}*/
+	
+	layers.layers = newLayers;
+	layers.constraints = newConstraints;
+
+
+
+	Vector<double> sumNegWeights(superpixelColors.Length(), 0);
+
+	//add the most negative color if necessary
+	if (meanNegativity < negativeThresh)
+	{
+		Console::WriteLine("LayerSet too negative: "+String(meanNegativity));
+		for (int superpixelIndex = 0; superpixelIndex < superpixelColors.Length(); superpixelIndex++)
+		{
+			for (int layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+			{
+				double weight = layers.layers[layerIndex].superpixelWeights[superpixelIndex];
+				if (weight < 0)
+					sumNegWeights[superpixelIndex] += weight;
+			}
+		}
+		superpixelIndexToAdd = sumNegWeights.MinIndex();
+	}
+
+
+	if (superpixelIndexToAdd > -1)
+	{
+		Layer newLayer;
+		newLayer.color = Vec3f(superpixelColors[superpixelIndexToAdd].color);
+		Console::WriteLine("Adding color: "+newLayer.color.CommaSeparatedString());
+		layers.layers.PushEnd(newLayer);
+		changed = true;
+	}
+
+	AddMidpointConstraints(parameters, bmp, layers);
+
+	VisualizeLayerPalette(parameters, bmp, layers, correctionPass, superpixelIndexToAdd);
+	correctionPass++;
+
+	return changed;
+
+}
+
 
 
 void LayerExtractor::InitLayersFromPixelConstraints(const AppParameters &parameters, const Bitmap &bmp, const Vector<PixelConstraint> &targetPixelColors, LayerSet &result)
 {
     ComponentTimer timer("Making layers from pixel constraints");
     
+	String key = "initial";
+	if (!result.constraints.ContainsKey(key))
+		result.constraints.Add(key, Vector<SuperpixelLayerConstraint>());
+
     Vector<RGBColor> uniqueColors;
     for(PixelConstraint p : targetPixelColors)
     {
@@ -114,7 +228,7 @@ void LayerExtractor::InitLayersFromPixelConstraints(const AppParameters &paramet
                     {
                         double targetValue = 0.0;
                         if(layerIndex == layerIndexInner) targetValue = 1.0;
-                        result.constraints.PushEnd(SuperpixelLayerConstraint(nearestSuperpixel, layerIndexInner, targetValue, parameters.pixelConstraintWeight));
+                        result.constraints[key].PushEnd(SuperpixelLayerConstraint(nearestSuperpixel, layerIndexInner, targetValue, parameters.pixelConstraintWeight));
                     }
                 }
             }
@@ -127,6 +241,9 @@ void LayerExtractor::InitLayersFromPixelConstraints(const AppParameters &paramet
 void LayerExtractor::InitLayersFromPalette(const AppParameters &parameters, const Bitmap &bmp, const Vector<Vec3f> &palette, LayerSet &result)
 {
     ComponentTimer timer("Making layers from palette");
+	String key = "initial";
+	if (!result.constraints.ContainsKey(key))
+		result.constraints.Add(key, Vector<SuperpixelLayerConstraint>());
     
     const double distScale = 1.0 / Math::Max(bmp.Width(), bmp.Height());
 
@@ -186,7 +303,7 @@ void LayerExtractor::InitLayersFromPalette(const AppParameters &parameters, cons
             {
                 double targetValue = 0.0;
                 if(layerIndex == layerIndexInner) targetValue = 1.0;
-                result.constraints.PushEnd(SuperpixelLayerConstraint(i, layerIndexInner, targetValue, parameters.pixelConstraintWeight));
+                result.constraints[key].PushEnd(SuperpixelLayerConstraint(i, layerIndexInner, targetValue, parameters.pixelConstraintWeight));
             }
         }
     }
@@ -195,9 +312,32 @@ void LayerExtractor::InitLayersFromPalette(const AppParameters &parameters, cons
 }
 
 
+void LayerExtractor::AddMidpointConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result)
+{
+	Console::WriteLine("Adding midpoint constraints");
+	String key = "midpoint";
+	if (!result.constraints.ContainsKey(key))
+		result.constraints.Add(key, Vector<SuperpixelLayerConstraint>());
+
+	//add a constraint to all pixels, encouraging them not to stray too far from 0.5
+	const UINT layerCount = result.layers.Length();
+	const UINT superpixelCount = superpixelColors.Length();
+
+	for (UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+		for (UINT layerIndex = 0; layerIndex < layerCount; layerIndex++)
+		{
+			result.constraints[key].PushEnd(SuperpixelLayerConstraint(superpixelIndex, layerIndex, 0.5, parameters.midpointWeight));
+		}
+	Console::WriteLine("Done adding midpoint constraints");
+}
+
+
 void LayerExtractor::AddLayerPreferenceConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result)
 {
 	Console::WriteLine("Initializing pixel-layer preferences");
+	String key = "preference";
+	if (!result.constraints.ContainsKey(key))
+		result.constraints.Add(key, Vector<SuperpixelLayerConstraint>());
 
 	//make superpixel prefer the closest palette color
 	const UINT layerCount = result.layers.Length();
@@ -220,10 +360,46 @@ void LayerExtractor::AddLayerPreferenceConstraints(const AppParameters &paramete
 		}
 
 		//add the constraint
-		result.constraints.PushEnd(SuperpixelLayerConstraint(superpixelIndex, bestLayerIndex, 1.0, parameters.preferenceWeight));
+		result.constraints[key].PushEnd(SuperpixelLayerConstraint(superpixelIndex, bestLayerIndex, 1.0, parameters.preferenceWeight*(1-bestDist)));
 
 	}
+	VisualizeLayerPreferences(parameters, bmp, result);
 	
+}
+
+void LayerExtractor::VisualizeLayerPreferences(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const
+{	
+	//make superpixel prefer the closest palette color
+	const UINT layerCount = layers.layers.Length();
+	const UINT superpixelCount = superpixelColors.Length();
+
+	Bitmap result(bmp.Width(), bmp.Height(), RGBColor::Black);
+	for (UINT y=0; y<bmp.Height(); y++) for (UINT x=0; x<bmp.Width(); x++)  result[y][x] = RGBColor(Vec3f(bmp[y][x])*0.2);
+	
+	AliasRender render;
+
+	for (UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+	{
+		int bestLayerIndex = 0;
+		double bestDist = std::numeric_limits<double>::max();
+
+		//find the best/worst layer
+		for (UINT layerIndex = 0; layerIndex < layerCount; layerIndex++)
+		{
+			double dist = Vec3f::Dist(layers.layers[layerIndex].color, Vec3f(superpixelColors[superpixelIndex].color));
+			if (dist < bestDist)
+			{
+				bestDist = dist;
+				bestLayerIndex = layerIndex;
+			}
+		}
+
+		RGBColor color = RGBColor(layers.layers[bestLayerIndex].color * (1-bestDist));
+		RGBColor border = RGBColor(layers.layers[bestLayerIndex].color);
+		render.DrawSquare(result, superpixelColors[superpixelIndex].coord, 2, color, border);
+
+	}
+	result.SavePNG("../Results/preferences.png");
 }
 
 void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers)
@@ -245,6 +421,7 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
     // Some superpixels in each layer are constrained directly to have specific weights.
     // lhs: C = lp x lp (diagonal matrix)
     // rhs: C * target
+	// There may be multiple C matrices for different sets of constraints
     //
     // *** Sum-to-one constraints
     // The sum of weights for each superpixel should be 1.
@@ -264,7 +441,7 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
     // A^TAx = A^Tb
     //
     // *** Final matrix
-    // (Q + wC C + wS S^T S + wR R^T R) x = wC Crhs + wS S^T Srhs + wR R^T Rrhs
+    // (Q + sum(wC C) + wS S^T S + wR R^T R) x = sum(wC Crhs) + wS S^T Srhs + wR R^T Rrhs
 	// (WBase + wC C)x = wC Crhs
     // where wC, wS, wR are three weights
     //
@@ -285,7 +462,7 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
             const SparseRow<double> &curRow = WBase[row];
             for(const SparseElement<double> &e : curRow.Data)
             {
-                Q.PushElement(row + layerOffset, e.Col + layerOffset, e.Entry);
+                Q.PushElement(row + layerOffset, e.Col + layerOffset, parameters.manifoldWeight*e.Entry);
             }
         }
     }
@@ -294,14 +471,18 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
     // Add simple (diagonal) constraints to lhs and lambda * target to rhs
     //
     Vector<double> Crhs(layerCount * superpixelCount, 0.0);
-    for(UINT constraintIndex = 0; constraintIndex < layers.constraints.Length(); constraintIndex++)
-    {
-        const SuperpixelLayerConstraint &constraint = layers.constraints[constraintIndex];
-        int row = constraint.index + constraint.layerIndex * superpixelCount;
+	Vector<String> constraintKeys = layers.constraints.Keys();
+	for (String key : constraintKeys)
+	{
+		for(UINT constraintIndex = 0; constraintIndex < layers.constraints[key].Length(); constraintIndex++)
+		{
+			const SuperpixelLayerConstraint &constraint = layers.constraints[key][constraintIndex];
+			int row = constraint.index + constraint.layerIndex * superpixelCount;
         
-        Q.PushDiagonalElement(row, constraint.weight);
-        Crhs[row] = constraint.weight * constraint.target;
-    }
+			Q.PushDiagonalElement(row, constraint.weight);
+			Crhs[row] += constraint.weight * constraint.target;
+		}
+	}
     for(UINT row = 0; row < layerCount * superpixelCount; row++)
     {
         Q.PushDiagonalElement(row, parameters.regularizationWeight);
@@ -489,7 +670,7 @@ void LayerExtractor::ComputeNearestNeighbors(const AppParameters &parameters, co
     {
         for(UINT x = 0; x < bmp.Width(); x++)
         {
-            ColorCoordinate curCoord(parameters, bmp[y][x], Vec2i(x, y));
+            ColorCoordinate curCoord(parameters, bmp[y][x], Vec2i(x, y), bmp.Width(), bmp.Height());
             tree.KNearest(curCoord.features, parameters.pixelNeighborCount, pixelNeighborhoods(y, x).indices, 0.0f);
         }
     }
@@ -612,7 +793,7 @@ void LayerExtractor::ComputeNeighborWeights(const AppParameters &parameters, con
             PixelNeighborhood &curPixel = pixelNeighborhoods(y, x);
             const UINT k = curPixel.indices.Length();
 
-            ColorCoordinate curPixelCoordinate(parameters, bmp[y][x], Vec2i(x, y));
+            ColorCoordinate curPixelCoordinate(parameters, bmp[y][x], Vec2i(x, y), bmp.Width(), bmp.Height());
             curPixel.weights = ComputeWeights(parameters, curPixel.indices, curPixelCoordinate.features);
         }
     }
@@ -660,6 +841,8 @@ void LayerExtractor::VisualizeNearestNeighbors(const AppParameters &parameters, 
 
         Bitmap result(bmp.Width(), bmp.Height());
         result.Clear(RGBColor::Black);
+		
+		for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) result[y][x] = RGBColor(Vec3f(bmp[y][x]) * 0.2f);
 
         result[y + 0][x + 0] = bmp[y][x];
         result[y + 1][x + 0] = bmp[y][x];
@@ -675,10 +858,94 @@ void LayerExtractor::VisualizeNearestNeighbors(const AppParameters &parameters, 
 
         result.SavePNG("../Results/pixel" + String(debugPixelIndex) + ".png");
     }
+
+	for (UINT debugSuperpixelIndex=0; debugSuperpixelIndex < debugPixelCount; debugSuperpixelIndex++)
+	{
+		int randIdx = rand() % superpixelColors.Length();
+		const SuperpixelNeighborhood &curSPixel = superpixelNeighbors[randIdx];
+		
+		Bitmap result(bmp.Width(), bmp.Height());
+		result.Clear(RGBColor::Black);
+		
+		for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) result[y][x] = RGBColor(Vec3f(bmp[y][x]) * 0.2f);
+
+		int x = superpixelColors[randIdx].coord.x;
+		int y = superpixelColors[randIdx].coord.y;
+
+		result[y + 0][x + 0] = bmp[y][x];
+        result[y + 1][x + 0] = bmp[y][x];
+        result[y - 1][x + 0] = bmp[y][x];
+        result[y + 0][x + 1] = bmp[y][x];
+        result[y + 0][x - 1] = bmp[y][x];
+	
+		for (UINT neighborIndex : curSPixel.indices)
+		{
+			const ColorCoordinate &superpixel = superpixelColors[neighborIndex];
+			result[superpixel.coord.y][superpixel.coord.x] = superpixel.color;
+		}
+		result.SavePNG("../Results/superpixel"+String(debugSuperpixelIndex)+".png");
+	
+	}
+}
+
+void LayerExtractor::VisualizeLayerPalette(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers, int index, int addedIndex) const
+{
+    const UINT paletteHeight = 40;
+    Bitmap result(bmp.Width(), bmp.Height() + paletteHeight);
+    
+    result.Clear(RGBColor::Black);
+
+    for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) result[y][x] = RGBColor(Vec3f(bmp[y][x])*0);
+	
+	AliasRender render;
+	
+
+    int layerWidth = Math::Ceiling((double)bmp.Width() / (double)layers.layers.Length());
+    for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+    {
+        for(int x = layerIndex * layerWidth; x < (int)(layerIndex + 1) * layerWidth; x++)
+        {
+            for(int y = (int)bmp.Height(); y < (int)result.Height(); y++)
+            {
+                if(result.ValidCoordinates(x, y)) result[y][x] = RGBColor(layers.layers[layerIndex].color);
+            }
+        }
+    }
+
+	//draw out the negative weights
+	Vector<double> sumNegWeights(superpixelColors.Length(), 0);
+	for (int superpixelIndex = 0; superpixelIndex < superpixelColors.Length(); superpixelIndex++)
+	{
+		for (int layerIndex=0; layerIndex < layers.layers.Length(); layerIndex++)
+		{
+			if (layers.layers[layerIndex].superpixelWeights.Length() == 0)
+				continue;
+			double weight = layers.layers[layerIndex].superpixelWeights[superpixelIndex];
+			if (weight < 0)
+			{
+				sumNegWeights[superpixelIndex] += fabs(weight);
+			}
+		}
+		double weight = sumNegWeights[superpixelIndex];
+		Vec2i coord = superpixelColors[superpixelIndex].coord;
+	
+		render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(coord, Vec2i(2,2)), RGBColor(weight*255,weight*255,weight*255),  result[coord.y][coord.x]);
+	}
+	
+	if (addedIndex >= 0)
+	{
+		Vec2i coord = superpixelColors[addedIndex].coord;
+		render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(coord, Vec2i(2, 2)), result[coord.y][coord.x], RGBColor::White);
+		Console::WriteLine("Added neg weight " + String(sumNegWeights[addedIndex]));
+		Console::WriteLine("Most neg weight " + String(sumNegWeights.MaxValue()));
+	}
+    result.SavePNG("../Results/LayerPalette" + String(index) + ".png");
 }
 
 void LayerExtractor::VisualizeLayerConstraints(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const
 {
+	String key = "initial";
+
     const UINT paletteHeight = 40;
     Bitmap result(bmp.Width(), bmp.Height() + paletteHeight);
     
@@ -687,7 +954,8 @@ void LayerExtractor::VisualizeLayerConstraints(const AppParameters &parameters, 
     for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) result[y][x] = RGBColor(Vec3f(bmp[y][x]) * 0.2f);
     
     AliasRender render;
-    for(const auto &constraint : layers.constraints)
+	const Vector<SuperpixelLayerConstraint>& constraints = layers.constraints[key];
+    for(const auto &constraint : constraints)
     {
         if(constraint.target > 0.0)
         {

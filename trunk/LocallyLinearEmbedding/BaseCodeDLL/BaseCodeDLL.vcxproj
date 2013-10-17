@@ -34,10 +34,12 @@
     <ClInclude Include="BasisColorExtractor.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="Dictionary.h" />
     <ClInclude Include="EigenSolver.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="GaussianPyramid.h" />
     <ClInclude Include="LayerExtractor.h" />
+    <ClInclude Include="LayerModel.h" />
     <ClInclude Include="Layers.h" />
     <ClInclude Include="LayerSynthesis.h" />
     <ClInclude Include="LayerTextureSynthesizer.h" />
@@ -63,6 +65,7 @@
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="GaussianPyramid.cpp" />
     <ClCompile Include="LayerExtractor.cpp" />
+    <ClCompile Include="LayerModel.cpp" />
     <ClCompile Include="LayerSynthesis.cpp" />
     <ClCompile Include="LayerTextureSynthesizer.cpp" />
     <ClCompile Include="Main.cpp">

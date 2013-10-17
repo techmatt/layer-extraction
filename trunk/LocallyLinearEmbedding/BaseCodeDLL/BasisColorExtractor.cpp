@@ -7,7 +7,7 @@ Vector<ColorCoordinate> SuperpixelExtractorPeriodic::Extract(const AppParameters
     {
         for(UINT x = 0; x < bmp.Width(); x += parameters.periodicBasisCount)
         {
-            ColorCoordinate coord(parameters, bmp[y][x], Vec2i(x, y));
+            ColorCoordinate coord(parameters, bmp[y][x], Vec2i(x, y), bmp.Width(), bmp.Height());
             result.PushEnd(coord);
         }
     }
@@ -95,7 +95,7 @@ Vector<ColorCoordinate> SuperpixelExtractorSuperpixel::Extract(const AppParamete
     Vector<ColorCoordinate> result;
     for(const Superpixel &p : superpixelsOut)
     {
-        result.PushEnd(ColorCoordinate(parameters, RGBColor(p.palette[0]), p.seed));
+        result.PushEnd(ColorCoordinate(parameters, RGBColor(p.palette[0]), p.seed, bmp.Width(), bmp.Height()));
     }
     return result;
 }

@@ -399,6 +399,24 @@ namespace Engine
             }
             return count;
         }
+
+        public static double HullError(DenseVector point, ConvexHull<MIConvexHull.DefaultVertex, MIConvexHull.DefaultConvexFace<MIConvexHull.DefaultVertex>> hull)
+        {
+
+            if (InHull(point, hull))
+                return 0;
+
+            double minError = Double.PositiveInfinity;
+            foreach (var face in hull.Faces)
+            {
+                DenseVector normal = new DenseVector(face.Normal);
+                DenseVector vertex = new DenseVector(face.Vertices.First().Position);
+                double dist = Math.Abs(normal * (vertex - point));
+                if (dist < minError)
+                    minError = dist;
+            }
+            return minError;
+        }
     }
 }
 

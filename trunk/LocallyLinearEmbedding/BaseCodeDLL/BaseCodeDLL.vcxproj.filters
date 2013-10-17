@@ -85,6 +85,12 @@
     <ClInclude Include="LayerTextureSynthesizer.h">
       <Filter>TextureSynthesis</Filter>
     </ClInclude>
+    <ClInclude Include="LayerModel.h">
+      <Filter>LayerModel</Filter>
+    </ClInclude>
+    <ClInclude Include="Dictionary.h">
+      <Filter>Base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -132,6 +138,9 @@
     <ClCompile Include="LayerTextureSynthesizer.cpp">
       <Filter>TextureSynthesis</Filter>
     </ClCompile>
+    <ClCompile Include="LayerModel.cpp">
+      <Filter>LayerModel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Base">
@@ -154,6 +163,9 @@
     </Filter>
     <Filter Include="TextureSynthesis">
       <UniqueIdentifier>{84bee6c7-9301-4b60-83a1-789d147078a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LayerModel">
+      <UniqueIdentifier>{fc85f3dd-9f91-4e8f-8eb5-0a5fc38151fe}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
