@@ -8,8 +8,9 @@ void __cdecl WorkerThreadEntry( LPVOID context )
     //return 0;
 }
 
-void WorkerThread::Init(ThreadLocalStorage *storage)
+void WorkerThread::Init(UINT threadIndex, ThreadLocalStorage *storage)
 {
+    _threadIndex = threadIndex;
     _storage = storage;
 }
 
@@ -31,7 +32,7 @@ void WorkerThread::Entry()
     WorkerThreadTask* curTask;
     while(_tasks->GetNextTask(curTask))
     {
-        curTask->Run(_storage);
+        curTask->Run(_threadIndex, _storage);
         delete curTask;
     }
     _done = true;

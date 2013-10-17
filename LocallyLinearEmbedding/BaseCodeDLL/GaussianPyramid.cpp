@@ -72,10 +72,10 @@ Vec2i GaussianPyramid::TransformCoordinates(Vec2i point, int fromDepth, int toDe
 	int delta = Math::AbsInt(toDepth-fromDepth);
 	if (toDepth > fromDepth)
 	{
-		return point/pow(2,delta);
+		return point/(int)pow(2,delta);
 
 	} else
 	{
-		return point*pow(2,delta);
+		return point*(int)pow(2,delta);
 	} 
 }

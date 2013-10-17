@@ -16,7 +16,7 @@ void ThreadPool::Init(UINT threadCount)
     for(UINT threadIndex = 0; threadIndex < threadCount; threadIndex++)
     {
         _threads[threadIndex] = new WorkerThread;
-        _threads[threadIndex]->Init(NULL);
+        _threads[threadIndex]->Init(threadIndex, NULL);
     }
 }
 
@@ -26,7 +26,7 @@ void ThreadPool::Init(UINT threadCount, Vector<ThreadLocalStorage*> &theadLocalS
     for(UINT threadIndex = 0; threadIndex < threadCount; threadIndex++)
     {
         _threads[threadIndex] = new WorkerThread;
-        _threads[threadIndex]->Init(theadLocalStorage[threadIndex]);
+        _threads[threadIndex]->Init(threadIndex, theadLocalStorage[threadIndex]);
     }
 }
 

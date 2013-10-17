@@ -111,7 +111,7 @@ void LayerSynthesis::InitPCA(const GaussianPyramid &layers, const NeighborhoodGe
 	const UINT width = layers.Base().First().Width();
 	const UINT height = layers.Base().First().Height();
 	
-	const int nRadius = generator.NeighborhoodRadius()*pow(2,layers.Depth()-1);
+	const int nRadius = generator.NeighborhoodRadius()*(int)pow(2,layers.Depth()-1);
 
     for(UINT neighborhoodIndex = 0; neighborhoodIndex < neighborhoodCount; neighborhoodIndex++)
     {
@@ -311,7 +311,7 @@ double LayerSynthesis::BestNeighborVotedMatch(Vec2i targetPt, const GaussianPyra
 		
 		if (topNum > 0)
 		{
-			for (int neighborIndex=0; neighborIndex < topNum; neighborIndex++)
+			for (int neighborIndex=0; neighborIndex < (int)topNum; neighborIndex++)
 				neighborMatchDistance += Vec2i::Dist(candidate, sortedCandidates[neighborIndex]);
 			neighborMatchDistance /= topNum;
 		}
