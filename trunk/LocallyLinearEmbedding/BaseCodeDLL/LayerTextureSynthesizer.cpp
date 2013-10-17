@@ -10,7 +10,7 @@ void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const Pixe
 	Vector< Grid<Vec2i> > coordinates;
 
 	
-	for (int iter = 0; iter < order.Length(); iter++) {
+	for (int iter = 0; iter < (int)order.Length(); iter++) {
 		Synthesize(layers, rgb, parameters, generator, kappa, order, iter, output, coordinates);
 	}
 
@@ -19,7 +19,7 @@ void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const Pixe
 	for (int y = 0; y < parameters.texsyn_outputheight; y++) {
 		for (int x = 0; x < parameters.texsyn_outputwidth; x++) {
 			Vec3f v(0,0,0);
-			for (int k = 0; k < output.Length(); k++) 
+			for (int k = 0; k < (int)output.Length(); k++) 
 				v += output[k].color * output[k].pixelWeights(y,x);
 			synthesized[y][x] = RGBColor(v);
 		}
