@@ -22,6 +22,10 @@ public:
     void KNearest(const double *QueryPoint, UINT k, Vector<UINT> &Indices, float Epsilon) const;
     void KNearest(const float *QueryPoint, UINT k, Vector<UINT> &Indices, Vector<float> &Distances, float Epsilon) const;
     void KNearest(const double *QueryPoint, UINT k, Vector<UINT> &Indices, Vector<double> &Distances, float Epsilon) const;
+	
+    void KNearestMultithreaded(const double *QueryPoint, UINT k, Vector<UINT> &Indices, float Epsilon) const;
+
+
     __forceinline UINT MaxK()
     {
         return _MaxK;

@@ -287,7 +287,6 @@ void App::SynthesizeTexture(void)
 	int outputwidth = _parameters.texsyn_outputwidth;
 	int outputheight = _parameters.texsyn_outputheight;
 	int nlevels = _parameters.texsyn_nlevels;
-	double kappa = _parameters.texsyn_kappa;
 
 	// read in exemplar image
 	String exemplar_name = "../TextureSynthesisExemplars/" + _parameters.texsyn_exemplar;
@@ -398,7 +397,7 @@ void App::SynthesizeTexture(void)
 	// synthesize
 	TextureSynthesis synthesizer;
 	synthesizer.Init(_parameters, pyramid, generator, nlevels, reducedDimension);
-	synthesizer.Synthesize(rgbpyr, pyramid, _parameters, generator, kappa);
+	synthesizer.Synthesize(rgbpyr, pyramid, _parameters, generator);
 }
 
 UINT32 App::ProcessCommand(const String &command)

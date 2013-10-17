@@ -71,7 +71,7 @@ void KDTree::BuildTree(const Vector<const double*> &Points, UINT Dimension, UINT
         }
     }
 
-    const bool UseBruteForce = false;
+    const bool UseBruteForce = true;
     if(UseBruteForce)
     {
         _KDTree = new ANNbruteForce( // build search structure
@@ -171,6 +171,37 @@ void KDTree::KNearest(const float *QueryPoint, UINT k, Vector<UINT> &Indices, Ve
         Indices[i] = _Indices[i];
         Distances[i] = float(_Dists[i]);
     }
+}
+
+void KDTree::KNearestMultithreaded(const double *QueryPoint, UINT k, Vector<UINT> &Indices, float Epsilon) const
+{
+	ANNpoint queryPt = annAllocPt(_Dimension); // allocate query point
+    ANNidxArray indices = new ANNidx[k]; // allocate near neigh indices
+    ANNdistArray dists = new ANNdist[k];  // allocate near neighbor dists
+	for(UINT ElementIndex = 0; ElementIndex < _Dimension; ElementIndex++)
+    {
+        queryPt[ElementIndex] = QueryPoint[ElementIndex];
+    }
+    _KDTree->annkSearch( // search
+        queryPt,        // query point
+        k,               // number of near neighbors
+        indices,        // nearest neighbors (returned)
+        dists,          // distance (returned)
+        Epsilon);        // error bound
+
+    if(Indices.Length() < k)
+    {
+        Indices.ReSize(k);
+    }
+    for(UINT i = 0; i < k; i++)
+    {
+        Indices[i] = indices[i];
+    }
+
+	// clean up
+	annDeallocPt(queryPt);
+	delete[] indices;
+	delete[] dists;
 }
 
 void KDTree::KNearest(const double *QueryPoint, UINT k, Vector<UINT> &Indices, float Epsilon) const
