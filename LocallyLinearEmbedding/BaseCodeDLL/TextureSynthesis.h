@@ -5,14 +5,17 @@ public:
 
 	void Init(const AppParameters &parameters, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension);
 
-	void Synthesize(const GaussianPyramid &rgbpyr, const GaussianPyramid &exemplar, const AppParameters &parameters, NeighborhoodGenerator &generator, double kappa);
+	void Synthesize(const GaussianPyramid &rgbpyr, const GaussianPyramid &exemplar, const AppParameters &parameters, NeighborhoodGenerator &generator);
+
+	Vec2i BestMatchP(const GaussianPyramid *exemplar, NeighborhoodGenerator *generator, const Grid<Vec2i> *coordinates,
+				    int level, int x, int y, int width, int height);
 
 private:
     void InitPCA(const AppParameters &parameters, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator);
 	void InitKDTree(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, UINT reducedDimension);
 
 	Vec2i BestMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates,
-				    int level, int x, int y, double coherence,
+				    int level, int x, int y,
 					double *neighbourhood, double *transformedNeighbourhood, int width, int height,
 					double *coherentneighbourhood, double *transformedCohNeighbourhood);
 	double BestApproximateMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, int level,
@@ -28,12 +31,26 @@ private:
 
 	UINT _reducedDimension;
 	Vector< PCA<double> > _pca;
-	Vector<KDTree> _tree;
+	Vector< Vector<KDTree> > _trees;
 	Vector< Vector<Vec2i> > _treeCoordinates;
+	int _nthreads; // multithreading
+	double _kappa; // coherence parameter
 
-	bool _usepca;
 	int _coherentcount;
 	
 	bool _debug;
 	String _debugoutdir;
+};
+
+
+struct TexSynTask : public WorkerThreadTask
+{
+    void Run(ThreadLocalStorage *threadLocalStorage);
+    TextureSynthesis *synthesizer;
+    Vec2i pixel;
+	Vec2i dimensions;
+	int level;
+    const GaussianPyramid *exemplar;
+    NeighborhoodGenerator *generator;
+	Grid<Vec2i> *coordinates;
 };

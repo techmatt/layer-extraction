@@ -70,7 +70,7 @@ pyramidDepth=3
 #pyramidDepth=3
 
 # texture synthesis
-texsyn_exemplar=256knot2.png
+texsyn_exemplar=64bluebrown.ex.rgb.png
 texsyn_outputwidth=256
 texsyn_outputheight=256
 texsyn_nlevels=3
