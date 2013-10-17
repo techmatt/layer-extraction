@@ -7,19 +7,19 @@ public:
 
 	void Synthesize(const GaussianPyramid &rgbpyr, const GaussianPyramid &exemplar, const AppParameters &parameters, NeighborhoodGenerator &generator);
 
-	Vec2i BestMatchP(const GaussianPyramid *exemplar, NeighborhoodGenerator *generator, const Grid<Vec2i> *coordinates,
+	Vec2i BestMatchP(int threadIndex, const GaussianPyramid *exemplar, NeighborhoodGenerator *generator, const Grid<Vec2i> *coordinates,
 				    int level, int x, int y, int width, int height);
 
 private:
     void InitPCA(const AppParameters &parameters, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator);
 	void InitKDTree(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, UINT reducedDimension);
 
-	Vec2i BestMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates,
+	/*Vec2i BestMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates,
 				    int level, int x, int y,
 					double *neighbourhood, double *transformedNeighbourhood, int width, int height,
-					double *coherentneighbourhood, double *transformedCohNeighbourhood);
-	double BestApproximateMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, int level,
-								Vec2i &outPt, double *transformedNeighbourhood);
+					double *coherentneighbourhood, double *transformedCohNeighbourhood);*/
+	double BestApproximateMatch(int threadindex, const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, int level, Vec2i &outPt,
+											  double *transformedNeighbourhood);
 	double BestCoherentMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates,
 							 int level, int width, int height, int x, int y, Vec2i &outPt, double *transformedNeighbourhood,
 							 double *coherentneighbourhood, double *transformedCohNeighbourhood);
@@ -45,7 +45,7 @@ private:
 
 struct TexSynTask : public WorkerThreadTask
 {
-    void Run(ThreadLocalStorage *threadLocalStorage);
+    void Run(UINT threadIndex, ThreadLocalStorage *threadLocalStorage);
     TextureSynthesis *synthesizer;
     Vec2i pixel;
 	Vec2i dimensions;
