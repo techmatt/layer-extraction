@@ -2,6 +2,13 @@
 
 void TextureSynthesis::Init(const AppParameters &parameters, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension)
 {
+    auto result = DistanceTransform::Transform(exemplar[0][2].pixelWeights);
+    Bitmap bmpA, bmpB;
+    bmpA.LoadGrid(exemplar[0][2].pixelWeights, 0.0, 1.0);
+    bmpB.LoadGrid(result, 0.0, 1.0);
+    bmpA.SavePNG("source.png");
+    bmpB.SavePNG("transform.png");
+
 	_debug = true;
 	_debugoutdir = "texsyn-out/";
 
@@ -24,7 +31,7 @@ void TextureSynthesis::InitPCA(const AppParameters &parameters, const GaussianPy
 	const UINT dimension = generator.Dimension();
 	const int nRadius = generator.NeighborhoodRadius();
 
-	for (int level = 0; level < exemplar.Depth(); level++) {
+	for (UINT level = 0; level < exemplar.Depth(); level++) {
 
 		String inputdescription = "";
 		if (parameters.texsyn_usergb) inputdescription = inputdescription + "_rgb";
@@ -71,7 +78,7 @@ void TextureSynthesis::InitPCA(const AppParameters &parameters, const GaussianPy
 void TextureSynthesis::InitKDTree(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, UINT reducedDimension)
 {
 	_trees.Allocate(exemplar.Depth());
-	for (int i = 0; i < exemplar.Depth(); i++)
+	for (UINT i = 0; i < exemplar.Depth(); i++)
 		_trees[i].Allocate(_nthreads);
 
 	_treeCoordinates.Allocate(exemplar.Depth());
@@ -81,7 +88,7 @@ void TextureSynthesis::InitKDTree(const GaussianPyramid &exemplar, const Neighbo
 	const UINT neighbors = 5;
 	double *neighborhood = new double[dimension];
 
-	for (int level = 0; level < exemplar.Depth(); level++) {
+	for (UINT level = 0; level < exemplar.Depth(); level++) {
 		const int width = exemplar[level].First().Width();
 		const int height = exemplar[level].First().Height();
 		Vector< Vector<const double*> > allNeighborhoods(_nthreads);
@@ -94,7 +101,7 @@ void TextureSynthesis::InitKDTree(const GaussianPyramid &exemplar, const Neighbo
 					allNeighborhoods[0].PushEnd(reducedNeighborhood);
 					for (int i = 1; i < _nthreads; i++) {
 						double *reduced = new double[_reducedDimension];
-						for (int k = 0; k < _reducedDimension; k++)
+						for (int k = 0; k < (int)_reducedDimension; k++)
 							reduced[i] = reducedNeighborhood[i];
 						allNeighborhoods[i].PushEnd(reduced);
 					}
@@ -173,7 +180,7 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 		exemplarheight = exemplar[level].First().Height();
 		Console::WriteLine(String("[ level ") + String(level) + String(" ] e(") + String(exemplarheight) + String(",") + String(exemplarwidth) + String(") | s(") + String(height) + String(",") + String(width) + String(")"));
 
-		if (level < exemplar.Depth()-1) { // upsample
+		if (level < (int)exemplar.Depth()-1) { // upsample
 			int lowidth = width / 2;
 			int loheight = height / 2;
 			int rowoffset, coloffset, lorow, locol;
@@ -250,7 +257,7 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 			diff = 0;
 			for (int y = nradius; y < paddedheight-nradius; y++) {
 				for (int x = nradius; x < paddedwidth-nradius; x++) {
-					for (int k = 0; k < exemplar.NumLayers(); k++) {
+					for (int k = 0; k < (int)exemplar.NumLayers(); k++) {
 						d = exemplar[level][k].pixelWeights(coordinates(y,x).y,coordinates(y,x).x) - exemplar[level][k].pixelWeights(prevcoordinates(y,x).y,prevcoordinates(y,x).x);
 						diff += d * d;
 					}
@@ -419,12 +426,12 @@ void TextureSynthesis::WriteImage(const GaussianPyramid &rgbpyr, const GaussianP
 	for (int row = 0; row < height; row++) { // image
 		for (int col = 0; col < width; col++) {
 
-			if (coordinates(row+pad,col+pad).x < 0 || coordinates(row+pad,col+pad).x >= rgbpyr[level][0].pixelWeights.Cols()) {
+			if (coordinates(row+pad,col+pad).x < 0 || coordinates(row+pad,col+pad).x >= (int)rgbpyr[level][0].pixelWeights.Cols()) {
 				int tx = coordinates(row,col).x;
 				int bound = rgbpyr[level][0].pixelWeights.Cols();
 				Console::WriteLine("xxx");
 			}
-			if (coordinates(row+pad,col+pad).y < 0 || coordinates(row+pad,col+pad).y >= rgbpyr[level][0].pixelWeights.Rows()) {
+			if (coordinates(row+pad,col+pad).y < 0 || coordinates(row+pad,col+pad).y >= (int)rgbpyr[level][0].pixelWeights.Rows()) {
 				int ty = coordinates(row,col).y;
 				int bound = rgbpyr[level][0].pixelWeights.Rows();
 				Console::WriteLine("yyy");

@@ -104,12 +104,12 @@ bool LayerExtractor::CorrectLayerSet(const AppParameters &parameters, const Bitm
 	
 	int origLayerCount = layers.layers.Length();
 	int* newLayerIndices = new int[origLayerCount];
-	for (int i=0; i<layers.layers.Length(); i++)
+	for (UINT i=0; i<layers.layers.Length(); i++)
 		newLayerIndices[i] = i;
 
 	
 	Vector<Layer> newLayers;
-	for (int layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+	for (UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
 	{
 		double weight = layers.layers[layerIndex].MaxWeight();
 		Console::WriteLine("Layer " + String(layerIndex) + ":" + String(weight));
@@ -158,9 +158,9 @@ bool LayerExtractor::CorrectLayerSet(const AppParameters &parameters, const Bitm
 	if (meanNegativity < negativeThresh)
 	{
 		Console::WriteLine("LayerSet too negative: "+String(meanNegativity));
-		for (int superpixelIndex = 0; superpixelIndex < superpixelColors.Length(); superpixelIndex++)
+		for (UINT superpixelIndex = 0; superpixelIndex < superpixelColors.Length(); superpixelIndex++)
 		{
-			for (int layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+			for (UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
 			{
 				double weight = layers.layers[layerIndex].superpixelWeights[superpixelIndex];
 				if (weight < 0)
