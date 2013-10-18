@@ -91,6 +91,9 @@
     <ClInclude Include="Dictionary.h">
       <Filter>Base</Filter>
     </ClInclude>
+    <ClInclude Include="DistanceTransform.h">
+      <Filter>LayerSynthesizer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -140,6 +143,9 @@
     </ClCompile>
     <ClCompile Include="LayerModel.cpp">
       <Filter>LayerModel</Filter>
+    </ClCompile>
+    <ClCompile Include="DistanceTransform.cpp">
+      <Filter>LayerSynthesizer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

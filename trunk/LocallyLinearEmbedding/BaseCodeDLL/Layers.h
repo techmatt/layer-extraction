@@ -10,7 +10,7 @@ struct Layer
 		
 		double overlap = 0;
 
-		for (int i=0; i<superpixelWeights.Length(); i++)
+		for (UINT i=0; i<superpixelWeights.Length(); i++)
 			overlap += superpixelWeights[i] * other.superpixelWeights[i];
 
 		return overlap;
@@ -19,7 +19,7 @@ struct Layer
 	double AveragePositive() const
 	{
 		double pos = 0;
-		for (int i=0; i<superpixelWeights.Length(); i++)
+		for (UINT i=0; i<superpixelWeights.Length(); i++)
 		{
 			if (superpixelWeights[i] > 0)
 				pos += superpixelWeights[i];
@@ -52,7 +52,7 @@ struct Layer
 			return 0;
 
 		double negCount = 0;
-		for (int i=0; i<superpixelWeights.Length(); i++)
+		for (UINT i=0; i<superpixelWeights.Length(); i++)
 			if (superpixelWeights[i] < 0)
 				negCount++;
 		return negCount/superpixelWeights.Length();
@@ -61,7 +61,7 @@ struct Layer
 	double AverageNegative() const
 	{
 		double neg = 0;
-		for (int i=0; i<superpixelWeights.Length(); i++)
+		for (UINT i=0; i<superpixelWeights.Length(); i++)
 		{
 			if (superpixelWeights[i] < 0)
 				neg += superpixelWeights[i];

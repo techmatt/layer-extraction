@@ -113,6 +113,8 @@ public:
     
     void LoadGrid(const Grid<float> &Values);
     void LoadGrid(const Grid<float> &Values, float Min, float Max);
+    void LoadGrid(const Grid<double> &Values);
+    void LoadGrid(const Grid<double> &Values, double Min, double Max);
     void FlipHorizontal();
     void FlipVertical();
     

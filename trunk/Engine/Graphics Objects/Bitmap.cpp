@@ -540,14 +540,53 @@ void Bitmap::LoadGrid(const Grid<float> &Values, float Min, float Max)
             {
                 Intensity = Utility::BoundToByte(Math::LinearMap(Min, Max, 0.0f, 255.0f, Values(y, x)));
             }
-            if(Values(y, x) == 0.0f)
+            //if(Values(y, x) == 0.0f)
             {
-                (*this)[y][x] = RGBColor::Magenta;
+                //(*this)[y][x] = RGBColor::Magenta;
             }
-            else
+            //else
             {
                 (*this)[y][x] = RGBColor(Intensity, Intensity, Intensity);
             }
+        }
+    }
+}
+
+void Bitmap::LoadGrid(const Grid<double> &Values)
+{
+    double Min = Values(0, 0);
+    double Max = Values(0, 0);
+    for(UINT y = 0; y < Values.Rows(); y++)
+    {
+        for(UINT x = 0; x < Values.Cols(); x++)
+        {
+            if(Values(y, x) != 0.0f)
+            {
+                if(Min == 0.0f)
+                {
+                    Min = Values(y, x);
+                }
+                Min = Math::Min(Min, Values(y, x));
+            }
+            Max = Math::Max(Max, Values(y, x));
+        }
+    }
+    LoadGrid(Values, Min, Max);
+}
+
+void Bitmap::LoadGrid(const Grid<double> &Values, double Min, double Max)
+{
+    Allocate(Values.Cols(), Values.Rows());
+    for(UINT y = 0; y < _Height; y++)
+    {
+        for(UINT x = 0; x < _Width; x++)
+        {
+            BYTE Intensity = 0;
+            if(Max != Min)
+            {
+                Intensity = Utility::BoundToByte(Math::LinearMap(Min, Max, 0.0, 255.0, Values(y, x)));
+            }
+            (*this)[y][x] = RGBColor(Intensity, Intensity, Intensity);
         }
     }
 }

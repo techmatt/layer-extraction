@@ -20,7 +20,7 @@ void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const Pixe
 		for (int x = 0; x < parameters.texsyn_outputwidth; x++) {
 			Vec3f v(0,0,0);
 			for (int k = 0; k < (int)output.Length(); k++) 
-				v += output[k].color * output[k].pixelWeights(y,x);
+				v += output[k].color * (float)output[k].pixelWeights(y,x);
 			synthesized[y][x] = RGBColor(v);
 		}
 	}
