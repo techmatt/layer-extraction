@@ -374,7 +374,7 @@ void LayerExtractor::VisualizeLayerPreferences(const AppParameters &parameters, 
 	const UINT superpixelCount = superpixelColors.Length();
 
 	Bitmap result(bmp.Width(), bmp.Height(), RGBColor::Black);
-	for (UINT y=0; y<bmp.Height(); y++) for (UINT x=0; x<bmp.Width(); x++)  result[y][x] = RGBColor(Vec3f(bmp[y][x])*0.2);
+	for (UINT y=0; y<bmp.Height(); y++) for (UINT x=0; x<bmp.Width(); x++)  result[y][x] = RGBColor(Vec3f(bmp[y][x])*0.2f);
 	
 	AliasRender render;
 
@@ -394,7 +394,7 @@ void LayerExtractor::VisualizeLayerPreferences(const AppParameters &parameters, 
 			}
 		}
 
-		RGBColor color = RGBColor(layers.layers[bestLayerIndex].color * (1-bestDist));
+		RGBColor color = RGBColor(layers.layers[bestLayerIndex].color * (1.0f-(float)bestDist));
 		RGBColor border = RGBColor(layers.layers[bestLayerIndex].color);
 		render.DrawSquare(result, superpixelColors[superpixelIndex].coord, 2, color, border);
 
@@ -914,9 +914,9 @@ void LayerExtractor::VisualizeLayerPalette(const AppParameters &parameters, cons
 
 	//draw out the negative weights
 	Vector<double> sumNegWeights(superpixelColors.Length(), 0);
-	for (int superpixelIndex = 0; superpixelIndex < superpixelColors.Length(); superpixelIndex++)
+	for (UINT superpixelIndex = 0; superpixelIndex < superpixelColors.Length(); superpixelIndex++)
 	{
-		for (int layerIndex=0; layerIndex < layers.layers.Length(); layerIndex++)
+		for (UINT layerIndex=0; layerIndex < layers.layers.Length(); layerIndex++)
 		{
 			if (layers.layers[layerIndex].superpixelWeights.Length() == 0)
 				continue;

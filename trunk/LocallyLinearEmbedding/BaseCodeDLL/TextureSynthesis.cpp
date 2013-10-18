@@ -2,12 +2,15 @@
 
 void TextureSynthesis::Init(const AppParameters &parameters, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension)
 {
-    auto result = DistanceTransform::Transform(exemplar[0][2].pixelWeights);
-    Bitmap bmpA, bmpB;
-    bmpA.LoadGrid(exemplar[0][2].pixelWeights, 0.0, 1.0);
-    bmpB.LoadGrid(result, 0.0, 1.0);
-    bmpA.SavePNG("source.png");
-    bmpB.SavePNG("transform.png");
+    for(int i = 0; i < exemplar[0].Length(); i++)
+    {
+        auto result = DistanceTransform::Transform(exemplar[0][i].pixelWeights);
+        Bitmap bmpA, bmpB;
+        bmpA.LoadGrid(exemplar[0][i].pixelWeights, 0.0, 1.0);
+        bmpB.LoadGrid(result, 0.0, 1.0);
+        bmpA.SavePNG(String(i) + "_source.png");
+        bmpB.SavePNG(String(i) + "_transform.png");
+    }
 
 	_debug = true;
 	_debugoutdir = "texsyn-out/";
