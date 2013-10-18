@@ -54,6 +54,7 @@
             this.saveLayersButton = new System.Windows.Forms.Button();
             this.textureSynthesisButton = new System.Windows.Forms.Button();
             this.autoBox = new System.Windows.Forms.CheckBox();
+            this.textureByLayerButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -302,11 +303,23 @@
             this.autoBox.Text = "AutoCorrectPalette";
             this.autoBox.UseVisualStyleBackColor = true;
             // 
+            // textureByLayerButton
+            // 
+            this.textureByLayerButton.Font = new System.Drawing.Font("Calibri", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textureByLayerButton.Location = new System.Drawing.Point(457, 567);
+            this.textureByLayerButton.Name = "textureByLayerButton";
+            this.textureByLayerButton.Size = new System.Drawing.Size(83, 36);
+            this.textureByLayerButton.TabIndex = 23;
+            this.textureByLayerButton.Text = "texture by layers";
+            this.textureByLayerButton.UseVisualStyleBackColor = true;
+            this.textureByLayerButton.Click += new System.EventHandler(this.textureByLayerButton_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1328, 800);
+            this.Controls.Add(this.textureByLayerButton);
             this.Controls.Add(this.autoBox);
             this.Controls.Add(this.textureSynthesisButton);
             this.Controls.Add(this.saveLayersButton);
@@ -374,6 +387,7 @@
         private System.Windows.Forms.Button saveLayersButton;
         private System.Windows.Forms.Button textureSynthesisButton;
         private System.Windows.Forms.CheckBox autoBox;
+        private System.Windows.Forms.Button textureByLayerButton;
     }
 }
 

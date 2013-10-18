@@ -292,6 +292,118 @@ BCLayers* App::SynthesizeLayers()
 
 
 
+void App::SynthesizeTextureByLayers(void)
+{
+	// params
+	_parameters.Init("../Parameters.txt");
+	int reducedDimension = _parameters.texsyn_pcadim;
+	int neighborhoodSize = _parameters.texsyn_neighbourhoodsize; // radius
+	int outputwidth = _parameters.texsyn_outputwidth;
+	int outputheight = _parameters.texsyn_outputheight;
+	int nlevels = _parameters.texsyn_nlevels;
+
+	// read in exemplar image
+	String exemplar_name = "../TextureSynthesisExemplars/" + _parameters.texsyn_exemplar;
+	Console::WriteLine("Texture Synthesis By Layers: " + exemplar_name);
+	Bitmap rgbimg;
+	rgbimg.LoadPNG(exemplar_name);
+	//debugging
+	String outdir = "texsyn-out/LAYER/";
+	rgbimg.SavePNG(outdir + String("input.png"));
+
+	// input layers for synthesis
+	PixelLayerSet input, rgblayers;
+
+	// split colour image to rgb pixel layers
+	PixelLayer red, green, blue;
+	red.color = Vec3f(1, 0, 0);
+	green.color = Vec3f(0, 1, 0);
+	blue.color = Vec3f(0, 0, 1);
+	red.pixelWeights.Allocate(rgbimg.Height(), rgbimg.Width());
+	green.pixelWeights.Allocate(rgbimg.Height(), rgbimg.Width());
+	blue.pixelWeights.Allocate(rgbimg.Height(), rgbimg.Width());
+	for (UINT y = 0; y < rgbimg.Height(); y++) {
+		for (UINT x = 0; x < rgbimg.Width(); x++) {
+			Vec3f colour = Vec3f(rgbimg[y][x]);
+			red.pixelWeights(y,x) = colour[0];
+			green.pixelWeights(y,x) = colour[1];
+			blue.pixelWeights(y,x) = colour[2];
+		}
+	}
+	rgblayers.PushEnd(red);
+	rgblayers.PushEnd(green);
+	rgblayers.PushEnd(blue);
+
+	// use layers from k-means colour selection
+	if (_parameters.texsyn_uselayers) {
+		// check if layers are cached
+		String cache = String("../TexSynCache/") + _parameters.texsyn_exemplar + String("_");
+		String palettecache = cache + String("kmeans-palette_k-") + String(_parameters.texsyn_klayers) + String(".txt");
+		if (Utility::FileExists(palettecache)) { 
+			// load from file
+			Vector<Vec3f> palette;
+			Vector<String> lines = Utility::GetFileLines(palettecache);
+			for (int i = 0; i < _parameters.texsyn_klayers; i++) {
+				Vector<String> colourFields = lines[i].Partition('\t');
+				palette.PushEnd(Vec3f(colourFields[0].ConvertToFloat(), colourFields[1].ConvertToFloat(), colourFields[2].ConvertToFloat()));
+			}
+
+			int idx = input.Length();
+			for (int i = 0; i < _parameters.texsyn_klayers; i++) {
+				String layerfile = cache + String("layers_k-") + String(_parameters.texsyn_klayers) + String("_l-") + String(i) + String(".txt");
+				input.PushEnd(PixelLayer(layerfile));
+			    input[idx+i].SavePNG(outdir + String("input-layer-") + String(i) + String(".png"));
+			}
+		}
+		else { // generate palette & layers
+			LayerSet layers;
+			KMeansClustering<Vec3f, Vec3fKMeansMetric> clustering;
+			Vector<Vec3f> bmpColors;
+
+			for(UINT y = 0; y < rgbimg.Height(); y++) for(UINT x = 0; x < rgbimg.Width(); x++) bmpColors.PushEnd(Vec3f(rgbimg[y][x]));
+			bmpColors.Randomize();
+
+			clustering.Cluster(bmpColors, _parameters.texsyn_klayers, 10000, true, 0.000001);
+
+			Vector<Vec3f> palette(_parameters.texsyn_klayers);
+			for(int i = 0; i < _parameters.texsyn_klayers; i++) palette[i] = clustering.ClusterCenter(i);
+			palette.Sort([](const Vec3f &a, const Vec3f &b){ return a.y < b.y; });
+
+			_extractor.Init(_parameters, rgbimg);
+			_extractor.InitLayersFromPalette(_parameters, rgbimg, palette, layers);
+			_extractor.ExtractLayers(_parameters, rgbimg, layers);
+			for (int i = 0; i < 4; i++) {
+				_extractor.AddNegativeConstraints(_parameters, rgbimg, layers);
+				_extractor.ExtractLayers(_parameters, rgbimg, layers);
+			}
+			PixelLayerSet p = _extractor.GetPixelLayers(rgbimg, layers);
+			input.Append(p);
+
+			// cache palette
+			ofstream File(palettecache.CString());
+			PersistentAssert(!File.fail(), "Failed to open file");
+			for (int i = 0; i < _parameters.texsyn_klayers; i++)
+				File << palette[i].TabSeparatedString() << endl;
+			File.close();
+			// cache layers
+			for (int i = 0; i < _parameters.texsyn_klayers; i++) {
+				String layerfile = cache + String("layers_k-") + String(_parameters.texsyn_klayers) + String("_l-") + String(i) + String(".txt");
+				p[i].WriteToFile(layerfile);
+				p[i].SavePNG(outdir + String("input-layer-") + String(i) + String(".png"));
+			}
+		}
+	}
+
+	Vector<int> order(input.Length());
+	for (int i = 0; i < input.Length(); i++)
+		order[i] = i;//(i+1) % input.Length();
+
+	NeighborhoodGenerator generator(neighborhoodSize, input.Length(), 1);
+	// synthesize
+	LayerTextureSynthesizer synthesizer;
+	synthesizer.Synthesize(input, rgblayers, _parameters, generator, order);
+}
+
 void App::SynthesizeTexture(void)
 {
 	// params
@@ -402,7 +514,6 @@ void App::SynthesizeTexture(void)
 			}
 		}
 	}
-	Console::WriteLine(String(input.Length()));
 
 	// build gaussian pyramid
 	NeighborhoodGenerator generator(neighborhoodSize, input.Length(), 1);
@@ -418,6 +529,9 @@ UINT32 App::ProcessCommand(const String &command)
 {
 	if (command == "SynthesizeTexture") {
 		SynthesizeTexture();
+	}
+	else if (command == "SynthesizeTextureByLayers") {
+		SynthesizeTextureByLayers();
 	}
 	return 0;
 }
