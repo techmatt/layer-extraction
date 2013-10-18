@@ -12,7 +12,7 @@ void TextureSynthesis::Init(const AppParameters &parameters, const GaussianPyram
 	_debug = true;
 	_debugoutdir = "texsyn-out/";
 
-	_nthreads = 7;
+	_nthreads = 1;
 	_kappa = parameters.texsyn_kappa;
 
 	clock_t start = clock();
@@ -135,7 +135,7 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 
 	Grid<Vec2i> prevcoordinates(outputheight+2*endpad, outputwidth+2*endpad, Vec2i(-1,-1));
 
-	const int subpass = nradius * 2 + 1; // synthesize in blocks
+	const int subpass = 1;//nradius * 2 + 1; // synthesize in blocks
 
 	int exemplarwidth = exemplar.Base().First().Width();
 	int exemplarheight = exemplar.Base().First().Height();
@@ -154,8 +154,8 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 	for (int row = 0; row < coarseheight+2*pad; row+=skip) {
 		for (int col = 0; col < coarsewidth+2*pad; col+=skip) {
 			// initialize to random skip x skip 
-			rx = (int)(((float)std::rand()/RAND_MAX)*(excoarseheight-1-skip));
-			ry = (int)(((float)std::rand()/RAND_MAX)*(excoarsewidth-1-skip));
+			ry = (int)(((float)std::rand()/RAND_MAX)*(excoarseheight-1-skip));
+			rx = (int)(((float)std::rand()/RAND_MAX)*(excoarsewidth-1-skip));
 			for (int j = 0; j < skip; j++) {
 				for (int i = 0; i < skip; i++) 
 					if (row+j < coarseheight+2*pad && col+i < coarsewidth+2*pad)
@@ -166,7 +166,7 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 	Console::WriteLine("exemplar [" + String(exemplarwidth) + " by " + String(exemplarheight) + "] -> output [" + String(outputwidth) + "," + String(outputheight) + "] | " + String(exemplar.NumLayers()) + " layers, dimension = " + String(_reducedDimension));
 
 	const double CORRECTION_THRESHOLD = 1;
-	const int MAX_ITERS = 2;
+	const int MAX_ITERS = 5;
 
 	for (int level = exemplar.Depth()-1; level >= 0; level--) {
 		int delta = 1 << level; 
@@ -219,8 +219,9 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 
 			_coherentcount = 0;
 
-			for (int sy = 0; sy < subpass; sy++) {
-				for (int sx = 0; sx < subpass; sx++) {
+			/*for (int sy = 0; sy < subpass; sy++) {
+				for (int sx = 0; sx < subpass; sx++) {*/
+			int sx = 0, sy = 0;
 
 					TaskList<WorkerThreadTask*> tasks;
 					for (int y = nradius+sy; y < paddedheight-nradius; y+=subpass) {
@@ -249,8 +250,8 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 					}
 					}*/
 
-				}
-			}
+				/*}
+			}*/
 
 			Console::WriteLine(String(" coherent count = ") + String(_coherentcount) + String(" of ") + String((paddedwidth-2*nradius)*(paddedheight-2*nradius)));
 
@@ -392,7 +393,7 @@ double TextureSynthesis::BestApproximateMatch(int threadindex, const GaussianPyr
 	Vector<UINT> indices(1);
 
 	//find nearest pixel neighborhood			
-	_trees[level][threadindex].KNearestMultithreaded(transformedNeighbourhood, 1, indices, 0.0f);
+	_trees[level][threadindex].KNearest(transformedNeighbourhood, 1, indices, 0.0f);
 	Vec2i sourceCoordinate = _treeCoordinates[level][indices[0]];
 
 	outPt.x = sourceCoordinate.x;

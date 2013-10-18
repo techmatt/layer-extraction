@@ -12,6 +12,7 @@ public:
     void Recolorize();
 	BCLayers* SynthesizeLayers();
 	void SynthesizeTexture(void);
+	void SynthesizeTextureByLayers(void);
     
 private:
     AppParameters _parameters;

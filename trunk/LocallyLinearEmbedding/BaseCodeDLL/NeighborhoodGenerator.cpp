@@ -163,3 +163,29 @@ bool NeighborhoodGenerator::Generate(const PixelLayerSet &layers, const Vector<i
 	}
 	return inBounds;
 }
+
+bool NeighborhoodGenerator::Generate(const PixelLayerSet &synthlayers, const Vector< Grid<Vec2i> > &coordinateset, Vector<int> order, int iteration,
+									 int width, int height, int xCenter, int yCenter, double* result) const
+{
+	UINT dimensionIndex = 0;
+	bool inBounds = true;
+
+	for (int i = 0; i <= iteration; i++) {
+		for(int row = yCenter - _neighborhoodSize; row <= yCenter + _neighborhoodSize; row++)
+		{
+			for(int col = xCenter - _neighborhoodSize; col <= xCenter + _neighborhoodSize; col++)
+			{
+				if(row < 0 || row >= height || col < 0 || col >= width)
+				{
+					inBounds = false;
+					result[dimensionIndex++] = 0;
+				} else {
+					Assert( col >= 0 &&  col < synthlayers[i].Width() &&  row >= 0 &&  row < synthlayers[i].Height(),
+						"coordinates out of bounds");
+					result[dimensionIndex++] = synthlayers[i].pixelWeights(row,col);
+				}
+			}
+		}
+	}
+	return inBounds;
+}

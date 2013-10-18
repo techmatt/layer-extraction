@@ -911,6 +911,10 @@ namespace BaseCodeApp
         {
             BCProcessCommand(baseCodeDLLContext, "SynthesizeTexture");
         }
+        private void textureByLayerButton_Click(object sender, EventArgs e)
+        {
+            BCProcessCommand(baseCodeDLLContext, "SynthesizeTextureByLayers");
+        }
 
         private void extractLayersButton_Click(object sender, EventArgs e)
         {
