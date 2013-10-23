@@ -1,0 +1,122 @@
+
+imageFile=angel.png
+maskFile=angelSkyMaskB.png
+
+#
+# Superpixel terms
+#
+superpixelIterations=5
+superpixelCount=2000
+
+#
+# Locally-linear embedding constants
+#
+#spatialToColorScale=0.01
+spatialToColorScale=1.0;
+pixelNeighborCount=10
+superpixelNeighborCount=30
+#superpixelNeighborCount=20
+
+#
+# These terms are used by LayerExtractor
+#
+useKMeansPalette=true
+KMeansPaletteSize=7
+manifoldWeight=1
+#manifoldWeight=0
+#pixelConstraintWeight=0.01
+pixelConstraintWeight=0
+sumToOneWeight=0.1
+reconstructionWeight=0.5
+#reconstructionWeight=0
+#midpointWeight=0.01;
+midpointWeight=0;
+regularizationWeight=0
+negativeSupressionWeight=0.01
+#negativeSupressionWeight=0
+#preferenceWeight = 0.1
+preferenceWeight = 0
+
+#
+# These terms are only used for recolorizing (have no effect on LayerExtractor)
+#
+weightRegularizationTerm=0.000001
+userConstraintWeight=0.00001
+distantConstraintWeight=0.000001
+colorInertiaWeight=0.000000001
+periodicBasisCount=3
+
+#
+# For synthesis tests
+# useMajorityVote will take the majority vote of neighboring pixels to find a match, otherwise it'll use 
+# the image analogies coherence method
+#
+#allTargetLayers=targetEye_0.txt, targetEye_1.txt, targetEye_2.txt, targetEye_3.txt, targetEye_4.txt
+#targetLayers=targetEye_0.txt, targetEye_4.txt, targetEye_1.txt
+#refLayers=refEye_0.txt, refEye_3.txt, refEye_1.txt
+#updateSchedule=1.0,0.2,0.2
+#targetImageFile=targetEye.png
+#targetMaskFile=targetEye_mask.png
+#reducedDimension=32
+#neighborhoodSize=5
+#coherenceParameter=0
+#useMajorityVote=true
+#neighborRange=5
+#pyramidDepth=2
+
+#allTargetLayers=targetEye2_0.txt, targetEye2_1.txt, targetEye2_2.txt, targetEye2_3.txt, targetEye2_4.txt
+#targetLayers=targetEye2_1.txt, targetEye2_3.txt, targetEye2_4.txt
+#refLayers=refEye_0.txt, refEye_3.txt, refEye_1.txt
+#updateSchedule=1.0,0.2,0.2
+#targetImageFile=targetEye2.png
+#targetMaskFile=targetEye2_mask.png
+#reducedDimension=32
+#neighborhoodSize=2
+#coherenceParameter=0
+#useMajorityVote=true
+#neighborRange=5
+#pyramidDepth=3
+
+
+
+allTargetLayers=targetCloud_0.txt, targetCloud_1.txt
+targetLayers=targetCloud_0.txt, targetCloud_1.txt
+refLayers=refCloud_0.txt, refCloud_1.txt
+updateSchedule=1.0,0.1
+targetImageFile=targetCloud.png
+targetMaskFile=targetCloud_mask.png
+reducedDimension=32
+neighborhoodSize=2
+coherenceParameter=0
+useMajorityVote=true
+neighborRange=5
+pyramidDepth=3
+
+
+
+#allTargetLayers=targetCloud_0.txt, targetCloud_1.txt
+#targetLayers=targetCloud_0.txt, targetCloud_1.txt
+#refLayers=refCloud_0.txt, refCloud_1.txt
+#updateSchedule=1.0,0.1
+#targetImageFile=targetCloud.png
+#targetMaskFile=targetCloud_mask.png
+#reducedDimension=32
+#neighborhoodSize=5
+#coherenceParameter=0
+#useMajorityVote=false
+#neighborRange=5
+#pyramidDepth=3
+
+# texture synthesis
+texsyn_exemplar=fauxfur.ex.rgb.png
+texsyn_outputwidth=256
+texsyn_outputheight=256
+texsyn_nlevels=3
+texsyn_neighbourhoodsize=10
+texsyn_kappa=20
+texsyn_usepca=true
+texsyn_pcadim=32
+texsyn_usergb=false
+texsyn_uselayers=true
+texsyn_klayers=4
+texsyn_initrandsize=8
