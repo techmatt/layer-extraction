@@ -144,6 +144,18 @@ namespace BaseCodeApp
                 baseCodeDLLContext = BCInit();
             }
 
+            String[] commandLine = Environment.GetCommandLineArgs();
+            if (commandLine.Length >= 3 && commandLine[1] == "--SynthesizeTexture")
+            {
+                BCProcessCommand(baseCodeDLLContext, "SynthesizeTexture " + commandLine[2]);
+                Application.Exit();
+            }
+            if (commandLine.Length >= 3 && commandLine[1] == "--SynthesizeTextureByLayers")
+            {
+                BCProcessCommand(baseCodeDLLContext, "SynthesizeTextureByLayers " + commandLine[2]);
+                Application.Exit();
+            }
+
             //UpdateImages();
             paletteMethodBox.SelectedIndex = 1;
             layerMethodBox.SelectedIndex = 0;

@@ -5,7 +5,7 @@ const bool usingRecolorizer = false;
 
 void App::Init()
 {
-	AllocConsole();
+	/*AllocConsole();
 	_parameters.Init("../Parameters.txt");
 
 	Bitmap bmp;
@@ -56,7 +56,7 @@ void App::Init()
 	layers.Dump("../Results/Layers.txt", _extractor.SuperpixelColors());
 
 	_extractor.TestLayerRecoloring(bmp, layers);
-	_layers = layers;
+	_layers = layers;*/
 }
 
 void App::Recolorize()
@@ -78,11 +78,7 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 {
 	AllocConsole();
 
-	Vector<int> v(5);
-	for(int i = 0; i < 5; i++) v[i] = i;
-	auto mappedVector = v.Map(function<int(int)>([](int a) { return a * a; }));
-
-#ifdef DEBUG
+#ifdef _DEBUG
 	Console::WriteLine("DLL compiled in release mode");
 #else
 	Console::WriteLine("DLL compiled in debug mode");
@@ -292,10 +288,11 @@ BCLayers* App::SynthesizeLayers()
 
 
 
-void App::SynthesizeTextureByLayers(void)
+void App::SynthesizeTextureByLayers(const String &parameterFilename)
 {
-	// params
-	_parameters.Init("../Parameters.txt");
+	if(parameterFilename.Length() > 0) _parameters.Init(parameterFilename);
+    else _parameters.Init("../Parameters.txt");
+
 	int reducedDimension = _parameters.texsyn_pcadim;
 	int neighborhoodSize = _parameters.texsyn_neighbourhoodsize; // radius
 	int outputwidth = _parameters.texsyn_outputwidth;
@@ -395,7 +392,7 @@ void App::SynthesizeTextureByLayers(void)
 	}
 
 	Vector<int> order(input.Length());
-	for (int i = 0; i < input.Length(); i++)
+	for (UINT i = 0; i < input.Length(); i++)
 		order[i] = i;//(i+1) % input.Length();
 
 	NeighborhoodGenerator generator(neighborhoodSize, input.Length(), 1);
@@ -404,10 +401,11 @@ void App::SynthesizeTextureByLayers(void)
 	synthesizer.Synthesize(input, rgblayers, _parameters, generator, order);
 }
 
-void App::SynthesizeTexture(void)
+void App::SynthesizeTexture(const String &parameterFilename)
 {
-	// params
-	_parameters.Init("../Parameters.txt");
+	if(parameterFilename.Length() > 0) _parameters.Init(parameterFilename);
+    else _parameters.Init("../Parameters.txt");
+
 	int reducedDimension = _parameters.texsyn_pcadim;
 	int neighborhoodSize = _parameters.texsyn_neighbourhoodsize; // radius
 	int outputwidth = _parameters.texsyn_outputwidth;
@@ -527,12 +525,16 @@ void App::SynthesizeTexture(void)
 
 UINT32 App::ProcessCommand(const String &command)
 {
-	if (command == "SynthesizeTexture") {
-		SynthesizeTexture();
+    Vector<String> words = command.Partition(" ");
+    while(words.Length() < 5) words.PushEnd("");
+
+	if (words[0] == "SynthesizeTexture") {
+		SynthesizeTexture(words[1]);
 	}
-	else if (command == "SynthesizeTextureByLayers") {
-		SynthesizeTextureByLayers();
+	else if (words[0] == "SynthesizeTextureByLayers") {
+		SynthesizeTextureByLayers(words[1]);
 	}
+
 	return 0;
 }
 

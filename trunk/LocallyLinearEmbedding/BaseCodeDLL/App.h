@@ -11,8 +11,8 @@ public:
 	BCBitmapInfo* SegmentImage(const BCBitmapInfo &bitmap);
     void Recolorize();
 	BCLayers* SynthesizeLayers();
-	void SynthesizeTexture(void);
-	void SynthesizeTextureByLayers(void);
+	void SynthesizeTexture(const String &parameterFilename);
+	void SynthesizeTextureByLayers(const String &parameterFilename);
     
 private:
     AppParameters _parameters;
