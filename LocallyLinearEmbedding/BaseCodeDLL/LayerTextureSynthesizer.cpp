@@ -400,13 +400,13 @@ void LayerTextureSynthesizer::VisualizeMatches(const PixelLayerSet &layers, cons
 		PixelLayer diff(Vec3f(1,1,1), nradius*2+1, nradius*2+1);
 		for (int yoffset = -nradius; yoffset <= nradius; yoffset++) {
 			for (int xoffset = -nradius; xoffset <= nradius; xoffset++) {
-				if (matchpt.y+yoffset >= 0 && matchpt.y+yoffset < exemplar[i].Height() &&
-					matchpt.x+xoffset >= 0 && matchpt.x+xoffset < exemplar[i].Width())
+				if (matchpt.y+yoffset >= 0 && matchpt.y+yoffset < (int)exemplar[i].Height() &&
+					matchpt.x+xoffset >= 0 && matchpt.x+xoffset < (int)exemplar[i].Width())
 					exneighbourhood.pixelWeights(yoffset+nradius,xoffset+nradius) = layers[order[iteration]].pixelWeights(matchpt.y+yoffset,matchpt.x+xoffset);
 				else
 					exneighbourhood.pixelWeights(yoffset+nradius,xoffset+nradius) = 0;
-				if (pt.y+yoffset >= 0 && pt.y+yoffset < synth[i].Height() &&
-					pt.x+xoffset >= 0 && pt.x+xoffset < synth[i].Width())
+				if (pt.y+yoffset >= 0 && pt.y+yoffset < (int)synth[i].Height() &&
+					pt.x+xoffset >= 0 && pt.x+xoffset < (int)synth[i].Width())
 					syneighbourhood.pixelWeights(yoffset+nradius,xoffset+nradius) = synthlayers[iteration].pixelWeights(pt.y+yoffset,pt.x+xoffset);
 				else
 					syneighbourhood.pixelWeights(yoffset+nradius,xoffset+nradius) = 0;
