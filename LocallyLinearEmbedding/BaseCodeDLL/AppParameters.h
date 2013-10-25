@@ -57,6 +57,7 @@ struct AppParameters
 		texsyn_exemplar = file.GetString("texsyn_exemplar", "");
 		texsyn_outputwidth = file.GetInteger("texsyn_outputwidth");
 		texsyn_outputheight = file.GetInteger("texsyn_outputheight");
+		texsyn_outputdirectory = file.GetString("texsyn_outputdirectory", "");
 		texsyn_nlevels = file.GetInteger("texsyn_nlevels");
 		texsyn_neighbourhoodsize = file.GetInteger("texsyn_neighbourhoodsize");
 		texsyn_kappa = file.GetDouble("texsyn_kappa");
@@ -64,6 +65,7 @@ struct AppParameters
 		texsyn_pcadim = file.GetInteger("texsyn_pcadim");
 		texsyn_usergb = file.GetBoolean("texsyn_usergb");
 		texsyn_uselayers = file.GetBoolean("texsyn_uselayers");
+		texsyn_usedistancetransform = file.GetBoolean("texsyn_usedistancetransform");
 		texsyn_klayers = file.GetInteger("texsyn_klayers");
 		texsyn_initrandsize = file.GetInteger("texsyn_initrandsize");
 
@@ -121,6 +123,7 @@ struct AppParameters
 	String texsyn_exemplar;
 	int texsyn_outputwidth;
 	int texsyn_outputheight;
+	String texsyn_outputdirectory;
 	int texsyn_nlevels;
 	int texsyn_neighbourhoodsize;
 	double texsyn_kappa;
@@ -128,6 +131,7 @@ struct AppParameters
 	int texsyn_pcadim;
 	bool texsyn_usergb;
 	bool texsyn_uselayers;
+	bool texsyn_usedistancetransform;
 	int texsyn_klayers;
 	int texsyn_initrandsize;
 };

@@ -5,6 +5,19 @@ using System.Windows.Forms;
 
 namespace BaseCodeApp
 {
+    [Serializable()]
+    public class EarlyAbortException : System.Exception
+    {
+        public EarlyAbortException() : base() { }
+        public EarlyAbortException(string message) : base(message) { }
+        public EarlyAbortException(string message, System.Exception inner) : base(message, inner) { }
+
+        // A constructor is needed for serialization when an 
+        // exception propagates from a remoting server to the client.  
+        protected EarlyAbortException(System.Runtime.Serialization.SerializationInfo info,
+            System.Runtime.Serialization.StreamingContext context) { }
+    }
+
     static class Program
     {
         /// <summary>
@@ -15,7 +28,18 @@ namespace BaseCodeApp
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainWindow());
+
+            MainWindow window;
+            try
+            {
+                window = new MainWindow();
+            }
+            catch (EarlyAbortException ex)
+            {
+                return;
+            }
+
+            Application.Run(window);
         }
     }
 }

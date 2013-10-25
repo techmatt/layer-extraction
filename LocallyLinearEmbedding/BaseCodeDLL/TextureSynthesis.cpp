@@ -2,18 +2,16 @@
 
 void TextureSynthesis::Init(const AppParameters &parameters, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension)
 {
-    /*for(UINT i = 0; i < exemplar[0].Length(); i++)
-    {
-        auto result = DistanceTransform::Transform(exemplar[0][i].pixelWeights);
-        Bitmap bmpA, bmpB;
-        bmpA.LoadGrid(exemplar[0][i].pixelWeights, 0.0, 1.0);
-        bmpB.LoadGrid(result, 0.0, 1.0);
-        bmpA.SavePNG(String(i) + "_source.png");
-        bmpB.SavePNG(String(i) + "_transform.png");
-    }*/
-
 	_debug = true;
-	_debugoutdir = "texsyn-out/";
+	CreateOutputDirectory(parameters);
+
+	if (_debug) {
+		// write out pyramid
+		for (int level = 0; level < exemplar.Depth(); level++) {
+			for (int layer = 0; layer < exemplar[level].Length(); layer++) 
+				exemplar[level][layer].SavePNG(_outdir+"pyramid-level-"+String(level)+"_layer-"+String(layer)+".png");
+		}
+	}
 
 	_nthreads = 1;
 	_kappa = parameters.texsyn_kappa;
@@ -22,6 +20,41 @@ void TextureSynthesis::Init(const AppParameters &parameters, const GaussianPyram
 	InitPCA(parameters, exemplar, generator);
 	InitKDTree(exemplar, generator, reducedDimension);
 	Console::WriteLine(String("...initialized in ") + String(((float)(clock()-start))/CLOCKS_PER_SEC) + String(" seconds"));
+}
+
+String TextureSynthesis::CreateOutputDirectory(const AppParameters &parameters)
+{
+	_outdir = "../" + parameters.texsyn_outputdirectory;
+	if (!Utility::FileExists(_outdir))
+		Utility::MakeDirectory(_outdir);
+	String folder = "";
+	if (parameters.texsyn_usergb) 
+		folder += "rgb";
+	if (parameters.texsyn_uselayers) {
+		if (folder.Length() == 0) folder += "layers-" + String(parameters.texsyn_klayers);
+		else                      folder += "-layers-" + String(parameters.texsyn_klayers);
+	}
+	if (parameters.texsyn_usedistancetransform) {
+		if (folder.Length() == 0) folder += "dist-" + String(parameters.texsyn_klayers);
+		else                      folder += "-dist-" + String(parameters.texsyn_klayers);
+	}
+	_outdir += folder + "/";
+	if (!Utility::FileExists(_outdir))
+		Utility::MakeDirectory(_outdir);
+
+	_outdir += parameters.texsyn_exemplar + "/";
+	if (!Utility::FileExists(_outdir))
+		Utility::MakeDirectory(_outdir);
+
+	_outdir += "k-" + String(parameters.texsyn_kappa) + "_s-" + String(parameters.texsyn_initrandsize) + "_nr-" + String(parameters.texsyn_neighbourhoodsize) +
+		"_nl-" + String(parameters.texsyn_nlevels) + "_pca-" + String(parameters.texsyn_pcadim) + 
+		"_size-" + String(parameters.texsyn_outputwidth) + "-" + String(parameters.texsyn_outputheight) + "/";
+
+	if (!Utility::FileExists(_outdir))
+		Utility::MakeDirectory(_outdir);
+	Console::WriteLine("Outputting to " + _outdir);
+
+	return _outdir;
 }
 
 void TextureSynthesis::InitPCA(const AppParameters &parameters, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator)
@@ -37,8 +70,9 @@ void TextureSynthesis::InitPCA(const AppParameters &parameters, const GaussianPy
 	for (UINT level = 0; level < exemplar.Depth(); level++) {
 
 		String inputdescription = "";
-		if (parameters.texsyn_usergb) inputdescription = inputdescription + "_rgb";
-		if (parameters.texsyn_uselayers) inputdescription = inputdescription + "_layers";
+		if (parameters.texsyn_usergb) inputdescription += "_rgb";
+		if (parameters.texsyn_uselayers) inputdescription = "_layers";
+		if (parameters.texsyn_usedistancetransform) inputdescription += "_dist";
 		String cache = "../TexSynCache/" + parameters.texsyn_exemplar + "_";
 		String filename = cache + String("pca_nr-") + String(nRadius) + String("_nl-") +  String(exemplar.NumLayers()) + 
 			String("_lv-") + String(level) + 
@@ -64,8 +98,8 @@ void TextureSynthesis::InitPCA(const AppParameters &parameters, const GaussianPy
 					success = generator.Generate(exemplar, level, xCenter, yCenter, curNeighborhood);
 				}
 				neighborhoods[neighborhoodIndex] = curNeighborhood;
-				if (neighborhoodIndex % 1000 == 0)
-					Console::WriteLine("Initialized "+String(neighborhoodIndex)+" neighborhoods");
+				//if (neighborhoodIndex % 1000 == 0)
+				//	Console::WriteLine("Initialized "+String(neighborhoodIndex)+" neighborhoods");
 			}
 
 			_pca[level].InitFromDensePoints(neighborhoods, dimension);
@@ -204,7 +238,6 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 		}
 		if (_debug) {
 			WriteImage(rgbpyr, exemplar, coordinates, level, width, height, pad, String("upsamp"));
-			//WriteImage(rgbpyr, exemplar, coordinates, level, paddedwidth, paddedheight, 0, String("upsamp-all"));
 		}
 
 		// synthesis
@@ -222,13 +255,12 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 
 			_coherentcount = 0;
 
-			/*for (int sy = 0; sy < subpass; sy++) {
-				for (int sx = 0; sx < subpass; sx++) {*/
-			int sx = 0, sy = 0;
+			for (int sy = 0; sy < subpass; sy++) {
+				for (int sx = 0; sx < subpass; sx++) {
 
 					TaskList<WorkerThreadTask*> tasks;
-					for (int y = nradius+sy; y < paddedheight-nradius; y+=subpass) {
-						for (int x = nradius+sx; x < paddedwidth-nradius; x+=subpass) {
+					for (int y = paddedheight-nradius-1; y >= nradius+sy; y-=subpass) {
+						for (int x = paddedwidth-nradius-1; x >= nradius+sx; x-=subpass) {
 							TexSynTask *newTask = new TexSynTask;
 							newTask->synthesizer = this;
 							newTask->pixel = Vec2i(x,y);
@@ -253,8 +285,8 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 					}
 					}*/
 
-				/*}
-			}*/
+				}
+			}
 
 			Console::WriteLine(String(" coherent count = ") + String(_coherentcount) + String(" of ") + String((paddedwidth-2*nradius)*(paddedheight-2*nradius)));
 
@@ -331,29 +363,29 @@ Vec2i TextureSynthesis::BestMatchP(int threadindex, const GaussianPyramid *exemp
 
 	return bestPt;
 }
-/*
+
 Vec2i TextureSynthesis::BestMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates, int level, int x, int y, 
-double *neighbourhood, double *transformedNeighbourhood, int width, int height,
-double *coherentneighbourhood, double *transformedCohNeighbourhood)
+								  double *neighbourhood, double *transformedNeighbourhood, int width, int height,
+								  double *coherentneighbourhood, double *transformedCohNeighbourhood)
 {
-Vec2i approxPt, coherentPt;
+	Vec2i approxPt, coherentPt;
 
-generator.Generate(exemplar, coordinates, level, width, height, x, y, neighbourhood);
+	generator.Generate(exemplar, coordinates, level, width, height, x, y, neighbourhood);
 
-_pca[level].Transform(transformedNeighbourhood, neighbourhood, _reducedDimension);
+	_pca[level].Transform(transformedNeighbourhood, neighbourhood, _reducedDimension);
 
-double nearestDist = BestApproximateMatch(exemplar, generator, level, approxPt, transformedNeighbourhood);
-if (_kappa == 0) return approxPt;
+	double nearestDist = BestApproximateMatch(0, exemplar, generator, level, approxPt, transformedNeighbourhood);
+	if (_kappa == 0) return approxPt;
 
-double nearestCoherentDist = BestCoherentMatch(exemplar, generator, coordinates, level, width, height,
-x, y, coherentPt, transformedNeighbourhood, coherentneighbourhood, transformedCohNeighbourhood);
+	double nearestCoherentDist = BestCoherentMatch(exemplar, generator, coordinates, level, width, height,
+		x, y, coherentPt, transformedNeighbourhood, coherentneighbourhood, transformedCohNeighbourhood);
 
-if (nearestCoherentDist < nearestDist * (1 + pow(2.0,-level-1)*_kappa)) {
-_coherentcount++;
-return coherentPt;
+	if (nearestCoherentDist < nearestDist * (1 + pow(2.0,-level-1)*_kappa)) {
+		_coherentcount++;
+		return coherentPt;
+	}
+	return approxPt;
 }
-return approxPt;
-}*/
 
 double TextureSynthesis::BestCoherentMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates, 
 										   int level, int width, int height, int x, int y, Vec2i &outPt,
@@ -425,8 +457,8 @@ void TextureSynthesis::WriteImage(const GaussianPyramid &rgbpyr, const GaussianP
 		for (int col = 0; col < width; col++)
 			coordimage[row][col] = RGBColor(Vec3f((float)coordinates(row+pad,col+pad).y/exemplarheight, (float)coordinates(row+pad,col+pad).x/exemplarwidth, 0));
 	}
-	coordimage.SavePNG(_debugoutdir + String("coord-") + String(level) + String("_") + label + String(".png"));
-	Console::WriteLine(_debugoutdir + String("coord-") + String(level) + String("_") + label + String(".png"));
+	coordimage.SavePNG(_outdir + String("coord-") + String(level) + String("_") + label + String(".png"));
+	Console::WriteLine(_outdir + String("coord-") + String(level) + String("_") + label + String(".png"));
 	for (int row = 0; row < height; row++) { // image
 		for (int col = 0; col < width; col++) {
 
@@ -446,6 +478,6 @@ void TextureSynthesis::WriteImage(const GaussianPyramid &rgbpyr, const GaussianP
 				rgbpyr[level][2].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x)));
 		}
 	}
-	coordimage.SavePNG(_debugoutdir + String("image-") + String(level) + String("_") + label + String(".png"));
-	Console::WriteLine(_debugoutdir + String("image-") + String(level) + String("_") + label + String(".png"));
+	coordimage.SavePNG(_outdir + String("image-") + String(level) + String("_") + label + String(".png"));
+	Console::WriteLine(_outdir + String("image-") + String(level) + String("_") + label + String(".png"));
 }
