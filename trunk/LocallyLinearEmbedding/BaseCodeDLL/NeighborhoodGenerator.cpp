@@ -205,7 +205,7 @@ bool NeighborhoodGenerator::Generate(const Vector<PixelLayerSet> &layerfeatures,
 	for(int layeridx = 0; layeridx <= iteration; layeridx++)
 	{
 		int layerIndex = order[layeridx];
-		for (int feature = 0; feature < layerfeatures[layerIndex].Length(); feature++) {
+		for (int feature = 0; feature < (int)layerfeatures[layerIndex].Length(); feature++) {
 
 			for(int row = yCenter - _neighborhoodSize; row <= yCenter + _neighborhoodSize; row++)
 			{
@@ -233,7 +233,7 @@ bool NeighborhoodGenerator::Generate(const Vector<PixelLayerSet> &layerfeatures,
 
 	for (int iter = 0; iter <= iteration; iter++) {
 		int layerIndex = order[iter];
-		for (int feature = 0; feature < layerfeatures[layerIndex].Length(); feature++) {
+		for (int feature = 0; feature < (int)layerfeatures[layerIndex].Length(); feature++) {
 
 			for(int row = yCenter - _neighborhoodSize; row <= yCenter + _neighborhoodSize; row++)
 			{

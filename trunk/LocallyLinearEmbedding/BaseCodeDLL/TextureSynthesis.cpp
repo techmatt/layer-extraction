@@ -7,8 +7,8 @@ void TextureSynthesis::Init(const AppParameters &parameters, const GaussianPyram
 
 	if (_debug) {
 		// write out pyramid
-		for (int level = 0; level < exemplar.Depth(); level++) {
-			for (int layer = 0; layer < exemplar[level].Length(); layer++) 
+		for (UINT level = 0; level < exemplar.Depth(); level++) {
+			for (UINT layer = 0; layer < exemplar[level].Length(); layer++) 
 				exemplar[level][layer].SavePNG(_outdir+"pyramid-level-"+String(level)+"_layer-"+String(layer)+".png");
 		}
 	}
@@ -428,7 +428,7 @@ double TextureSynthesis::BestApproximateMatch(int threadindex, const GaussianPyr
 	Vector<UINT> indices(1);
 
 	//find nearest pixel neighborhood			
-	_trees[level][threadindex].KNearest(transformedNeighbourhood, 1, indices, 0.0f);
+	_trees[level][threadindex].KNearest(transformedNeighbourhood, 1, indices, 0.1f);
 	Vec2i sourceCoordinate = _treeCoordinates[level][indices[0]];
 
 	outPt.x = sourceCoordinate.x;

@@ -15,7 +15,7 @@ void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const Pixe
 	// compute distance transforms
 	Console::WriteLine("computing distance transforms...");
 	Vector<PixelLayerSet> layerfeatures(layers.Length());
-	for (int k = 0; k < layers.Length(); k++) {
+	for (UINT k = 0; k < layers.Length(); k++) {
 		PixelLayer p;
 		p.color = layers[k].color;
 		p.pixelWeights = DistanceTransform::Transform(layers[k].pixelWeights);
