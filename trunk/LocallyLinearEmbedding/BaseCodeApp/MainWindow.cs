@@ -148,12 +148,12 @@ namespace BaseCodeApp
             if (commandLine.Length >= 3 && commandLine[1] == "--SynthesizeTexture")
             {
                 BCProcessCommand(baseCodeDLLContext, "SynthesizeTexture " + commandLine[2]);
-                Application.Exit();
+                throw new EarlyAbortException();
             }
             if (commandLine.Length >= 3 && commandLine[1] == "--SynthesizeTextureByLayers")
             {
                 BCProcessCommand(baseCodeDLLContext, "SynthesizeTextureByLayers " + commandLine[2]);
-                Application.Exit();
+                throw new EarlyAbortException();
             }
 
             //UpdateImages();

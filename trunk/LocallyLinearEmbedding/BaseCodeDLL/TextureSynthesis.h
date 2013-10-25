@@ -9,15 +9,17 @@ public:
 
 	Vec2i BestMatchP(int threadIndex, const GaussianPyramid *exemplar, NeighborhoodGenerator *generator, const Grid<Vec2i> *coordinates,
 				    int level, int x, int y, int width, int height);
+	
+	String CreateOutputDirectory(const AppParameters &parameters);
 
 private:
     void InitPCA(const AppParameters &parameters, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator);
 	void InitKDTree(const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, UINT reducedDimension);
 
-	/*Vec2i BestMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates,
+	Vec2i BestMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates,
 				    int level, int x, int y,
 					double *neighbourhood, double *transformedNeighbourhood, int width, int height,
-					double *coherentneighbourhood, double *transformedCohNeighbourhood);*/
+					double *coherentneighbourhood, double *transformedCohNeighbourhood);
 	double BestApproximateMatch(int threadindex, const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, int level, Vec2i &outPt,
 											  double *transformedNeighbourhood);
 	double BestCoherentMatch(const GaussianPyramid &exemplar, NeighborhoodGenerator &generator, const Grid<Vec2i> &coordinates,
@@ -25,6 +27,7 @@ private:
 							 double *coherentneighbourhood, double *transformedCohNeighbourhood);
 
 	double NeighborhoodDistance(double* neighborhoodA, double* neighborhoodB, UINT dimension);
+
 
 	void WriteImage(const GaussianPyramid &rgbpyr, const GaussianPyramid &exemplar, const Grid<Vec2i> &coordinates, int level, int width, int height, int pad, String label);
 
@@ -39,7 +42,7 @@ private:
 	int _coherentcount;
 	
 	bool _debug;
-	String _debugoutdir;
+	String _outdir;
 };
 
 

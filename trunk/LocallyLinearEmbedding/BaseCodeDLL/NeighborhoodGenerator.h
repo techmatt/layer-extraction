@@ -16,6 +16,9 @@ public:
 	bool Generate(const PixelLayerSet &layers, const Vector<int> &order, int iteration, int xCenter, int yCenter, double* result) const; // synthesis by layer
 	bool Generate(const PixelLayerSet &synthlayers, const Vector< Grid<Vec2i> > &coordinateset, Vector<int> order, int iteration,
 									 int width, int height, int xCenter, int yCenter, double* result) const;
+	bool Generate(const Vector<PixelLayerSet> &layerfeatures, const Vector<int> &order, int iteration, int xCenter, int yCenter, double* result) const; // synthesis by layer w/ extra features, e.g. distance transform
+	bool Generate(const Vector<PixelLayerSet> &layerfeatures, const Vector< Grid<Vec2i> > &coordinateset, Vector<int> order, int iteration,
+									 int width, int height, int xCenter, int yCenter, double* result) const;
 
     __forceinline UINT Dimension() const
     {

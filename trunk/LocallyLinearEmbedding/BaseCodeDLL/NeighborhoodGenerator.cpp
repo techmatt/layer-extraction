@@ -134,7 +134,7 @@ bool NeighborhoodGenerator::Generate(const GaussianPyramid &pyramid, const Grid<
 	return inBounds;
 }
 
-
+//// synthesis by layer
 bool NeighborhoodGenerator::Generate(const PixelLayerSet &layers, const Vector<int> &order, int iteration, int xCenter, int yCenter, double* result) const
 {
 	const int width  = layers.First().Width();
@@ -183,6 +183,72 @@ bool NeighborhoodGenerator::Generate(const PixelLayerSet &synthlayers, const Vec
 					Assert( col >= 0 &&  col < synthlayers[i].Width() &&  row >= 0 &&  row < synthlayers[i].Height(),
 						"coordinates out of bounds");
 					result[dimensionIndex++] = synthlayers[i].pixelWeights(row,col);
+				}
+			}
+		}
+	}
+	return inBounds;
+}
+
+
+
+//// synthesis by layer w/ extra features
+bool NeighborhoodGenerator::Generate(const Vector<PixelLayerSet> &layerfeatures, const Vector<int> &order, int iteration, int xCenter, int yCenter, double* result) const
+{
+	const int width  = layerfeatures.First().First().Width();
+	const int height = layerfeatures.First().First().Height();
+
+	UINT dimensionIndex = 0;
+	bool inBounds = true;
+
+	//Vec2i centerPt = pyramid.TransformCoordinates(Vec2i(xCenter, yCenter), 0, level);
+	for(int layeridx = 0; layeridx <= iteration; layeridx++)
+	{
+		int layerIndex = order[layeridx];
+		for (int feature = 0; feature < layerfeatures[layerIndex].Length(); feature++) {
+
+			for(int row = yCenter - _neighborhoodSize; row <= yCenter + _neighborhoodSize; row++)
+			{
+				for(int col = xCenter - _neighborhoodSize; col <= xCenter + _neighborhoodSize; col++)
+				{
+					if(row < 0 || row >= height || col < 0 || col >= width)
+					{
+						inBounds = false;
+						result[dimensionIndex++] = 0;
+					} else {
+						result[dimensionIndex++] = layerfeatures[layerIndex][feature].pixelWeights(row, col);
+					}
+				}
+			}
+		}
+	}
+	return inBounds;
+}
+
+bool NeighborhoodGenerator::Generate(const Vector<PixelLayerSet> &layerfeatures, const Vector< Grid<Vec2i> > &coordinateset, Vector<int> order, int iteration,
+									 int width, int height, int xCenter, int yCenter, double* result) const
+{
+	UINT dimensionIndex = 0;
+	bool inBounds = true;
+
+	for (int iter = 0; iter <= iteration; iter++) {
+		int layerIndex = order[iter];
+		for (int feature = 0; feature < layerfeatures[layerIndex].Length(); feature++) {
+
+			for(int row = yCenter - _neighborhoodSize; row <= yCenter + _neighborhoodSize; row++)
+			{
+				for(int col = xCenter - _neighborhoodSize; col <= xCenter + _neighborhoodSize; col++)
+				{
+					if(row < 0 || row >= height || col < 0 || col >= width)
+					{
+						inBounds = false;
+						result[dimensionIndex++] = 0;
+					} else {
+						Assert( coordinateset[iter](row,col).x >= 0 && coordinateset[iter](row,col).x < layerfeatures.First().First().Width() && 
+							coordinateset[iter](row,col).y >= 0 && coordinateset[iter](row,col).y < layerfeatures.First().First().Height(),
+							"coordinates out of bounds");
+						result[dimensionIndex++] = layerfeatures[layerIndex][feature].pixelWeights(coordinateset[iter](row,col).y, coordinateset[iter](row,col).x);
+					}
 				}
 			}
 		}

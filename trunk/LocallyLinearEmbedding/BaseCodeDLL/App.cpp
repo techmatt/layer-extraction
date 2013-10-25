@@ -349,7 +349,7 @@ void App::SynthesizeTextureByLayers(const String &parameterFilename)
 			for (int i = 0; i < _parameters.texsyn_klayers; i++) {
 				String layerfile = cache + String("layers_k-") + String(_parameters.texsyn_klayers) + String("_l-") + String(i) + String(".txt");
 				input.PushEnd(PixelLayer(layerfile));
-			    input[idx+i].SavePNG(outdir + String("input-layer-") + String(i) + String(".png"));
+				input[idx+i].SavePNG(outdir + String("input-layer-") + String(i) + String(".png"));
 			}
 		}
 		else { // generate palette & layers
@@ -406,6 +406,8 @@ void App::SynthesizeTexture(const String &parameterFilename)
 	if(parameterFilename.Length() > 0) _parameters.Init(parameterFilename);
     else _parameters.Init("../Parameters.txt");
 
+	TextureSynthesis synthesizer;
+
 	int reducedDimension = _parameters.texsyn_pcadim;
 	int neighborhoodSize = _parameters.texsyn_neighbourhoodsize; // radius
 	int outputwidth = _parameters.texsyn_outputwidth;
@@ -418,7 +420,10 @@ void App::SynthesizeTexture(const String &parameterFilename)
 	Bitmap rgbimg;
 	rgbimg.LoadPNG(exemplar_name);
 	//debugging
-	String outdir = "texsyn-out/";
+	String outdir = synthesizer.CreateOutputDirectory(_parameters);
+	if (!Utility::FileExists(outdir))
+		Utility::MakeDirectory(outdir);
+
 	rgbimg.SavePNG(outdir + String("input.png"));
 
 	// input layers for synthesis
@@ -454,8 +459,10 @@ void App::SynthesizeTexture(const String &parameterFilename)
 	rgblayers.PushEnd(blue);
 
 	// use layers from k-means colour selection
-	if (_parameters.texsyn_uselayers) {
+	if (_parameters.texsyn_uselayers || _parameters.texsyn_usedistancetransform) {
+		int idx = input.Length();
 		// check if layers are cached
+		PixelLayerSet layers;
 		String cache = String("../TexSynCache/") + _parameters.texsyn_exemplar + String("_");
 		String palettecache = cache + String("kmeans-palette_k-") + String(_parameters.texsyn_klayers) + String(".txt");
 		if (Utility::FileExists(palettecache)) { 
@@ -467,15 +474,17 @@ void App::SynthesizeTexture(const String &parameterFilename)
 				palette.PushEnd(Vec3f(colourFields[0].ConvertToFloat(), colourFields[1].ConvertToFloat(), colourFields[2].ConvertToFloat()));
 			}
 
-			int idx = input.Length();
 			for (int i = 0; i < _parameters.texsyn_klayers; i++) {
 				String layerfile = cache + String("layers_k-") + String(_parameters.texsyn_klayers) + String("_l-") + String(i) + String(".txt");
-				input.PushEnd(PixelLayer(layerfile));
-			    input[idx+i].SavePNG(outdir + String("input-layer-") + String(i) + String(".png"));
+				layers.PushEnd(PixelLayer(layerfile));
+				if (_parameters.texsyn_uselayers) {
+					input.PushEnd(PixelLayer(layerfile));
+					input[idx+i].SavePNG(outdir + String("input-layer-") + String(i) + String(".png"));
+				}
 			}
 		}
 		else { // generate palette & layers
-			LayerSet layers;
+			LayerSet superpixellayers;
 			KMeansClustering<Vec3f, Vec3fKMeansMetric> clustering;
 			Vector<Vec3f> bmpColors;
 
@@ -489,14 +498,15 @@ void App::SynthesizeTexture(const String &parameterFilename)
 			palette.Sort([](const Vec3f &a, const Vec3f &b){ return a.y < b.y; });
 
 			_extractor.Init(_parameters, rgbimg);
-			_extractor.InitLayersFromPalette(_parameters, rgbimg, palette, layers);
-			_extractor.ExtractLayers(_parameters, rgbimg, layers);
+			_extractor.InitLayersFromPalette(_parameters, rgbimg, palette, superpixellayers);
+			_extractor.ExtractLayers(_parameters, rgbimg, superpixellayers);
 			for (int i = 0; i < 4; i++) {
-				_extractor.AddNegativeConstraints(_parameters, rgbimg, layers);
-				_extractor.ExtractLayers(_parameters, rgbimg, layers);
+				_extractor.AddNegativeConstraints(_parameters, rgbimg, superpixellayers);
+				_extractor.ExtractLayers(_parameters, rgbimg, superpixellayers);
 			}
-			PixelLayerSet p = _extractor.GetPixelLayers(rgbimg, layers);
-			input.Append(p);
+			layers = _extractor.GetPixelLayers(rgbimg, superpixellayers);
+			if (_parameters.texsyn_uselayers)
+				input.Append(layers);
 
 			// cache palette
 			ofstream File(palettecache.CString());
@@ -507,18 +517,35 @@ void App::SynthesizeTexture(const String &parameterFilename)
 			// cache layers
 			for (int i = 0; i < _parameters.texsyn_klayers; i++) {
 				String layerfile = cache + String("layers_k-") + String(_parameters.texsyn_klayers) + String("_l-") + String(i) + String(".txt");
-				p[i].WriteToFile(layerfile);
-				p[i].SavePNG(outdir + String("input-layer-") + String(i) + String(".png"));
+				layers[i].WriteToFile(layerfile);
+				if (_parameters.texsyn_uselayers)
+					layers[i].SavePNG(outdir + String("input-layer-") + String(i) + String(".png"));
+			}
+		}
+
+		// compute distance transforms
+		if (_parameters.texsyn_usedistancetransform) {
+			for(int i = 0; i < layers.Length(); i++)
+			{
+				PixelLayer p;
+				p.color = layers[i].color;
+				p.pixelWeights = DistanceTransform::Transform(layers[i].pixelWeights);
+				p.SavePNG(outdir + "input-layer-" + String(i) + "-dist_trans.png");
+				input.PushEnd(p);
 			}
 		}
 	}
+	String info = "";
+	if (_parameters.texsyn_usergb) info += "using rgb | ";
+	if (_parameters.texsyn_uselayers) info += "using layers | ";
+	if (_parameters.texsyn_usedistancetransform) info += "using distance transform (layers) | ";
+	Console::WriteLine(info + String(input.Length()) + " layers");
 
 	// build gaussian pyramid
 	NeighborhoodGenerator generator(neighborhoodSize, input.Length(), 1);
 	GaussianPyramid pyramid(input, nlevels);
 	GaussianPyramid rgbpyr(rgblayers, nlevels); // for visualising synthesis
 	// synthesize
-	TextureSynthesis synthesizer;
 	synthesizer.Init(_parameters, pyramid, generator, nlevels, reducedDimension);
 	synthesizer.Synthesize(rgbpyr, pyramid, _parameters, generator);
 }

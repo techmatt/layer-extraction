@@ -12,8 +12,24 @@ void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const Pixe
 	_dimension = parameters.texsyn_neighbourhoodsize * 2 + 1;
 	_dimension *=  _dimension;
 
+	// compute distance transforms
+	Console::WriteLine("computing distance transforms...");
+	Vector<PixelLayerSet> layerfeatures(layers.Length());
+	for (int k = 0; k < layers.Length(); k++) {
+		PixelLayer p;
+		p.color = layers[k].color;
+		p.pixelWeights = DistanceTransform::Transform(layers[k].pixelWeights);
+		// output distance transform
+		p.SavePNG(_outputdir + "input-layer-" + String(k) + "-dist_transform.png");
+		if (parameters.texsyn_uselayers) layerfeatures[k].PushEnd(layers[k]); // original layer
+		if (parameters.texsyn_usedistancetransform) layerfeatures[k].PushEnd(p); // distance transform
+	}
+	_dimension *= layerfeatures.First().Length(); 
+
+	// currently not using the rgb layers
+
 	for (int iter = 0; iter < (int)order.Length(); iter++) {
-		Synthesize(layers, rgb, parameters, generator, order, iter, output, coordinates);
+		Synthesize(layerfeatures, parameters, generator, order, iter, output, coordinates);
 	}
 
 	// compose
@@ -30,17 +46,18 @@ void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const Pixe
 }
 
 
-void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const PixelLayerSet &rgb, const AppParameters &parameters,
+void LayerTextureSynthesizer::Synthesize(const Vector<PixelLayerSet> &layerfeatures, const AppParameters &parameters,
 										 NeighborhoodGenerator &generator, Vector<int> order, int iteration, 
 										 PixelLayerSet &synthesized, Vector< Grid<Vec2i> > &coordinateset)
 {
 	Console::WriteLine("...initializing iteration " + String(iteration) + " (layer " + String(order[iteration]) + ")");
+	const int origlayeridx = 0;
 	_reducedDimension = parameters.texsyn_pcadim;
 	PCA<double> pca;
-	ComputePCA(parameters, layers, generator, order, iteration, pca);
+	ComputePCA(parameters, layerfeatures, generator, order, iteration, pca);
 	Vector<Vec2i> treeCoordinates;
 	KDTree kdtree;
-	ConstructKDTree(pca, layers, generator, order, iteration, treeCoordinates, kdtree);
+	ConstructKDTree(pca, layerfeatures, generator, order, iteration, treeCoordinates, kdtree);
 
 	Console::WriteLine("Synthesizing layer " + String(order[iteration]) + "...");
 	String cond = String(order[iteration]);
@@ -52,8 +69,8 @@ void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const Pixe
 	int paddedwidth = outputwidth + 2 * nradius;
 	int paddedheight = outputheight + 2 * nradius;
 
-	int exemplarwidth = layers.First().Width();
-	int exemplarheight = layers.First().Height();
+	int exemplarwidth = layerfeatures.First().First().Width();
+	int exemplarheight = layerfeatures.First().First().Height();
 
 	UINT dimension = _dimension * (iteration+1);
 	double *neighbourhood = new double[dimension]; 
@@ -61,29 +78,39 @@ void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const Pixe
 	double *coherentneighbourhood = new double[dimension];
 	double *transformedCohNeighbourhood = new double[_reducedDimension];
 
-	PixelLayer output(layers[order[iteration]].color, paddedwidth, paddedheight);
+	PixelLayer output(layerfeatures[order[iteration]][origlayeridx].color, paddedwidth, paddedheight);
 	Grid<Vec2i> coordinates(paddedheight, paddedwidth, Vec2i(-1,-1));
-	// initialize to random skip by skip blocks
-	const int skip = parameters.texsyn_initrandsize;
-	int rx, ry;
-	for (int row = 0; row < paddedheight; row+=skip) {
-		for (int col = 0; col < paddedwidth; col+=skip) {
-			ry = (int)(((float)std::rand()/RAND_MAX)*(exemplarheight-1-skip));
-			rx = (int)(((float)std::rand()/RAND_MAX)*(exemplarwidth-1-skip));
-			for (int j = 0; j < skip; j++) {
-				for (int i = 0; i < skip; i++)  {
-					if (row+j < paddedheight && col+i < paddedwidth) {
-						coordinates(row+j,col+i) = Vec2i(rx+i, ry+j);
-						output.pixelWeights(row+j,col+i) = layers[order[iteration]].pixelWeights(ry+j,rx+i);
+	if (iteration == 0) {
+		// initialize to random skip by skip blocks
+		const int skip = parameters.texsyn_initrandsize;
+		int rx, ry;
+		for (int row = 0; row < paddedheight; row+=skip) {
+			for (int col = 0; col < paddedwidth; col+=skip) {
+				ry = (int)(((float)std::rand()/RAND_MAX)*(exemplarheight-1-skip));
+				rx = (int)(((float)std::rand()/RAND_MAX)*(exemplarwidth-1-skip));
+				for (int j = 0; j < skip; j++) {
+					for (int i = 0; i < skip; i++)  {
+						if (row+j < paddedheight && col+i < paddedwidth) {
+							coordinates(row+j,col+i) = Vec2i(rx+i, ry+j);
+							output.pixelWeights(row+j,col+i) = layerfeatures[order[iteration]][origlayeridx].pixelWeights(ry+j,rx+i);
+						}
 					}
 				}
+			}
+		}
+	}
+	else {
+		for (int row = 0; row < paddedheight; row++) {
+			for (int col = 0; col < paddedwidth; col++) {
+					coordinates(row,col) = coordinateset[iteration-1](row,col);
+					output.pixelWeights(row,col) = synthesized[iteration-1].pixelWeights(row,col);
 			}
 		}
 	}
 	synthesized.PushEnd(output);
 	coordinateset.PushEnd(coordinates);
 
-	Write(layers, synthesized, coordinateset, outputwidth, outputheight, nradius, cond+"_init");
+	Write(layerfeatures, synthesized, coordinateset, outputwidth, outputheight, nradius, cond+"_init");
 
 	// synthesis
 	const double CORRECTION_THRESHOLD = 10;
@@ -107,11 +134,11 @@ void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const Pixe
 
 		for (int y = 0; y < paddedheight; y++) {
 			for (int x = 0; x < paddedwidth; x++) {
-				Vec2i pt = BestMatch(layers, pca, kdtree, treeCoordinates, generator, synthesized, coordinateset, order, iteration, x, y,
+				Vec2i pt = BestMatch(layerfeatures, pca, kdtree, treeCoordinates, generator, synthesized, coordinateset, order, iteration, x, y,
 					neighbourhood, transformedNeighbourhood, paddedwidth, paddedheight,
 					coherentneighbourhood, transformedCohNeighbourhood);
 				coordinateset[iteration](y,x) = pt;
-				synthesized[iteration].pixelWeights(y,x) = layers[order[iteration]].pixelWeights(pt.y, pt.x);
+				synthesized[iteration].pixelWeights(y,x) = layerfeatures[order[iteration]][origlayeridx].pixelWeights(pt.y, pt.x);
 			}
 		}
 
@@ -138,14 +165,14 @@ void LayerTextureSynthesizer::Synthesize(const PixelLayerSet &layers, const Pixe
 		}
 		prevdiff = diff;
 
-		Write(layers, synthesized, coordinateset, outputwidth, outputheight, nradius, cond+"_correct-"+String(iter));
+		Write(layerfeatures, synthesized, coordinateset, outputwidth, outputheight, nradius, cond+"_correct-"+String(iter));
 
 		iter++;
 	}
 	Console::WriteLine("Done!");
 }
 
-Vec2i LayerTextureSynthesizer::BestMatch(const PixelLayerSet &layers, PCA<double> &pca, KDTree &kdtree, const Vector<Vec2i> &treeCoordinates,
+Vec2i LayerTextureSynthesizer::BestMatch(const Vector<PixelLayerSet> &layerfeatures, PCA<double> &pca, KDTree &kdtree, const Vector<Vec2i> &treeCoordinates,
 										 NeighborhoodGenerator &generator, const PixelLayerSet &synthesized, const Vector< Grid<Vec2i> > &coordinateset, 
 										 Vector<int> order, int iteration, int x, int y, 
 										 double *neighbourhood, double *transformedNeighbourhood, int width, int height,
@@ -157,43 +184,22 @@ Vec2i LayerTextureSynthesizer::BestMatch(const PixelLayerSet &layers, PCA<double
 
 	pca.Transform(transformedNeighbourhood, neighbourhood, _reducedDimension);
 
-	double nearestDist = BestApproximateMatch(kdtree, treeCoordinates, layers, generator, approxPt, transformedNeighbourhood);
-
-	/*double *test = new double[_dimension*(iteration+1)];
-	double *ttest = new double[_reducedDimension];
-	generator.Generate(layers, order, iteration, approxPt.x, approxPt.y, test);
-	pca.Transform(ttest, test, _reducedDimension);
-	Vector<double> match(_reducedDimension);
-	for (int i = 0; i < _reducedDimension; i++)
-	match[i] = ttest[i];
-	Vector<double> query(_reducedDimension);
-	for (int i = 0; i < _reducedDimension; i++)
-	query[i] = transformedNeighbourhood[i];
-	double dist = NeighborhoodDistance(transformedNeighbourhood, ttest, _reducedDimension);
-	double rdist = NeighborhoodDistance(neighbourhood, test, _dimension*(iteration+1));
-	Vec2i testpt(43,33);
-	generator.Generate(layers, order, iteration, testpt.x, testpt.y, test);
-	pca.Transform(ttest, test, _reducedDimension);
-	double dist2 = NeighborhoodDistance(transformedNeighbourhood, ttest, _reducedDimension);
-	double rdist2 = NeighborhoodDistance(neighbourhood, test, _dimension*(iteration+1));
-	VisualizeMatches(layers, synthesized, order, iteration, generator.NeighborhoodRadius(), Vec2i(x,y), testpt);
-	VisualizeMatches(layers, synthesized, order, iteration, generator.NeighborhoodRadius(), Vec2i(x,y), approxPt);
-	*/
+	double nearestDist = BestApproximateMatch(kdtree, treeCoordinates, approxPt, transformedNeighbourhood);
 
 	if (_kappa == 0) return approxPt;
 
-	double nearestCoherentDist = BestCoherentMatch(layers, pca, generator, coordinateset, order, iteration, width, height,
+	double nearestCoherentDist = BestCoherentMatch(layerfeatures, pca, generator, coordinateset, order, iteration, width, height,
 		x, y, coherentPt, transformedNeighbourhood, coherentneighbourhood, transformedCohNeighbourhood);
 
-	double kappa = _kappa / (iteration+1);
-	if (nearestCoherentDist < nearestDist * (1 + 0.5*kappa)) {
+	//double kappa = _kappa / (iteration+1);
+	if (nearestCoherentDist < nearestDist * (1 + 0.5*_kappa)) {
 		_coherentcount++;
 		return coherentPt;
 	}
 	return approxPt;
 }
 
-double LayerTextureSynthesizer::BestCoherentMatch(const PixelLayerSet &layers, PCA<double> &pca, NeighborhoodGenerator &generator, const Vector< Grid<Vec2i> > &coordinateset, 
+double LayerTextureSynthesizer::BestCoherentMatch(const Vector<PixelLayerSet> &layerfeatures, PCA<double> &pca, NeighborhoodGenerator &generator, const Vector< Grid<Vec2i> > &coordinateset, 
 												  Vector<int> order, int iteration, int width, int height, int x, int y, Vec2i &outPt, double *transformedNeighbourhood,
 												  double *coherentneighbourhood, double *transformedCohNeighbourhood)
 {
@@ -207,10 +213,10 @@ double LayerTextureSynthesizer::BestCoherentMatch(const PixelLayerSet &layers, P
 				xcoord = coordinateset[iteration](y+j,x+i).x - i;
 				ycoord = coordinateset[iteration](y+j,x+i).y - j;
 
-				int exh = layers.First().Height();
-				int exw = layers.First().Width();
+				int exh = layerfeatures.First().First().Height();
+				int exw = layerfeatures.First().First().Width();
 				if (ycoord >= 0 && ycoord < exh && xcoord >= 0 && xcoord < exw) {
-					if (generator.Generate(layers, order, iteration, xcoord, ycoord, coherentneighbourhood)) {
+					if (generator.Generate(layerfeatures, order, iteration, xcoord, ycoord, coherentneighbourhood)) {
 						pca.Transform(transformedCohNeighbourhood, coherentneighbourhood, _reducedDimension);
 
 						d = NeighborhoodDistance(transformedNeighbourhood, transformedCohNeighbourhood, _reducedDimension);
@@ -228,8 +234,8 @@ double LayerTextureSynthesizer::BestCoherentMatch(const PixelLayerSet &layers, P
 	return mindist;
 }
 
-double LayerTextureSynthesizer::BestApproximateMatch(KDTree &kdtree, const Vector<Vec2i> &treeCoordinates, const PixelLayerSet &layers,
-													 NeighborhoodGenerator &generator, Vec2i &outPt, double *transformedNeighbourhood)
+double LayerTextureSynthesizer::BestApproximateMatch(KDTree &kdtree, const Vector<Vec2i> &treeCoordinates, 
+													 Vec2i &outPt, double *transformedNeighbourhood)
 {
 	Vector<UINT> indices(1);
 
@@ -253,7 +259,7 @@ double LayerTextureSynthesizer::NeighborhoodDistance(double* neighborhoodA, doub
 	return result;
 }
 
-void LayerTextureSynthesizer::ComputePCA(const AppParameters &parameters, const PixelLayerSet &layers, const NeighborhoodGenerator &generator,
+void LayerTextureSynthesizer::ComputePCA(const AppParameters &parameters, const Vector<PixelLayerSet> &layerfeatures, const NeighborhoodGenerator &generator,
 										 Vector<int> order, int iteration, PCA<double> &pca)
 {
 	const UINT neighborhoodCount = 32000;
@@ -264,14 +270,14 @@ void LayerTextureSynthesizer::ComputePCA(const AppParameters &parameters, const 
 	String cond = "";
 	for (int i = 0; i < iteration; i++)
 		cond += "-" + String(order[i]);
-	String filename = cache + String("pca_nr-") + String(nRadius) + String("_layer-") +  String(order[iteration]) + String("_cond") + cond + String(".txt");
+	String filename = cache + String("pca_disttransform_nr-") + String(nRadius) + String("_layer-") +  String(order[iteration]) + String("_cond") + cond + String(".txt");
 	if (Utility::FileExists(filename)) {
 		pca.LoadFromFile(filename);
 		Console::WriteLine(String("...loaded iteration ") + String(iteration) + String(" from file"));
 	}
 	else {
-		const int width = layers.First().Width();
-		const int height = layers.First().Height();
+		const int width = layerfeatures.First().First().Width();
+		const int height = layerfeatures.First().First().Height();
 
 		Vector<const double*> neighborhoods(neighborhoodCount);
 
@@ -283,13 +289,13 @@ void LayerTextureSynthesizer::ComputePCA(const AppParameters &parameters, const 
 				int xCenter = centerPt.x;
 				int yCenter = centerPt.y;
 
-				success = generator.Generate(layers, order, iteration, xCenter, yCenter, curNeighborhood);
+				success = generator.Generate(layerfeatures, order, iteration, xCenter, yCenter, curNeighborhood);
 			}
 
 
 			neighborhoods[neighborhoodIndex] = curNeighborhood;
-			if (neighborhoodIndex % 1000 == 0)
-				Console::WriteLine("Initialized "+String(neighborhoodIndex)+" neighborhoods");
+			//if (neighborhoodIndex % 1000 == 0)
+			//	Console::WriteLine("Initialized "+String(neighborhoodIndex)+" neighborhoods");
 		}
 
 		pca.InitFromDensePoints(neighborhoods, dimension);
@@ -300,20 +306,20 @@ void LayerTextureSynthesizer::ComputePCA(const AppParameters &parameters, const 
 	}
 }
 
-void LayerTextureSynthesizer::ConstructKDTree(PCA<double> &pca, const PixelLayerSet &layers, const NeighborhoodGenerator &generator,
+void LayerTextureSynthesizer::ConstructKDTree(PCA<double> &pca, const Vector<PixelLayerSet> &layerfeatures, const NeighborhoodGenerator &generator,
 											  Vector<int> order, int iteration, Vector<Vec2i> &treeCoordinates, KDTree &kdtree)
 {
 	const UINT dimension = _dimension * (iteration+1);
 	const UINT neighbors = 5;
 	double *neighborhood = new double[dimension];
 
-	const int width = layers.First().Width();
-	const int height = layers.First().Height();
+	const int width = layerfeatures.First().First().Width();
+	const int height = layerfeatures.First().First().Height();
 	Vector<const double*> allNeighborhoods;
 
 	for(int y = 0; y < height; y++) {
 		for(int x = 0; x < width; x++) {
-			if(generator.Generate(layers, order, iteration, x, y, neighborhood)) {
+			if(generator.Generate(layerfeatures, order, iteration, x, y, neighborhood)) {
 				double *reducedNeighborhood = new double[_reducedDimension];
 				pca.Transform(reducedNeighborhood, neighborhood, _reducedDimension);
 
@@ -328,11 +334,11 @@ void LayerTextureSynthesizer::ConstructKDTree(PCA<double> &pca, const PixelLayer
 	delete[] neighborhood;
 }
 
-void LayerTextureSynthesizer::Write(const PixelLayerSet &layers, PixelLayerSet &synth, const Vector< Grid<Vec2i> > &coordinateset, int width, int height, int pad, String cond) const
+void LayerTextureSynthesizer::Write(const Vector<PixelLayerSet> &layerfeatures, PixelLayerSet &synth, const Vector< Grid<Vec2i> > &coordinateset, int width, int height, int pad, String cond) const
 {
 	int idx = synth.Length() - 1;
-	UINT exemplarwidth = layers.First().Width();
-	UINT exemplarheight = layers.First().Height();
+	UINT exemplarwidth = layerfeatures.First().First().Width();
+	UINT exemplarheight = layerfeatures.First().First().Height();
 	Bitmap coordimage(height, width);
 	for (int row = 0; row < height; row++) { // coordinates
 		for (int col = 0; col < width; col++)

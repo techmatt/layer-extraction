@@ -195,7 +195,7 @@ struct PixelLayer
 		pixelWeights.Allocate(height, width, 0);
 	}
 
-	void SavePNG(const String &filename, bool renderColor=true)
+	void SavePNG(const String &filename, bool renderColor=true) const
 	{
 		Bitmap image(pixelWeights.Cols(), pixelWeights.Rows());
 		for (UINT x=0; x<image.Width(); x++)
