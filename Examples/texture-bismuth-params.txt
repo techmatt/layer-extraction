@@ -1,0 +1,15 @@
+# texture synthesis
+texsyn_exemplar=bismuth.png
+texsyn_outputwidth=256
+texsyn_outputheight=256
+texsyn_outputdirectory=bin/texsyn-out/
+texsyn_nlevels=3
+texsyn_neighbourhoodsize=5
+texsyn_kappa=6
+texsyn_usepca=true
+texsyn_pcadim=32
+texsyn_usergb=false
+texsyn_uselayers=false
+texsyn_usedistancetransform=true
+texsyn_klayers=4
+texsyn_initrandsize=8
