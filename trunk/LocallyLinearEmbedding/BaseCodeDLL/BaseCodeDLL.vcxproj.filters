@@ -28,9 +28,6 @@
     <ClInclude Include="Recolorizer.h">
       <Filter>LayerExtractor</Filter>
     </ClInclude>
-    <ClInclude Include="BasisColorExtractor.h">
-      <Filter>LayerExtractor</Filter>
-    </ClInclude>
     <ClInclude Include="LayerExtractor.h">
       <Filter>LayerExtractor</Filter>
     </ClInclude>
@@ -94,6 +91,15 @@
     <ClInclude Include="DistanceTransform.h">
       <Filter>LayerSynthesizer</Filter>
     </ClInclude>
+    <ClInclude Include="LayerExtractorVideo.h">
+      <Filter>LayerExtractor</Filter>
+    </ClInclude>
+    <ClInclude Include="SuperpixelExtractor.h">
+      <Filter>LayerExtractor</Filter>
+    </ClInclude>
+    <ClInclude Include="SuperpixelExtractorVideo.h">
+      <Filter>LayerExtractor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -110,9 +116,6 @@
     </ClCompile>
     <ClCompile Include="BaseCodeDLL.cpp">
       <Filter>Base</Filter>
-    </ClCompile>
-    <ClCompile Include="BasisColorExtractor.cpp">
-      <Filter>LayerExtractor</Filter>
     </ClCompile>
     <ClCompile Include="Recolorizer.cpp">
       <Filter>LayerExtractor</Filter>
@@ -146,6 +149,15 @@
     </ClCompile>
     <ClCompile Include="DistanceTransform.cpp">
       <Filter>LayerSynthesizer</Filter>
+    </ClCompile>
+    <ClCompile Include="LayerExtractorVideo.cpp">
+      <Filter>LayerExtractor</Filter>
+    </ClCompile>
+    <ClCompile Include="SuperpixelExtractor.cpp">
+      <Filter>LayerExtractor</Filter>
+    </ClCompile>
+    <ClCompile Include="SuperpixelExtractorVideo.cpp">
+      <Filter>LayerExtractor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

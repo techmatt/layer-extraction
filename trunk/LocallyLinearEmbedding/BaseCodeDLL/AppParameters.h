@@ -11,6 +11,7 @@ struct AppParameters
         superpixelIterations = file.GetInteger("superpixelIterations");
 
         spatialToColorScale = file.GetFloat("spatialToColorScale");
+        temporalToColorScale = file.GetFloat("temporalToColorScale");
 
         pixelNeighborCount = file.GetInteger("pixelNeighborCount");
         superpixelNeighborCount = file.GetInteger("superpixelNeighborCount");
@@ -82,6 +83,7 @@ struct AppParameters
     int periodicBasisCount;
     int superpixelIterations;
 
+    float temporalToColorScale;
     float spatialToColorScale;
 
     int pixelNeighborCount;
