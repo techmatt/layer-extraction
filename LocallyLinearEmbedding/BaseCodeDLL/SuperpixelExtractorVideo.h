@@ -1,18 +1,29 @@
-struct ColorCoordinate
+
+struct Video
 {
-    ColorCoordinate()
+    UINT Width() const  { return frames[0].Width();  }
+    UINT Height() const { return frames[0].Height(); }
+
+    Vector<Bitmap> frames;
+};
+
+struct ColorCoordinateVideo
+{
+    ColorCoordinateVideo()
     {
 
     }
-    ColorCoordinate(const AppParameters &parameters, RGBColor _color, Vec2i _coord, int width, int height)
+    ColorCoordinateVideo(const AppParameters &parameters, RGBColor _color, Vec2i _coord, UINT _frame, int width, int height)
     {
         color = _color;
         coord = _coord;
+        frame = _frame;
         MakeFeatureVector(parameters, width, height);
     }
     RGBColor color;
     Vec2i coord;
-    float features[5];
+    UINT frame;
+    float features[6];
 
 private:
     void MakeFeatureVector(const AppParameters &parameters, int width, int height)
@@ -22,44 +33,17 @@ private:
         features[2] = color.b / 255.0f;
         features[3] = coord.x/(float)width * parameters.spatialToColorScale;
         features[4] = coord.y/(float)height * parameters.spatialToColorScale;
+        features[5] = frame * parameters.temporalToColorScale;
     }
 };
 
-class SuperpixelExtractor
+class SuperpixelExtractorVideoPeriodic
 {
 public:
-    virtual Vector<ColorCoordinate> Extract(const AppParameters &parameters, const Bitmap &bmp) = 0;
+    Vector<ColorCoordinateVideo> Extract(const AppParameters &parameters, const Video &video);
 };
 
-class SuperpixelExtractorPeriodic
-{
-public:
-    Vector<ColorCoordinate> Extract(const AppParameters &parameters, const Bitmap &bmp);
-};
-
-struct Superpixel
-{
-    static const int maxPaletteCount = 5;
-
-    void ResetColor(RGBColor c);
-    void Reset(const Bitmap &bmp, const Vec2i &seed);
-
-    Vec2i MassCentroid() const;
-    double AssignmentError(const Bitmap &bmp, const Vec2i &coord) const;
-    void ComputePalette(const Bitmap &bmp, UINT paletteCount);
-
-    __forceinline void AddCoord(const Vec2i &coord)
-    {
-        pixels.PushEnd(coord);
-    }
-
-    Vec3f palette[maxPaletteCount];
-    Vector<Vec2i> pixels;
-    Vec2i seed;
-    Vector<UINT> superpixelNeighbors;
-};
-
-class SuperpixelExtractorSuperpixel
+/*class SuperpixelExtractorVideoSuperpixel
 {
 public:
     struct QueueEntry
@@ -92,3 +76,4 @@ __forceinline bool operator < (const SuperpixelExtractorSuperpixel::QueueEntry &
 {
     return (a.priority < b.priority);
 }
+*/

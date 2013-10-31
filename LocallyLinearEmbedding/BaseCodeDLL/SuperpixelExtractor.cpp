@@ -14,14 +14,6 @@ Vector<ColorCoordinate> SuperpixelExtractorPeriodic::Extract(const AppParameters
     return result;
 }
 
-void Superpixel::ResetColor(RGBColor c)
-{
-    for(Vec3f &p : palette)
-    {
-        p = Vec3f(c);
-    }
-}
-
 void Superpixel::Reset(const Bitmap &bmp, const Vec2i &_seed)
 {
     pixels.FreeMemory();
@@ -51,60 +43,39 @@ Vec2i Superpixel::MassCentroid() const
 
 double Superpixel::AssignmentError(const Bitmap &bmp, const Vec2i &coord) const
 {
-    return Vec3f::DistSq(palette[0], Vec3f(bmp[coord.y][coord.x]));
+    return Vec3f::DistSq(color, Vec3f(bmp[coord.y][coord.x]));
 }
 
-void Superpixel::ComputePalette(const Bitmap &bmp, UINT paletteCount)
+void Superpixel::ResetColor( const RGBColor &_color )
 {
-    if(pixels.Length() < paletteCount)
-    {
-        Vec2i randomPixel = pixels.RandomElement();
-        for(Vec3f &c : palette) c = Vec3f(bmp[randomPixel.y][randomPixel.x]);
-        return;
-    }
+    color = Vec3f(_color);
+}
 
-    if(paletteCount == 1)
-    {
-        Vec3f color = Vec3f::Origin;
-        for(Vec2i p : pixels) color += Vec3f(bmp[p.y][p.x]);
-        palette[0] = color / (float)pixels.Length();
-        return;
-    }
-
-    KMeansClustering<Vec3f, Vec3fKMeansMetric> clustering;
-
-    Vector<Vec3f> pixelColors(pixels.Length());
-    for(UINT pixelIndex = 0; pixelIndex < pixels.Length(); pixelIndex++)
-    {
-        Vec2i c = pixels[pixelIndex];
-        pixelColors[pixelIndex] = Vec3f(bmp[c.y][c.x]);
-    }
-    clustering.Cluster(pixelColors, paletteCount, 20, false, 0.0);
-    for(UINT paletteIndex = 0; paletteIndex < paletteCount; paletteIndex++)
-    {
-        palette[paletteIndex] = clustering.ClusterCenter(paletteIndex);
-    }
+void Superpixel::ComputeColor( const Bitmap &bmp )
+{
+    color = Vec3f::Origin;
+    for(Vec2i p : pixels) color += Vec3f(bmp[p.y][p.x]);
+    color /= (float)pixels.Length();
 }
 
 Vector<ColorCoordinate> SuperpixelExtractorSuperpixel::Extract(const AppParameters &parameters, const Bitmap &bmp)
 {
     Vector<Superpixel> superpixelsOut;
     Grid<UINT> assignmentsOut;
-    Extract(parameters, bmp, 1, superpixelsOut, assignmentsOut);
+    Extract(parameters, bmp, superpixelsOut, assignmentsOut);
 
     Vector<ColorCoordinate> result;
     for(const Superpixel &p : superpixelsOut)
     {
-        result.PushEnd(ColorCoordinate(parameters, RGBColor(p.palette[0]), p.seed, bmp.Width(), bmp.Height()));
+        result.PushEnd(ColorCoordinate(parameters, RGBColor(p.color), p.seed, bmp.Width(), bmp.Height()));
     }
     return result;
 }
 
-void SuperpixelExtractorSuperpixel::Extract(const AppParameters &parameters, const Bitmap &bmp, UINT paletteCount, Vector<Superpixel> &superpixelsOut, Grid<UINT> &assignmentsOut)
+void SuperpixelExtractorSuperpixel::Extract(const AppParameters &parameters, const Bitmap &bmp, Vector<Superpixel> &superpixelsOut, Grid<UINT> &assignmentsOut)
 {
     ComponentTimer timer( "Segmenting bitmap, " + String(bmp.Width()) + "x" + String(bmp.Height()) );
     
-    _paletteCount = paletteCount;
     _dimensions = Vec2i(bmp.Width(), bmp.Height());
     _assignments.Allocate(_dimensions.y, _dimensions.x);
     _superpixels.Allocate(parameters.superpixelCount);
@@ -134,7 +105,7 @@ void SuperpixelExtractorSuperpixel::Extract(const AppParameters &parameters, con
     GrowSuperpixels(parameters, bmp);
     for(Superpixel &p : _superpixels)
     {
-        p.ComputePalette(bmp, _paletteCount);
+        p.ComputeColor(bmp);
     }
 
     superpixelsOut = _superpixels;
@@ -227,7 +198,7 @@ void SuperpixelExtractorSuperpixel::RecenterSuperpixels(const AppParameters &par
         else
         {
             newSeed = p.MassCentroid();
-            p.ComputePalette(bmp, _paletteCount);
+            p.ComputeColor(bmp);
         }
         p.Reset(bmp, newSeed);
         seeds.PushEnd(newSeed);
@@ -258,7 +229,7 @@ void SuperpixelExtractorSuperpixel::DrawSuperpixelColors(const Bitmap &inputBmp,
         for(UINT x = 0; x < outputBmp.Width(); x++)
         {
             const Superpixel &p =  _superpixels[_assignments(y, x)];
-            outputBmp[y][x] = RGBColor(p.palette[x % _paletteCount]);
+            outputBmp[y][x] = RGBColor(p.color);
         }
     }
 }

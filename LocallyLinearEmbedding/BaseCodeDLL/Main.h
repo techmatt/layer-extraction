@@ -27,10 +27,12 @@ Main.h is included by all source files and includes every header file in the cor
 #include "EigenSolver.h"
 
 #include "Dictionary.h"
-#include "BasisColorExtractor.h"
+#include "SuperpixelExtractor.h"
+#include "SuperpixelExtractorVideo.h"
 #include "Recolorizer.h"
 #include "Layers.h"
 #include "LayerExtractor.h"
+#include "LayerExtractorVideo.h"
 #include "Utility.h"
 
 #include "App.h"
