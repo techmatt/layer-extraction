@@ -9,3 +9,4 @@ EXPORTS
 	BCExtractLayers
 	BCSegmentImage
 	BCSynthesizeLayers
+	BCOutputMesh
