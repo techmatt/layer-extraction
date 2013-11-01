@@ -170,6 +170,7 @@ PixelLayerSet App::ExtractLayers(const Bitmap &bmp, const Vector<Vec3f> &palette
 	_layers = layers;
 
 	Vector<PixelLayer> pixellayers = _extractor.GetPixelLayers(_image, _layers);	
+	return pixellayers;
 }
 
 BCLayers* App::PixelLayersToBCLayers(const PixelLayerSet &pixellayers)
