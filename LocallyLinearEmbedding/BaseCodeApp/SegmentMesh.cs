@@ -1,0 +1,535 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Engine;
+using System.Drawing;
+using System.IO;
+/*using Emgu.CV;
+using Emgu.Util;
+using Emgu.CV.Structure;*/
+
+
+namespace Colorizer
+{
+    class NamedFeature
+    {
+        public String name;
+        public List<Double> values;
+
+        public NamedFeature(String n)
+        {
+            name = n;
+            values = new List<Double>();
+        }
+        public NamedFeature(String n, List<Double> v)
+        {
+            name = n;
+            values = new List<Double>(v);
+        }
+    }
+
+    class Segment
+    {
+        public SortedSet<int> adjacencies;
+        public List<NamedFeature> features;
+        public List<Point> points;
+        public int groupId;
+        public int assignmentId;
+        public Dictionary<int,double> adjacencyStrength; //the relative strength of the adjacency (lengthwise)
+        public Dictionary<int, Tuple<double,double>> enclosureStrength; //how enclosed the segment is by the neighbor, and how enclosed the neighbor is by the segment
+
+        public Segment(int id)
+        {
+            adjacencies = new SortedSet<int>();
+            features = new List<NamedFeature>();
+            points = new List<Point>();
+            assignmentId = id;
+            adjacencyStrength = new Dictionary<int, double>();
+            enclosureStrength = new Dictionary<int, Tuple<double, double>>();
+        }
+    }
+
+    class SegmentGroup
+    {
+        public SortedSet<int> members;
+        public List<NamedFeature> features;
+        public Color observed;
+
+        public SegmentGroup(Color c)
+        {
+            observed = c;
+            members = new SortedSet<int>();
+            features = new List<NamedFeature>();
+        }
+    }
+
+    class SegmentMesh
+    {
+        public List<Segment> segments;
+        public List<SegmentGroup> groups;
+        int imageWidth = 0;
+        int imageHeight = 0;
+        int[,] assignments;
+
+
+        public SegmentMesh(ColorTemplate template)
+        {
+            int numGroups = template.NumSlots();
+            imageWidth = template.Width();
+            imageHeight = template.Height();
+
+            groups = new List<SegmentGroup>();
+            segments = new List<Segment>();
+
+            //now populate the segments and segment groups
+            Dictionary<int, int> slotToGroup = new Dictionary<int, int>();
+            for (int i = 0; i < numGroups; i++)
+            {
+               // if (template.PixelsInSlot(i) > 0)
+               // {
+                    slotToGroup.Add(i, groups.Count());
+                    groups.Add(new SegmentGroup(template.OriginalSlotColor(i)));
+               // }
+            }
+
+            UnionFind<Color> uf = new UnionFind<Color>((a, b) => (a.GetHashCode() == b.GetHashCode()));
+            Bitmap image = template.DebugQuantization();
+            Color[,] imageArray = Util.BitmapToArray(image);
+            assignments = uf.ConnectedComponentsNoiseRemoval(imageArray);
+            
+
+            Dictionary<int, Segment> idToSegment = new Dictionary<int, Segment>();
+            int totalAdjacencyPerimeter = 0;
+            Dictionary<int, HashSet<Point>> idToPerimeter = new Dictionary<int, HashSet<Point>>();
+           
+            //populate segments
+            int width = image.Width;
+            int height = image.Height;
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    //if the color is transparent, ignore it
+                    if (template.GetSlotId(i,j)==-1)
+                        continue;
+
+                    int id = assignments[i, j];
+                    if (!idToSegment.ContainsKey(id))
+                    {
+                        idToSegment.Add(id, new Segment(id));
+                        idToPerimeter.Add(id, new HashSet<Point>());
+                    }
+
+                    idToSegment[id].points.Add(new Point(i, j));
+                    idToSegment[id].groupId = slotToGroup[template.GetSlotId(i, j)];
+
+                    //look for 8-neighbor adjacencies, 2 pixels away
+                    //TODO: measure adjacency strength and filter?
+                    for (int dx = -2; dx <= 2; dx++)
+                    {
+                        for (int dy = -2; dy <= 2; dy++)
+                        {
+                            int x = i + dx;
+                            int y = j + dy;
+
+                            //is it within the image
+                            if (x >= 0 && x < width && y >= 0 && y < height && template.GetSlotId(x, y) != -1)
+                            {
+                                int nid = assignments[x, y];
+                                if (nid != id && template.GetSlotId(i,j) != template.GetSlotId(x,y))
+                                {
+                                    idToSegment[id].adjacencies.Add(nid);
+
+                                    //keep track of the total perimeter, and individual segment perimeters
+                                    //don't double count the same point for each segment
+                                    if (!idToPerimeter[id].Contains(new Point(x, y)))
+                                    {
+                                        idToPerimeter[id].Add(new Point(x, y));
+                                        totalAdjacencyPerimeter++;
+
+                                        //keep track of the adjacecy strength per segment
+                                        if (!idToSegment[id].adjacencyStrength.ContainsKey(nid))
+                                            idToSegment[id].adjacencyStrength.Add(nid, 0);
+                                        idToSegment[id].adjacencyStrength[nid]++;
+                                    }
+                                    else
+                                    {
+                                        //point already counted
+                                        //Console.WriteLine("Point already counted");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                //might as well be consistent here, and take into account the borders of the image when determining
+                                //enclosure. We don't need to do this for the totalAdjacencyPerimeter, because that is just a normalization
+                                //for the adjacency strengths of segments within the image
+                                if (!idToPerimeter[id].Contains(new Point(x,y)))
+                                {
+                                    idToPerimeter[id].Add(new Point(x,y));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //finalize segment list and adjacency list
+            Dictionary<int, int> idToIdx = new Dictionary<int, int>();
+            foreach (int id in idToSegment.Keys)
+            {
+                segments.Add(idToSegment[id]);
+                idToIdx.Add(id, segments.Count() - 1);
+            }
+
+            //finalize adjacencies
+            for (int i = 0; i < segments.Count(); i++)
+            {
+                SortedSet<int> renamedAdj = new SortedSet<int>();
+                foreach (int a in segments[i].adjacencies)
+                    renamedAdj.Add(idToIdx[a]);
+                segments[i].adjacencies = renamedAdj;
+
+                //finalize adjacency strengths
+                int sid = assignments[segments[i].points.First().X, segments[i].points.First().Y];
+
+                Dictionary<int, double> renamedAdjStrength = new Dictionary<int, double>();
+                foreach (int nid in segments[i].adjacencyStrength.Keys)
+                {
+                    double pixelsAdj = segments[i].adjacencyStrength[nid];
+                    renamedAdjStrength.Add(idToIdx[nid], pixelsAdj / totalAdjacencyPerimeter);
+                    segments[i].enclosureStrength.Add(idToIdx[nid], new Tuple<double, double>(pixelsAdj / idToPerimeter[sid].Count(), pixelsAdj / idToPerimeter[nid].Count()));
+                }
+                segments[i].adjacencyStrength = renamedAdjStrength;
+
+            }
+
+            //finalize groups
+            for (int i = 0; i < segments.Count(); i++)
+            {
+                int groupId = segments[i].groupId;
+                groups[groupId].members.Add(i);
+            }
+
+            //finalize segment list
+
+            ClassifySegments();
+
+            double maxSegSize = 0;
+            foreach (Segment s in segments)
+            {
+                ComputeFeatures(s);
+                maxSegSize = Math.Max(s.features.Find(f => f.name == "RelativeSize").values.First(), maxSegSize);
+            }
+
+            double maxGroupSize = 0;
+            foreach (SegmentGroup g in groups)
+            {
+                ComputeFeatures(g);
+                maxGroupSize = Math.Max(g.features.Find(f => f.name == "RelativeSize").values.First(), maxGroupSize);
+            }
+
+            //corner case where there are no segments
+            if (maxSegSize == 0)
+                maxSegSize = 1;
+            if (maxGroupSize == 0)
+                maxGroupSize = 1;
+
+            //now compute the collective features
+            foreach (Segment s in segments)
+            {
+                s.features.Add(new NamedFeature("RelativeSizeOverMax", new List<double> { s.features.Find(f => f.name == "RelativeSize").values.First() / maxSegSize }));
+            }
+            foreach (SegmentGroup g in groups)
+            {
+                g.features.Add(new NamedFeature("RelativeSizeOverMax", new List<double> { g.features.Find(f => f.name == "RelativeSize").values.First() / maxGroupSize }));
+            }
+        }
+
+        public List<Segment> getSegments()
+        {
+            return segments;
+        }
+
+        public List<SegmentGroup> getGroups()
+        {
+            return groups;
+        }
+
+
+        public void ClassifySegments()
+        {
+            //label some segments as noise
+            
+            //label the color group with the largest segment as a background element
+            //label all segments in the color group as a background (?), unless it is noise
+            //001-noise, 010-background, 100-foreground
+            double largestSize = 0;
+            int segIdx = -1;
+
+            for (int i = 0; i < segments.Count(); i++)
+            {
+                double size = segments[i].points.Count();
+                if (segments[i].assignmentId >= 0 && largestSize < size)
+                {
+                    largestSize = size;
+                    segIdx = i;
+                }
+            }
+
+            int groupId = -1;
+
+            if (segIdx >= 0)
+            {
+                groupId = segments[segIdx].groupId;
+
+                NamedFeature bg = new NamedFeature("Label");
+                bg.values = new List<Double> { 0, 1, 0 };
+                foreach (int idx in groups[groupId].members)
+                {
+                    if (segments[idx].assignmentId >= 0)
+                        segments[idx].features.Add(bg);
+                }
+            }
+
+            NamedFeature noise = new NamedFeature("Label");
+            noise.values = new List<Double>{0, 0, 1};
+
+            NamedFeature fg = new NamedFeature("Label");
+            fg.values = new List<Double> { 1, 0, 0 };
+
+            foreach (Segment s in segments)
+            {
+                if (s.assignmentId < 0)
+                    s.features.Add(noise);
+                else if (s.groupId != groupId)
+                    s.features.Add(fg);
+            }
+
+        }
+
+        private double Dist(PointF a, PointF b)
+        {
+            return Math.Sqrt(Math.Pow(a.X-b.X,2) + Math.Pow(a.Y-b.Y,2));
+        }
+
+        public void ComputeFeatures(Segment s)
+        {
+            //Add the relative size
+            NamedFeature f = new NamedFeature("RelativeSize");
+            f.values.Add(s.points.Count() / (double)(imageWidth * imageHeight));
+            s.features.Add(f);
+
+            // Relative centroid
+            PointF c = NormalizedCentroid(s);
+            s.features.Add(new NamedFeature("RelativeCentroid", new List<double>{c.X, c.Y}));
+
+            //Radial distance
+            s.features.Add(new NamedFeature("RadialDistance", new List<double>{Math.Sqrt(c.X*c.X+c.Y*c.Y)}));
+
+            //Normalized Discrete Compactness http://www.m-hikari.com/imf-password2009/25-28-2009/bribiescaIMF25-28-2009.pdf
+            //Find the segment id
+            Point sp = s.points.First();
+            int sidx = assignments[sp.X, sp.Y];
+            
+            //count number of perimeter edges
+            int perimeter = 0;
+            foreach (Point p in s.points)
+            {
+                for (int i = -1; i <= 1; i++)
+                {
+                    for (int j = -1; j <= 1; j++)
+                    {
+                        if (Math.Abs(i) == Math.Abs(j))
+                            continue;
+                        if (Util.InBounds(p.X + i, p.Y + j, imageWidth, imageHeight) && assignments[p.X + i, p.Y + j] != sidx)
+                            perimeter++;
+                        else if (!Util.InBounds(p.X + i, p.Y + j, imageWidth, imageHeight)) //edge pixels should be considered perimeter too
+                            perimeter++;
+                    }
+                }
+            }
+            int n = s.points.Count();
+            double CD = (4.0 * n - perimeter) / 2;
+            double CDmin = n - 1;
+            double CDmax = (4 * n - 4 * Math.Sqrt(n)) / 2;
+            double CDN = (CD - CDmin) / Math.Max(1,(CDmax - CDmin));
+            s.features.Add(new NamedFeature("NormalizedDiscreteCompactness", new List<double> { CDN }));
+
+
+            //Add elongation (width/length normalized between 0-square to 1-long http://hal.archives-ouvertes.fr/docs/00/44/60/37/PDF/ARS-Journal-SurveyPatternRecognition.pdf         
+//            PointF[] points = s.points.Select<Point, PointF>(p => new PointF(p.X, p.Y)).ToArray<PointF>();
+//            Emgu.CV.Structure.MCvBox2D box = Emgu.CV.PointCollection.MinAreaRect(points);
+//
+//            PointF[] vertices = box.GetVertices();
+//            double elongation = 1 - Math.Min(box.size.Width + 1, box.size.Height + 1) / Math.Max(box.size.Width + 1, box.size.Height + 1);
+//            s.features.Add(new NamedFeature("Elongation", new List<double>{elongation}));
+
+            //TODO: implement this without EmguCV
+            s.features.Add(new NamedFeature("Elongation", new List<double> { 0.5 }));
+        }
+
+        public PointF NormalizedCentroid(Segment s)
+        {
+            //normalize the points (relative to the image center (0,0))
+            PointF[] normalizedPoints = s.points.Select<Point, PointF>(p => new PointF(-0.5f + (float)p.X / imageWidth, -0.5f + (float)p.Y / imageHeight)).ToArray<PointF>();
+
+            //Add the relative centroid 
+            float cX = 0;
+            float cY = 0;
+            foreach (PointF p in normalizedPoints)
+            {
+                cX += p.X;
+                cY += p.Y;
+            }
+            cX /= normalizedPoints.Count();
+            cY /= normalizedPoints.Count();
+            return new PointF(cX, cY);
+        }
+
+        public void ComputeFeatures(SegmentGroup g)
+        {
+            double imarea = (double)(imageWidth * imageHeight);
+
+            // Amount of the image this group takes up
+            NamedFeature sizef = new NamedFeature("RelativeSize");
+            int size = 0;
+            foreach (int i in g.members)
+            {
+                Segment s = segments[i];
+                size += s.points.Count();
+            }
+            sizef.values.Add(size / imarea);
+            g.features.Add(sizef);
+
+            // (Normalized) number of segments in the group
+            NamedFeature numsegf = new NamedFeature("NormalizedNumSegs");
+            if (segments.Count() == 0)
+                numsegf.values.Add(0);
+            else
+                numsegf.values.Add(g.members.Count() / (double)(segments.Count()));
+            g.features.Add(numsegf);
+
+            // min, max, mean, stddev segment size
+            if (g.members.Count() > 0)
+            {
+                int minsegsize, maxsegsize, segsizesum;
+                minsegsize = Int32.MaxValue;
+                maxsegsize = 0;
+                segsizesum = 0;
+                foreach (int i in g.members)
+                {
+                    int s = segments[i].points.Count;
+                    minsegsize = Math.Min(s, minsegsize);
+                    maxsegsize = Math.Max(s, maxsegsize);
+                    segsizesum += s;
+                }
+
+                double meansegsize = ((double)segsizesum) / g.members.Count;
+                double stddevsegsize = 0;
+                foreach (int i in g.members)
+                {
+                    int s = segments[i].points.Count;
+                    double diff = (s - meansegsize);
+                    stddevsegsize += (diff * diff);
+                }
+                stddevsegsize /= g.members.Count;
+                NamedFeature segsizestatsf = new NamedFeature("SegmentSizeStatistics");
+                segsizestatsf.values.Add(minsegsize / imarea);
+                segsizestatsf.values.Add(maxsegsize / imarea);
+                segsizestatsf.values.Add(meansegsize / imarea);
+                segsizestatsf.values.Add(stddevsegsize / imarea);
+                g.features.Add(segsizestatsf);
+
+
+                // "spread" - covariance of segment centroids
+                PointF meanc = new PointF(0, 0);
+                foreach (int i in g.members)
+                {
+                    PointF c = NormalizedCentroid(segments[i]);
+                    meanc.X += c.X;
+                    meanc.Y += c.Y;
+                }
+                meanc.X /= g.members.Count;
+                meanc.Y /= g.members.Count;
+                double[,] covar = new double[,] { { 0, 0 }, { 0, 0 } };
+                foreach (int i in g.members)
+                {
+                    PointF c = NormalizedCentroid(segments[i]);
+                    float x = c.X - meanc.X;
+                    float y = c.Y - meanc.Y;
+                    covar[0, 0] += x * x;
+                    covar[0, 1] += x * y;
+                    covar[1, 0] += x * y;
+                    covar[1, 1] += y * y;
+                }
+                covar[0, 0] /= g.members.Count;
+                covar[0, 1] /= g.members.Count;
+                covar[1, 0] /= g.members.Count;
+                covar[1, 1] /= g.members.Count;
+                NamedFeature spreadf = new NamedFeature("SegmentSpread",
+                    new List<double>{covar[0,0], covar[0,1], covar[1,0], covar[1,1]});
+                g.features.Add(spreadf);
+
+            }
+            else
+            {
+                NamedFeature dummyf = new NamedFeature("SegmentSizeStatistics", new List<double>{0,0,0,0});
+                g.features.Add(dummyf);
+
+                NamedFeature dummyspreadf = new NamedFeature("SegmentSpread", new List<double>{0,0,0,0});
+                g.features.Add(dummyspreadf);
+            }
+        }
+
+
+        public void WriteToFile(String filename)
+        {
+            List<String> lines = StringRepresentation();
+            File.WriteAllLines(filename, lines.ToArray<String>());
+        }
+
+        public List<String> StringRepresentation()
+        {
+            List<String> lines = new List<String>();
+            //dump to a file
+            foreach (Segment s in segments)
+            {
+                lines.Add("SegmentBegin");
+
+                foreach (NamedFeature f in s.features)
+                {
+                    lines.Add(f.name + " " + String.Join(" ", f.values.Select<Double, String>((d) => d.ToString()).ToArray<String>()));
+                }
+
+                //write adjacencies and their respective adjacency strength, enclosure strength of the segment, and enclosure strength of the neighbor
+                lines.Add("AdjacentTo " + String.Join(" ", s.adjacencies.Select<int, String>((d) => d.ToString() + "^" + s.adjacencyStrength[d].ToString() + "^" + s.enclosureStrength[d].Item1.ToString() + "^" + s.enclosureStrength[d].Item2.ToString()).ToArray<String>()));
+
+                lines.Add("SegmentEnd");
+            }
+            lines.Add("");
+            //write all groups
+            foreach (SegmentGroup g in groups)
+            {
+                lines.Add("GroupBegin");
+                foreach (NamedFeature f in g.features)
+                {
+                    lines.Add(f.name + " " + String.Join(" ", f.values.Select<Double, String>((d) => d.ToString()).ToArray<String>()));
+                }
+                lines.Add("ObservedColor " + g.observed.R / 255.0 + " " + g.observed.G / 255.0 + " " + g.observed.B / 255.0);
+                lines.Add("Members " + String.Join(" ", g.members.Select<int, String>(d => d.ToString()).ToArray<String>()));
+                lines.Add("GroupEnd");
+            }
+
+            return lines;
+        }
+
+
+
+
+
+    }
+
+
+}
