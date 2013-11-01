@@ -1,4 +1,36 @@
 #pragma once
+
+class Filter
+{
+	public:
+
+		Filter(double alpha=0.4)
+		{
+			_data.Allocate(5, 5, 0);
+
+			double w[] = {1, 0.25, 0.25-0.5*alpha};
+
+			for (int i=-2; i<=2; i++)
+				for (int j=-2; j<=2; j++)
+					_data(i+2, j+2) = w[Math::AbsInt(i)]*w[Math::AbsInt(j)];
+		};
+
+		__forceinline const double& operator() (unsigned int Col, unsigned int Row) const
+		{
+			return _data(Row+2, Col+2);
+		};
+
+		int Radius()
+		{
+			return 2;
+		}
+			
+
+	private:
+		Grid<double> _data;
+
+};
+
 class GaussianPyramid
 {
 public:
@@ -42,38 +74,6 @@ public:
 
 
 private:
-
-	class Filter
-	{
-		public:
-
-			Filter(double alpha=0.4)
-			{
-				_data.Allocate(5, 5, 0);
-
-				double w[] = {1, 0.25, 0.25-0.5*alpha};
-
-				for (int i=-2; i<=2; i++)
-					for (int j=-2; j<=2; j++)
-						_data(i+2, j+2) = w[Math::AbsInt(i)]*w[Math::AbsInt(j)];
-			};
-
-			__forceinline const double& operator() (unsigned int Col, unsigned int Row) const
-			{
-				return _data(Row+2, Col+2);
-			};
-
-			int Radius()
-			{
-				return 2;
-			}
-			
-
-		private:
-			Grid<double> _data;
-
-	};
-
 	static double ApplyFilter(Vec2i point, Filter filter, const PixelLayer &layer);
 	Vector<PixelLayerSet> _data;
 

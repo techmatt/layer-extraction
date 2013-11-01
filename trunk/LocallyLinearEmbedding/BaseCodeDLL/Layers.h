@@ -117,7 +117,7 @@ struct PixelLayer
 		return pixelWeights.Rows();
 	}
 
-	double WeightMean()
+	double WeightMean() const
 	{
 		double mean = 0;
 		for (UINT r=0; r<pixelWeights.Rows(); r++)
@@ -127,7 +127,7 @@ struct PixelLayer
 		return mean;
 	}
 
-	double WeightVariance()
+	double WeightVariance() const
 	{
 		double variance = 0;
 		double mean = WeightMean();
@@ -139,7 +139,17 @@ struct PixelLayer
 		return variance;
 	}
 
-	void WriteToFile(const String &filename)
+	double DotProduct(const PixelLayer& other)
+	{
+		PersistentAssert(pixelWeights.Rows() == other.pixelWeights.Rows() && pixelWeights.Cols() == other.pixelWeights.Cols(), "PixelLayer::DotProduct: Dimensions don't match!");
+		double result = 0;
+		for (int r=0; r<pixelWeights.Rows(); r++)
+			for (int c=0; c<pixelWeights.Cols(); c++)
+				result += pixelWeights(r,c)*other.pixelWeights(r,c);
+		return result;
+	}
+
+	void WriteToFile(const String &filename) const
 	{
 		ofstream File(filename.CString());
         PersistentAssert(!File.fail(), "Failed to open file");
@@ -213,6 +223,7 @@ struct PixelLayer
 
 		image.SavePNG(filename);
 	}
+
 
 };
 

@@ -94,7 +94,7 @@ bool LayerExtractor::CorrectLayerSet(const AppParameters &parameters, const Bitm
 
 	Vector<int> toRemove;
 	double weightThresh = 0.1;
-	double negativeThresh = -0.02;
+	double negativeThresh = -0.07;//-0.05;
 
 	double meanNegativity = 0;
 	double worstNegWeight = 0;
@@ -137,20 +137,24 @@ bool LayerExtractor::CorrectLayerSet(const AppParameters &parameters, const Bitm
 	//update the layer constraints and indices
 
 	Dictionary<String, Vector<SuperpixelLayerConstraint>> newConstraints;
-	/*for (int constraintIndex = 0; constraintIndex < layers.constraints.Length(); constraintIndex++)
+
+	//update the initial pixel layer constraints, recompute the midpoint and preference constraints
+	/*if (layers.constraints.ContainsKey("initial"))
 	{
-		SuperpixelLayerConstraint& constraint = layers.constraints[constraintIndex];
-		if (newLayerIndices[constraint.layerIndex] >= 0)
+		for (int constraintIndex = 0; constraintIndex < layers.constraints["initial"].Length(); constraintIndex++)
 		{
-			constraint.layerIndex = newLayerIndices[constraint.layerIndex];
-			newConstraints.PushEnd(constraint);
+			SuperpixelLayerConstraint& constraint = layers.constraints["initial"][constraintIndex];
+			if (newLayerIndices[constraint.layerIndex] >= 0)
+			{
+				constraint.layerIndex = newLayerIndices[constraint.layerIndex];
+				if (!newConstraints.ContainsKey("initial"))
+					newConstraints.Add("initial", Vector<SuperpixelLayerConstraint>());
+				newConstraints["initial"].PushEnd(constraint);
+			}
 		}
 	}*/
 	
 	layers.layers = newLayers;
-	layers.constraints = newConstraints;
-
-
 
 	Vector<double> sumNegWeights(superpixelColors.Length(), 0);
 
@@ -177,12 +181,29 @@ bool LayerExtractor::CorrectLayerSet(const AppParameters &parameters, const Bitm
 		newLayer.color = Vec3f(superpixelColors[superpixelIndexToAdd].color);
 		Console::WriteLine("Adding color: "+newLayer.color.CommaSeparatedString());
 		layers.layers.PushEnd(newLayer);
+
+		/*if (!newConstraints.ContainsKey("initial"))
+			newConstraints.Add("initial", Vector<SuperpixelLayerConstraint>());
+
+		newConstraints["initial"].PushEnd(SuperpixelLayerConstraint(superpixelIndexToAdd, layers.layers.Length()-1, 1, parameters.pixelConstraintWeight));
+		for (int layerIndex = 0; layerIndex < layers.layers.Length()-1; layerIndex++)
+			newConstraints["initial"].PushEnd(SuperpixelLayerConstraint(superpixelIndexToAdd, layerIndex, 0, parameters.pixelConstraintWeight));*/
 		changed = true;
 	}
 
+	layers.constraints = newConstraints;
+
+	
+	VisualizeLayerPalette(parameters, bmp, layers, correctionPass, superpixelIndexToAdd);
+
+	//just re-do the constraints
+	auto palette = layers.layers.Map(function<Vec3f(Layer)>([](Layer l){return l.color;}));
+
+	InitLayersFromPalette(parameters, bmp, palette, layers);
+	AddLayerPreferenceConstraints(parameters, bmp, layers);
 	AddMidpointConstraints(parameters, bmp, layers);
 
-	VisualizeLayerPalette(parameters, bmp, layers, correctionPass, superpixelIndexToAdd);
+
 	correctionPass++;
 
 	return changed;
@@ -935,7 +956,7 @@ void LayerExtractor::VisualizeLayerPalette(const AppParameters &parameters, cons
 	if (addedIndex >= 0)
 	{
 		Vec2i coord = superpixelColors[addedIndex].coord;
-		render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(coord, Vec2i(2, 2)), result[coord.y][coord.x], RGBColor::White);
+		render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(coord, Vec2i(2, 2)), result[coord.y][coord.x], RGBColor::Green);
 		Console::WriteLine("Added neg weight " + String(sumNegWeights[addedIndex]));
 		Console::WriteLine("Most neg weight " + String(sumNegWeights.MaxValue()));
 	}

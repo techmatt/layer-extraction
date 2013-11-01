@@ -82,14 +82,11 @@
     <ClInclude Include="LayerTextureSynthesizer.h">
       <Filter>TextureSynthesis</Filter>
     </ClInclude>
-    <ClInclude Include="LayerModel.h">
-      <Filter>LayerModel</Filter>
-    </ClInclude>
     <ClInclude Include="Dictionary.h">
       <Filter>Base</Filter>
     </ClInclude>
-    <ClInclude Include="DistanceTransform.h">
-      <Filter>LayerSynthesizer</Filter>
+    <ClInclude Include="LayerMesh.h">
+      <Filter>LayerMesh</Filter>
     </ClInclude>
     <ClInclude Include="LayerExtractorVideo.h">
       <Filter>LayerExtractor</Filter>
@@ -144,11 +141,8 @@
     <ClCompile Include="LayerTextureSynthesizer.cpp">
       <Filter>TextureSynthesis</Filter>
     </ClCompile>
-    <ClCompile Include="LayerModel.cpp">
-      <Filter>LayerModel</Filter>
-    </ClCompile>
-    <ClCompile Include="DistanceTransform.cpp">
-      <Filter>LayerSynthesizer</Filter>
+    <ClCompile Include="LayerMesh.cpp">
+      <Filter>LayerMesh</Filter>
     </ClCompile>
     <ClCompile Include="LayerExtractorVideo.cpp">
       <Filter>LayerExtractor</Filter>
@@ -182,7 +176,7 @@
     <Filter Include="TextureSynthesis">
       <UniqueIdentifier>{84bee6c7-9301-4b60-83a1-789d147078a9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="LayerModel">
+    <Filter Include="LayerMesh">
       <UniqueIdentifier>{fc85f3dd-9f91-4e8f-8eb5-0a5fc38151fe}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
