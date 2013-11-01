@@ -70,3 +70,19 @@ BASECODEDLL_API BCLayers* __stdcall BCSynthesizeLayers(void* context)
 
 	return app->SynthesizeLayers();
 }
+
+BASECODEDLL_API void BCOutputMesh(void* context, BCBitmapInfo bitmap, const double* palette, int paletteSize, const char* filename)
+{
+	if (context == NULL) return;
+	App  *app = (App*)context;
+
+	Vector<Vec3f> p;
+	int numColors = paletteSize;
+	double* data = (double*)palette;
+
+	for (int i=0; i<numColors; i++)
+		p.PushEnd(Vec3f((float)data[3*i], (float)data[3*i+1], (float)data[3*i+2]));
+	
+	app->OutputMesh(bitmap, p, filename);
+
+}

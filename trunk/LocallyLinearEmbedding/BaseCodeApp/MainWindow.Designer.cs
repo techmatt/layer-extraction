@@ -55,6 +55,8 @@
             this.textureSynthesisButton = new System.Windows.Forms.Button();
             this.autoBox = new System.Windows.Forms.CheckBox();
             this.textureByLayerButton = new System.Windows.Forms.Button();
+            this.getRecoloringsButton = new System.Windows.Forms.Button();
+            this.outputMeshes = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -314,11 +316,32 @@
             this.textureByLayerButton.UseVisualStyleBackColor = true;
             this.textureByLayerButton.Click += new System.EventHandler(this.textureByLayerButton_Click);
             // 
+            // getRecoloringsButton
+            // 
+            this.getRecoloringsButton.Location = new System.Drawing.Point(315, 609);
+            this.getRecoloringsButton.Name = "getRecoloringsButton";
+            this.getRecoloringsButton.Size = new System.Drawing.Size(135, 35);
+            this.getRecoloringsButton.TabIndex = 25;
+            this.getRecoloringsButton.Text = "Get Recolorings";
+            this.getRecoloringsButton.UseVisualStyleBackColor = true;
+            // 
+            // outputMeshes
+            // 
+            this.outputMeshes.Location = new System.Drawing.Point(194, 756);
+            this.outputMeshes.Name = "outputMeshes";
+            this.outputMeshes.Size = new System.Drawing.Size(231, 37);
+            this.outputMeshes.TabIndex = 26;
+            this.outputMeshes.Text = "Output Training Meshes";
+            this.outputMeshes.UseVisualStyleBackColor = true;
+            this.outputMeshes.Click += new System.EventHandler(this.outputMeshes_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1328, 800);
+            this.Controls.Add(this.outputMeshes);
+            this.Controls.Add(this.getRecoloringsButton);
             this.Controls.Add(this.textureByLayerButton);
             this.Controls.Add(this.autoBox);
             this.Controls.Add(this.textureSynthesisButton);
@@ -388,6 +411,8 @@
         private System.Windows.Forms.Button textureSynthesisButton;
         private System.Windows.Forms.CheckBox autoBox;
         private System.Windows.Forms.Button textureByLayerButton;
+        private System.Windows.Forms.Button getRecoloringsButton;
+        private System.Windows.Forms.Button outputMeshes;
     }
 }
 

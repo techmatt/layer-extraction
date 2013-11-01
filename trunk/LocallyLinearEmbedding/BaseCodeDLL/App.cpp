@@ -78,6 +78,25 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 {
 	AllocConsole();
 
+	Bitmap bmp;
+	bmp.Allocate(bcbmp.width, bcbmp.height);
+	for (UINT x=0; x<bcbmp.width; x++)
+	{
+		for (UINT y=0; y<bcbmp.height; y++)
+		{
+			int idx = 3*(y*bcbmp.width+x);
+			bmp[y][x] = RGBColor(bcbmp.colorData[idx], bcbmp.colorData[idx+1], bcbmp.colorData[idx+2]);
+		}
+	}
+	Vector<PixelLayer> pixellayers = ExtractLayers(bmp, palette, constraints, autoCorrect);
+
+	BCLayers *result = PixelLayersToBCLayers(pixellayers);
+
+	return result;
+}
+
+PixelLayerSet App::ExtractLayers(const Bitmap &bmp, const Vector<Vec3f> &palette, const String &constraints, const bool autoCorrect)
+{
 #ifdef _DEBUG
 	Console::WriteLine("DLL compiled in release mode");
 #else
@@ -89,17 +108,6 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 	if(usingRecolorizer)
 	{
 		Recolorize();
-	}
-
-	Bitmap bmp;
-	bmp.Allocate(bcbmp.width, bcbmp.height);
-	for (UINT x=0; x<bcbmp.width; x++)
-	{
-		for (UINT y=0; y<bcbmp.height; y++)
-		{
-			int idx = 3*(y*bcbmp.width+x);
-			bmp[y][x] = RGBColor(bcbmp.colorData[idx], bcbmp.colorData[idx+1], bcbmp.colorData[idx+2]);
-		}
 	}
 
 	_image = bmp;
@@ -161,10 +169,7 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 
 	_layers = layers;
 
-	Vector<PixelLayer> pixellayers = _extractor.GetPixelLayers(_image, _layers);
-	BCLayers *result = PixelLayersToBCLayers(pixellayers);
-
-	return result;
+	Vector<PixelLayer> pixellayers = _extractor.GetPixelLayers(_image, _layers);	
 }
 
 BCLayers* App::PixelLayersToBCLayers(const PixelLayerSet &pixellayers)
@@ -644,4 +649,22 @@ const char* App::QueryStringByName(const String &s)
 		return NULL;
 	}
 	return _queryString.CString();
+}
+
+void App::OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename)
+{	
+	Bitmap bmp;
+	bmp.Allocate(bcbmp.width, bcbmp.height);
+	for (UINT x=0; x<bcbmp.width; x++)
+	{
+		for (UINT y=0; y<bcbmp.height; y++)
+		{
+			int idx = 3*(y*bcbmp.width+x);
+			bmp[y][x] = RGBColor(bcbmp.colorData[idx], bcbmp.colorData[idx+1], bcbmp.colorData[idx+2]);
+		}
+	}
+
+	PixelLayerSet layers = ExtractLayers(bmp, palette, "", false);
+	LayerMesh mesh(layers);
+	mesh.SaveToFile(filename);
 }

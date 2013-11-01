@@ -74,6 +74,8 @@ namespace BaseCodeApp
         private static extern IntPtr BCSegmentImage(IntPtr context, BCBitmapInfo bitmap);
         [DllImport(BaseCodeDLL)]
         private static extern IntPtr BCSynthesizeLayers(IntPtr context);
+        [DllImport(BaseCodeDLL)]
+        private static extern IntPtr BCOutputMesh(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize, [In, MarshalAs(UnmanagedType.LPStr)] String filename);
 
         IntPtr baseCodeDLLContext = (IntPtr)0;
 
@@ -772,7 +774,7 @@ namespace BaseCodeApp
         }
 
 
-        private Dictionary<String, List<PaletteData>> LoadFilePalettes(String file)
+        /*private Dictionary<String, List<PaletteData>> LoadFilePalettes(String file)
         {
             //load art palettes
             var lines = File.ReadLines(file);
@@ -813,7 +815,7 @@ namespace BaseCodeApp
                 plist[key].Add(data);
             }
             return plist;
-        }
+        }*/
 
 
 
@@ -1272,5 +1274,150 @@ namespace BaseCodeApp
 
         }
 
+
+
+        //
+        // Color-suggestion-related methods
+        //
+        //Load PaletteData from file
+        private Dictionary<String, PaletteData> LoadFilePalettes(String file)
+        {
+            FileInfo finfo = new FileInfo(file);
+
+            Dictionary<String, PaletteData> plist = new Dictionary<String, PaletteData>();
+            String[] lines = File.ReadAllLines(file);
+
+            //extracted palettes file format
+            if (finfo.Extension == ".tsv")
+            {
+                for (int i = 1; i < lines.Count(); i++)
+                {
+                    String line = lines[i];
+                    String[] fields = line.Replace("\"", "").Split('\t');
+                    PaletteData data = new PaletteData();
+                    data.id = Int32.Parse(fields[0]);
+                    data.workerNum = Int32.Parse(fields[1]);
+                    String key = fields[2];
+                    String[] colors = fields[3].Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (String s in colors)
+                    {
+                        String[] comp = s.Split(',');
+                        Color c = Color.FromArgb(Int32.Parse(comp[0]), Int32.Parse(comp[1]), Int32.Parse(comp[2]));
+                        CIELAB l = Util.RGBtoLAB(c);
+                        data.colors.Add(c);
+                        data.lab.Add(l);
+                    }
+                    if (!plist.ContainsKey(key))
+                        plist.Add(key, data);
+                    else
+                        throw new IOException("More than one palette per key");
+                }
+            }
+            else //pattern template file format, populate the pattern id to template id field
+            {
+                for (int i = 0; i < lines.Count(); i++)
+                {
+                    String line = lines[i];
+                    String[] fields = line.Replace("\"", "").Split(',');
+
+                    PaletteData data = new PaletteData();
+                    data.id = Int32.Parse(fields[1]);
+                    data.workerName = fields[0];
+                    String[] colors = fields[3].Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    colors = colors.Distinct<String>().ToArray<String>();
+                    String key = fields[1] + ".png";
+                    foreach (String s in colors)
+                    {
+                        Color c = ColorTranslator.FromHtml("#" + s);
+                        data.colors.Add(c);
+                        data.lab.Add(Util.RGBtoLAB(c));
+
+                    }
+
+                    //ignore missing palette data
+                    if (!plist.ContainsKey(key) && colors.Count() > 0)
+                        plist.Add(key, data);
+                    else if (plist.ContainsKey(key))
+                        throw new IOException("More than one palette per key");
+
+                    //String templateId = fields[4];
+                    //if (!patternToTemplate.ContainsKey(data.id.ToString()))
+                    //    patternToTemplate.Add(data.id.ToString(), templateId);
+
+
+                }
+            }
+            return plist;
+        }
+
+        private void outputMeshes_Click(object sender, EventArgs e)
+        {
+            //Hardcoded directory for now
+            String directory = "../Training/CLdata";
+            String paletteFile = "../Training/template.csv";
+            String outDir = "../Training/CLmeshes";
+
+            Dictionary<String, PaletteData> palettes = LoadFilePalettes(paletteFile);
+
+            String[] subdirs = Directory.GetDirectories(directory);
+            foreach (String dir in subdirs)
+            {
+                String outSubDir = Path.Combine(outDir, new DirectoryInfo(dir).Name);
+                String[] files = Directory.GetFiles(dir);
+                foreach (String file in files)
+                {
+                    String baseName = new FileInfo(file).Name;
+                    String outFile = Path.Combine(outSubDir, Util.ConvertFileName(baseName,"",".txt"));
+
+                    //read and process the file
+                    Bitmap bmp = new Bitmap(file);
+                    List<Color> bmpData = Util.BitmapTo1DArray(bmp).ToList<Color>();
+
+                    PaletteData data = palettes[baseName];
+
+                    double[] palette = new double[data.colors.Count * 3];
+                    for (int i = 0; i < data.colors.Count; i++)
+                    {
+                        Color color = data.colors[i];
+                        palette[3 * i] = color.R / 255.0;
+                        palette[3 * i + 1] = color.G / 255.0;
+                        palette[3 * i + 2] = color.B / 255.0;
+                    }
+                    IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
+
+                    //for now, pass in RGB format
+                    byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
+                    for (int idx = 0; idx < bmpData.Count; idx++)
+                    {
+                        Color color = bmpData[idx];
+                        rgbData[3 * idx] = (byte)color.R;
+                        rgbData[3 * idx + 1] = (byte)color.G;
+                        rgbData[3 * idx + 2] = (byte)color.B;
+                    }
+
+                    BCBitmapInfo bmpInfo = new BCBitmapInfo();
+                    bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
+                    bmpInfo.width = bmp.Width;
+                    bmpInfo.height = bmp.Height;
+
+                    try
+                    {
+                        Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
+                        Marshal.Copy(palette, 0, palettePtr, palette.Length);
+                    }
+                    finally
+                    {
+                    }
+
+                    BCOutputMesh(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, outFile);
+                    Marshal.FreeHGlobal(bmpInfo.colorData);
+                    Marshal.FreeHGlobal(palettePtr);
+
+                }
+            }
+
+        }
+
     }
+
 }

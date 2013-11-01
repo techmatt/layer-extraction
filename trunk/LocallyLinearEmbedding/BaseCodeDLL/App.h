@@ -14,6 +14,8 @@ public:
 	void SynthesizeTexture(const String &parameterFilename);
 	void SynthesizeTextureByLayers(const String &parameterFilename);
     
+	void OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename);
+
 private:
     AppParameters _parameters;
 
@@ -30,4 +32,6 @@ private:
     Bitmap _queryBitmapResultC;
 
 	BCLayers* PixelLayersToBCLayers(const PixelLayerSet &layers);
+
+	PixelLayerSet ExtractLayers(const Bitmap &bitmap, const Vector<Vec3f> &palette, const String &constraints, const bool autoCorrect);
 };
