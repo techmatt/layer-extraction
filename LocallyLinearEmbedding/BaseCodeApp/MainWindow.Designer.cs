@@ -57,6 +57,7 @@
             this.textureByLayerButton = new System.Windows.Forms.Button();
             this.getRecoloringsButton = new System.Windows.Forms.Button();
             this.outputMeshes = new System.Windows.Forms.Button();
+            this.buttonVideo = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -335,6 +336,17 @@
             this.outputMeshes.UseVisualStyleBackColor = true;
             this.outputMeshes.Click += new System.EventHandler(this.outputMeshes_Click);
             // 
+            // buttonVideo
+            // 
+            this.buttonVideo.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonVideo.Location = new System.Drawing.Point(457, 610);
+            this.buttonVideo.Name = "buttonVideo";
+            this.buttonVideo.Size = new System.Drawing.Size(83, 33);
+            this.buttonVideo.TabIndex = 23;
+            this.buttonVideo.Text = "Video";
+            this.buttonVideo.UseVisualStyleBackColor = true;
+            this.buttonVideo.Click += new System.EventHandler(this.buttonVideo_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
@@ -342,6 +354,7 @@
             this.ClientSize = new System.Drawing.Size(1328, 800);
             this.Controls.Add(this.outputMeshes);
             this.Controls.Add(this.getRecoloringsButton);
+            this.Controls.Add(this.buttonVideo);
             this.Controls.Add(this.textureByLayerButton);
             this.Controls.Add(this.autoBox);
             this.Controls.Add(this.textureSynthesisButton);
@@ -413,6 +426,7 @@
         private System.Windows.Forms.Button textureByLayerButton;
         private System.Windows.Forms.Button getRecoloringsButton;
         private System.Windows.Forms.Button outputMeshes;
+        private System.Windows.Forms.Button buttonVideo;
     }
 }
 

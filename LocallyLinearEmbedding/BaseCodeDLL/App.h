@@ -9,14 +9,16 @@ public:
     const char *QueryStringByName(const String &s);
 	BCLayers* ExtractLayers(const BCBitmapInfo &bitmap, const Vector<Vec3f> &palette, const String &constraints, const bool autoCorrect);
 	BCBitmapInfo* SegmentImage(const BCBitmapInfo &bitmap);
-    void Recolorize();
-	BCLayers* SynthesizeLayers();
-	void SynthesizeTexture(const String &parameterFilename);
-	void SynthesizeTextureByLayers(const String &parameterFilename);
-    
+    BCLayers* SynthesizeLayers();
+
 	void OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename);
 
 private:
+    void Recolorize();
+    void SynthesizeTexture(const String &parameterFilename);
+    void SynthesizeTextureByLayers(const String &parameterFilename);
+    void ExtractVideoLayers();
+
     AppParameters _parameters;
 
     Bitmap _image;

@@ -4,6 +4,8 @@ struct Video
     UINT Width() const  { return frames[0].Width();  }
     UINT Height() const { return frames[0].Height(); }
 
+    Vector<Vec3f> ComputePaletteKMeans(UINT paletteSize) const;
+
     Vector<Bitmap> frames;
 };
 

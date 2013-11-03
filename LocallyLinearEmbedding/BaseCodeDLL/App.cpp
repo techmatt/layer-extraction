@@ -173,6 +173,34 @@ PixelLayerSet App::ExtractLayers(const Bitmap &bmp, const Vector<Vec3f> &palette
 	return pixellayers;
 }
 
+void App::ExtractVideoLayers()
+{
+    _parameters.Init("../Parameters.txt");
+
+    Video video;
+
+    const UINT frameCount = 10;
+    video.frames.Allocate(10);
+    for (UINT frameIndex = 0; frameIndex < frameCount; frameIndex++)
+    {
+        video.frames[frameIndex].LoadPNG("../Data/bigbuckbunny/bigbuckbunny_" + String::ZeroPad(frameIndex, 4) + ".png");
+    }
+
+    LayerSet layers;
+    LayerExtractorVideo videoExtractor;
+    videoExtractor.Init(_parameters, video);
+
+    videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputePaletteKMeans(6), layers);
+
+    for(UINT negativeSuppressionIndex = 0; negativeSuppressionIndex < 4; negativeSuppressionIndex++)
+    {
+        videoExtractor.ExtractLayers(_parameters, video, layers);
+        videoExtractor.AddNegativeConstraints(_parameters, video, layers);
+    }
+    
+    //layers.Dump("../Results/Layers.txt", videoExtractor.SuperpixelColors());
+}
+
 BCLayers* App::PixelLayersToBCLayers(const PixelLayerSet &pixellayers)
 {
 	BCLayers *result = new BCLayers();
@@ -531,7 +559,7 @@ void App::SynthesizeTexture(const String &parameterFilename)
 
 		// compute distance transforms
 		if (_parameters.texsyn_usedistancetransform) {
-			for(int i = 0; i < layers.Length(); i++)
+			for(UINT i = 0; i < layers.Length(); i++)
 			{
 				PixelLayer p;
 				p.color = layers[i].color;
@@ -567,7 +595,10 @@ UINT32 App::ProcessCommand(const String &command)
 	else if (words[0] == "SynthesizeTextureByLayers") {
 		SynthesizeTextureByLayers(words[1]);
 	}
-
+    else if (words[0] == "ExtractVideoLayers") {
+        ExtractVideoLayers();
+    }
+    
 	return 0;
 }
 
