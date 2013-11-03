@@ -3,9 +3,16 @@
 BASECODEDLL_API void* __stdcall BCInit()
 {
     App *app = new App;
-    //app->Init();
-	AllocConsole();
-    return app;
+    AllocConsole();
+
+#ifdef _DEBUG
+    Console::WriteLine("DLL compiled in debug mode");
+#else
+    Console::WriteLine("DLL compiled in release mode");
+#endif
+
+    app->Init();
+	return app;
 }
 
 BASECODEDLL_API UINT32 __stdcall BCProcessCommand(void *context, const char *s)

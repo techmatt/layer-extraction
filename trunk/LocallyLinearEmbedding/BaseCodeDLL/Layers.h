@@ -143,8 +143,8 @@ struct PixelLayer
 	{
 		PersistentAssert(pixelWeights.Rows() == other.pixelWeights.Rows() && pixelWeights.Cols() == other.pixelWeights.Cols(), "PixelLayer::DotProduct: Dimensions don't match!");
 		double result = 0;
-		for (int r=0; r<pixelWeights.Rows(); r++)
-			for (int c=0; c<pixelWeights.Cols(); c++)
+		for (UINT r=0; r<pixelWeights.Rows(); r++)
+			for (UINT c=0; c<pixelWeights.Cols(); c++)
 				result += pixelWeights(r,c)*other.pixelWeights(r,c);
 		return result;
 	}

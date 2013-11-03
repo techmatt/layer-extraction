@@ -1418,6 +1418,11 @@ namespace BaseCodeApp
 
         }
 
+        private void buttonVideo_Click(object sender, EventArgs e)
+        {
+            BCProcessCommand(baseCodeDLLContext, "ExtractVideoLayers");
+        }
+
     }
 
 }

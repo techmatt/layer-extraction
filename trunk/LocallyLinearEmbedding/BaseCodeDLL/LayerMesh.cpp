@@ -7,7 +7,7 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 	PixelLayerSet blurredLayers(layers);
 	Filter filter;
 	int radius = filter.Radius();
-	for (int layerIndex=0; layerIndex < layers.Length(); layerIndex++)
+	for (UINT layerIndex=0; layerIndex < layers.Length(); layerIndex++)
 	{
 		blurredLayers[layerIndex].pixelWeights.Clear(0);
 
@@ -21,7 +21,7 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 
 
 	// compute features for each layer
-	for (int layerIndex=0; layerIndex < layers.Length(); layerIndex++)
+	for (UINT layerIndex=0; layerIndex < layers.Length(); layerIndex++)
 	{		
 		Segment segment;
 
@@ -49,7 +49,7 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 
 		// overlap with other layers (after blurring)
 		double totalOverlap = 0;
-		for (int otherLayerIndex=0; otherLayerIndex < layers.Length(); otherLayerIndex++)
+		for (UINT otherLayerIndex=0; otherLayerIndex < layers.Length(); otherLayerIndex++)
 		{
 			if (otherLayerIndex == layerIndex)
 				continue;
@@ -62,7 +62,7 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 			totalOverlap += overlap;
 		}
 		Vector<int> &neighbors = segment.adjacencies.Keys();
-		for (int neighborIndex=0; neighborIndex<neighbors.Length(); neighborIndex++)
+		for (UINT neighborIndex=0; neighborIndex<neighbors.Length(); neighborIndex++)
 		{
 			segment.adjacencies[neighborIndex].first /= totalOverlap;
 		}
@@ -87,7 +87,7 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 				sizes[bin]++;
 			}
 		}
-		for (int i=0; i<sizes.Length(); i++)
+		for (UINT i=0; i<sizes.Length(); i++)
 			sizes[i] /= (layers.First().Width()*layers.First().Height());
 
 		segment.features.Add("RelativeSizes", sizes);
@@ -98,7 +98,7 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 	}
 
 	//initialize the groups, one segment per group
-	for (int groupIndex=0; groupIndex < layers.Length(); groupIndex++)
+	for (UINT groupIndex=0; groupIndex < layers.Length(); groupIndex++)
 	{
 		SegmentGroup group;
 		group.members.PushEnd(groupIndex);
@@ -112,7 +112,7 @@ Vector<String> LayerMesh::StringRepresentation()
 {
 	Vector<String> lines;
 	//write all segments
-	for (int segmentIndex=0; segmentIndex < segments.Length(); segmentIndex++)
+	for (UINT segmentIndex=0; segmentIndex < segments.Length(); segmentIndex++)
 	{
 		lines.PushEnd("SegmentBegin");
 		Segment &segment = segments[segmentIndex];
