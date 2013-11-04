@@ -25,6 +25,12 @@ private:
     }
 };
 
+class SuperpixelExtractorPeriodic
+{
+public:
+	Vector<ColorCoordinate> Extract(const AppParameters &parameters, const Bitmap &bmp);
+};
+
 struct Superpixel
 {
     void Reset(const Bitmap &bmp, const Vec2i &seed);
@@ -42,14 +48,9 @@ struct Superpixel
     Vec3f color;
     Vector<Vec2i> pixels;
     Vec2i seed;
-    Vector<UINT> superpixelNeighbors;
 };
 
-class SuperpixelExtractorPeriodic
-{
-public:
-    Vector<ColorCoordinate> Extract(const AppParameters &parameters, const Bitmap &bmp);
-};
+
 
 class SuperpixelExtractorSuperpixel
 {

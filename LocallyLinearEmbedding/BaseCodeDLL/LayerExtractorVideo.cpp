@@ -263,8 +263,8 @@ void LayerExtractorVideo::ComputeSuperpixels(const AppParameters &parameters, co
 {
     ComponentTimer timer("Computing superpixels");
 
-    //SuperpixelExtractorPeriodic extractor;
-    SuperpixelExtractorVideoPeriodic extractor;
+    //SuperpixelExtractorVideoPeriodic extractor;
+	SuperpixelExtractorVideoSuperpixel extractor;
     superpixelColors = extractor.Extract(parameters, video);
 }
 

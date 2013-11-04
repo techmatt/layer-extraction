@@ -81,34 +81,48 @@ void LayerTextureSynthesizer::Synthesize(const Vector<PixelLayerSet> &layerfeatu
 	PixelLayer output(layerfeatures[order[iteration]][origlayeridx].color, paddedwidth, paddedheight);
 	Grid<Vec2i> coordinates(paddedheight, paddedwidth, Vec2i(-1,-1));
 	if (iteration == 0) {
-		// initialize to random skip by skip blocks
+		/* initialize to random skip by skip blocks
 		const int skip = parameters.texsyn_initrandsize;
 		int rx, ry;
 		for (int row = 0; row < paddedheight; row+=skip) {
-			for (int col = 0; col < paddedwidth; col+=skip) {
-				ry = (int)(((float)std::rand()/RAND_MAX)*(exemplarheight-1-skip));
-				rx = (int)(((float)std::rand()/RAND_MAX)*(exemplarwidth-1-skip));
-				for (int j = 0; j < skip; j++) {
-					for (int i = 0; i < skip; i++)  {
-						if (row+j < paddedheight && col+i < paddedwidth) {
-							coordinates(row+j,col+i) = Vec2i(rx+i, ry+j);
-							output.pixelWeights(row+j,col+i) = layerfeatures[order[iteration]][origlayeridx].pixelWeights(ry+j,rx+i);
-						}
-					}
-				}
+		for (int col = 0; col < paddedwidth; col+=skip) {
+		ry = (int)(((float)std::rand()/RAND_MAX)*(exemplarheight-1-skip));
+		rx = (int)(((float)std::rand()/RAND_MAX)*(exemplarwidth-1-skip));
+		for (int j = 0; j < skip; j++) {
+		for (int i = 0; i < skip; i++)  {
+		if (row+j < paddedheight && col+i < paddedwidth) {
+		coordinates(row+j,col+i) = Vec2i(rx+i, ry+j);
+		output.pixelWeights(row+j,col+i) = layerfeatures[order[iteration]][origlayeridx].pixelWeights(ry+j,rx+i);
+		}
+		}
+		}
+		}
+		}*/
+		// initialize to tiled exemplar
+		for (int row = 0; row < paddedheight; row++) {
+			for (int col = 0; col < paddedwidth; col++) {
+				coordinates(row,col) = Vec2i(col % exemplarwidth, row % exemplarheight);
+				output.pixelWeights(row,col) = layerfeatures[order[iteration]][origlayeridx].pixelWeights(row % exemplarheight, col % exemplarwidth);
 			}
 		}
 	}
 	else {
+		int rx, ry;
 		for (int row = 0; row < paddedheight; row++) {
 			for (int col = 0; col < paddedwidth; col++) {
-					coordinates(row,col) = coordinateset[iteration-1](row,col);
-					output.pixelWeights(row,col) = synthesized[iteration-1].pixelWeights(row,col);
+				//coordinates(row,col) = coordinateset[iteration-1](row,col);
+				//output.pixelWeights(row,col) = synthesized[iteration-1].pixelWeights(row,col);
+				// initialize to random
+				ry = (int)(((float)std::rand()/RAND_MAX)*(exemplarheight-1));
+				rx = (int)(((float)std::rand()/RAND_MAX)*(exemplarwidth-1));
+				coordinates(row,col) = Vec2i(rx, ry);
+				output.pixelWeights(row,col) = layerfeatures[order[iteration]][origlayeridx].pixelWeights(ry,rx);
 			}
 		}
 	}
 	synthesized.PushEnd(output);
 	coordinateset.PushEnd(coordinates);
+	if (iteration == 0) return;
 
 	Write(layerfeatures, synthesized, coordinateset, outputwidth, outputheight, nradius, cond+"_init");
 

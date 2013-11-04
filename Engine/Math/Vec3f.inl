@@ -40,6 +40,13 @@ Vec3f::Vec3f(RGBColor c)
     z = c.b / 255.0f;
 }
 
+Vec3f::Vec3f(const Vec3i &V)
+{
+	x = (float) V.x;
+	y = (float) V.y;
+	z = (float) V.z;
+}
+
 __forceinline Vec3f& Vec3f::operator = (const Vec3f &V)
 {
     x = V.x;
