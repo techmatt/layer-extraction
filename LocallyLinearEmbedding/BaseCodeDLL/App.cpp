@@ -154,17 +154,13 @@ PixelLayerSet App::ExtractLayers(const Bitmap &bmp, const Vector<Vec3f> &palette
 		}
 		Console::WriteLine("Done correcting");
 	}
-	_extractor.ExtractLayers(_parameters, bmp, layers);
-	_extractor.AddNegativeConstraints(_parameters, bmp, layers);
-	_extractor.ExtractLayers(_parameters, bmp, layers);
-	_extractor.AddNegativeConstraints(_parameters, bmp, layers);
-	_extractor.ExtractLayers(_parameters, bmp, layers);
-	_extractor.AddNegativeConstraints(_parameters, bmp, layers);
-	_extractor.ExtractLayers(_parameters, bmp, layers);
-	_extractor.AddNegativeConstraints(_parameters, bmp, layers);
-	_extractor.ExtractLayers(_parameters, bmp, layers);
 
-
+    for(UINT negativeSuppressionIndex = 0; negativeSuppressionIndex < 4; negativeSuppressionIndex++)
+    {
+	    _extractor.ExtractLayers(_parameters, bmp, layers);
+	    _extractor.AddNegativeConstraints(_parameters, bmp, layers);
+    }
+	
 	layers.Dump("../Results/Layers.txt", _extractor.SuperpixelColors());
 
 	_layers = layers;

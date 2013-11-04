@@ -436,18 +436,18 @@ void LayerExtractorVideo::ComputeNeighborWeights(const AppParameters &parameters
 
 void LayerExtractorVideo::VisualizeSuperpixels(const AppParameters &parameters, const Video &video, UINT frameIndex, const Vector<Vec3f> *newSuperpixelColors, const String &filename) const
 {
-    /*Bitmap result(bmp.Width(), bmp.Height());
+    Bitmap result(video.Width(), video.Height());
     result.Clear(RGBColor::Black);
 
     for(UINT superpixelIndex = 0; superpixelIndex < superpixelColors.Length(); superpixelIndex++)
     {
-        const ColorCoordinate &superpixel = superpixelColors[superpixelIndex];
+        const ColorCoordinateVideo &superpixel = superpixelColors[superpixelIndex];
         if(newSuperpixelColors == NULL)
             result[superpixel.coord.y][superpixel.coord.x] = superpixel.color;
         else
             result[superpixel.coord.y][superpixel.coord.x] = RGBColor((*newSuperpixelColors)[superpixelIndex]);
     }
-    result.SavePNG("../Results/" + filename + ".png");*/
+    result.SavePNG("../Results/" + filename + ".png");
 }
 
 void LayerExtractorVideo::VisualizeNearestNeighbors(const AppParameters &parameters, const Video &video, UINT frameIndex) const
@@ -511,14 +511,14 @@ void LayerExtractorVideo::VisualizeNearestNeighbors(const AppParameters &paramet
 
 void LayerExtractorVideo::VisualizeLayerConstraints(const AppParameters &parameters, const Video &video, UINT frameIndex, const LayerSet &layers) const
 {
-	/*String key = "initial";
+	String key = "initial";
 
     const UINT paletteHeight = 40;
-    Bitmap result(bmp.Width(), bmp.Height() + paletteHeight);
+    Bitmap result(video.Width(), video.Height() + paletteHeight);
     
     result.Clear(RGBColor::Black);
 
-    for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) result[y][x] = RGBColor(Vec3f(bmp[y][x]) * 0.2f);
+    for(UINT y = 0; y < video.Height(); y++) for(UINT x = 0; x < video.Width(); x++) result[y][x] = RGBColor(Vec3f(video.frames[0][y][x]) * 0.2f);
     
     AliasRender render;
 	const Vector<SuperpixelLayerConstraint>& constraints = layers.constraints[key];
@@ -534,24 +534,24 @@ void LayerExtractorVideo::VisualizeLayerConstraints(const AppParameters &paramet
         }
     }
 
-    int layerWidth = Math::Ceiling((double)bmp.Width() / (double)layers.layers.Length());
+    int layerWidth = Math::Ceiling((double)video.Width() / (double)layers.layers.Length());
     for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
     {
         for(int x = layerIndex * layerWidth; x < (int)(layerIndex + 1) * layerWidth; x++)
         {
-            for(int y = (int)bmp.Height(); y < (int)result.Height(); y++)
+            for(int y = (int)video.Height(); y < (int)result.Height(); y++)
             {
                 if(result.ValidCoordinates(x, y)) result[y][x] = RGBColor(layers.layers[layerIndex].color);
             }
         }
     }
 
-    result.SavePNG("../Results/LayerConstraints.png");*/
+    result.SavePNG("../Results/LayerConstraints.png");
 }
 
 void LayerExtractorVideo::VisualizeReconstruction(const AppParameters &parameters, const Video &video, UINT frameIndex, const LayerSet &layers) const
 {
-    /*const UINT superpixelCount = superpixelColors.Length();
+    const UINT superpixelCount = superpixelColors.Length();
     Vector<Vec3f> newColors(superpixelCount, Vec3f::Origin);
     for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
     {
@@ -561,43 +561,43 @@ void LayerExtractorVideo::VisualizeReconstruction(const AppParameters &parameter
         }
     }
 
-    RecolorSuperpixels(bmp, newColors).SavePNG("../Results/Reconstruction_P" + String(pass) + ".png");*/
+    RecolorSuperpixels(video, frameIndex, newColors).SavePNG("../Results/Reconstruction_Pass" + String(pass) + "Frame_" + String(frameIndex) + ".png");
 }
 
 void LayerExtractorVideo::VisualizeLayers(const AppParameters &parameters, const Video &video, UINT frameIndex, const LayerSet &layers) const
 {
-  //  AliasRender render;
-  //  for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
-  //  {
-  //      const Layer &curLayer = layers.layers[layerIndex];
-  //      
-  //      const UINT superpixelCount = superpixelColors.Length();
-  //      Vector<Vec3f> newColors(superpixelCount);
-  //      for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
-  //      {
-  //          newColors[superpixelIndex] = Vec3f(RGBColor::Interpolate(RGBColor::Black, RGBColor::White, (float)curLayer.superpixelWeights[superpixelIndex]));
-  //      }
-  //      
-  //      Bitmap smoothBmp = RecolorSuperpixels(bmp, newColors);
-  //      Bitmap discreteBmp = smoothBmp;
-		//discreteBmp.Clear(RGBColor::Black);
+    AliasRender render;
+    for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+    {
+        const Layer &curLayer = layers.layers[layerIndex];
+        
+        const UINT superpixelCount = superpixelColors.Length();
+        Vector<Vec3f> newColors(superpixelCount);
+        for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+        {
+            newColors[superpixelIndex] = Vec3f(RGBColor::Interpolate(RGBColor::Black, RGBColor::White, (float)curLayer.superpixelWeights[superpixelIndex]));
+        }
+        
+        Bitmap smoothBmp = RecolorSuperpixels(video, frameIndex, newColors);
+        Bitmap discreteBmp = smoothBmp;
+		discreteBmp.Clear(RGBColor::Black);
 
-  //      for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
-  //      {
-  //          float weight = (float)curLayer.superpixelWeights[superpixelIndex];
-  //          Vec3f c = Vec3f(RGBColor::Interpolate(RGBColor::Black, RGBColor::White, weight));
-  //          
-  //          if(weight > 1.02) c = Vec3f(RGBColor::Red);
-  //          if(weight < -0.02) c = Vec3f(RGBColor::Blue);
-  //          render.DrawRect(discreteBmp, Rectangle2i::ConstructFromCenterVariance(superpixelColors[superpixelIndex].coord, Vec2i(2, 2)), RGBColor(c), RGBColor(c));//RGBColor(0, 128, 0));
-  //      }
-  //      
-  //      for(UINT y = 0; y < smoothBmp.Height(); y++) for(UINT x = 0; x < 10; x++)
-  //      {
-  //          smoothBmp[y][x] = RGBColor(curLayer.color);
-  //          discreteBmp[y][x] = RGBColor(curLayer.color);
-  //      }
-  //      discreteBmp.SavePNG("../Results/LayerD" + String(layerIndex) + "_P" + String(pass) + ".png");
-  //      smoothBmp.SavePNG("../Results/LayerS" + String(layerIndex) + "_P" + String(pass) + ".png");
-  //  }
+        for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+        {
+            float weight = (float)curLayer.superpixelWeights[superpixelIndex];
+            Vec3f c = Vec3f(RGBColor::Interpolate(RGBColor::Black, RGBColor::White, weight));
+            
+            if(weight > 1.02) c = Vec3f(RGBColor::Red);
+            if(weight < -0.02) c = Vec3f(RGBColor::Blue);
+            render.DrawRect(discreteBmp, Rectangle2i::ConstructFromCenterVariance(superpixelColors[superpixelIndex].coord, Vec2i(2, 2)), RGBColor(c), RGBColor(c));//RGBColor(0, 128, 0));
+        }
+        
+        for(UINT y = 0; y < smoothBmp.Height(); y++) for(UINT x = 0; x < 10; x++)
+        {
+            smoothBmp[y][x] = RGBColor(curLayer.color);
+            discreteBmp[y][x] = RGBColor(curLayer.color);
+        }
+        discreteBmp.SavePNG("../Results/LayerD" + String(layerIndex) + "_P" + String(pass) + ".png");
+        smoothBmp.SavePNG("../Results/LayerS" + String(layerIndex) + "_P" + String(pass) + ".png");
+    }
 }
