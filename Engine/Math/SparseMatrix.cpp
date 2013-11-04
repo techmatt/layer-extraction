@@ -86,7 +86,7 @@ void SparseMatrix<T>::Init(const Vector<T> &DiagonalEntries)
 }
 
 template<class T>
-UINT SparseMatrix<T>::TotalElements()
+UINT SparseMatrix<T>::TotalElements() const
 {
     UINT Result = 0;
     for(UINT i = 0; i < _RowCount; i++)

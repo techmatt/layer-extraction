@@ -2,7 +2,7 @@
 
 Vector<double> EigenSolver::Solve(const SparseMatrix<double> &M, const Vector<double> &b, Method method)
 {
-    Console::WriteLine("Loading Eigen matrix...");
+    Console::WriteLine("Loading Eigen matrix " + String(M.RowCount()) + "x" + String(M.ColCount()) + ", " + String((double)M.TotalElements() / (double) M.RowCount()) + " non-zeroes / row");
     Eigen::SparseMatrix<double> eigenMatrix(M.RowCount(), M.ColCount());
     auto triplets = Utility::MakeEigenTriplets(M);
     eigenMatrix.setFromTriplets(triplets.begin(), triplets.end());
