@@ -34,7 +34,7 @@ Vector<ColorCoordinateVideo> SuperpixelExtractorVideoPeriodic::Extract(const App
         }
     }
 
-    if(result.Length() > parameters.superpixelCount)
+    if((int)result.Length() > parameters.superpixelCount)
     {
         result.Randomize();
         result.ReSize(parameters.superpixelCount);
