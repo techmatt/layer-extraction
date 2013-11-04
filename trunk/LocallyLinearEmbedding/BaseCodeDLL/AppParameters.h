@@ -67,6 +67,7 @@ struct AppParameters
 		texsyn_usergb = file.GetBoolean("texsyn_usergb");
 		texsyn_uselayers = file.GetBoolean("texsyn_uselayers");
 		texsyn_usedistancetransform = file.GetBoolean("texsyn_usedistancetransform");
+		texsyn_usergbdistance = file.GetBoolean("texsyn_usergbdistance");
 		texsyn_klayers = file.GetInteger("texsyn_klayers");
 		texsyn_initrandsize = file.GetInteger("texsyn_initrandsize");
 
@@ -134,6 +135,7 @@ struct AppParameters
 	bool texsyn_usergb;
 	bool texsyn_uselayers;
 	bool texsyn_usedistancetransform;
+	bool texsyn_usergbdistance;
 	int texsyn_klayers;
 	int texsyn_initrandsize;
 };

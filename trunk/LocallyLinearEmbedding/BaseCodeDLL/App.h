@@ -15,10 +15,13 @@ public:
 
 private:
     void Recolorize();
-    void SynthesizeTexture(const String &parameterFilename);
-    void SynthesizeTextureByLayers(const String &parameterFilename);
-    void ExtractVideoLayers();
+	//BCLayers* SynthesizeLayers();
+	void SynthesizeTexture(const String &parameterFilename);
+	void SynthesizeTextureByLayers(const String &parameterFilename);
 
+	void DeleteLayer(const String &parameterFilename);
+	void ExtractVideoLayers();
+    
     AppParameters _parameters;
 
     Bitmap _image;

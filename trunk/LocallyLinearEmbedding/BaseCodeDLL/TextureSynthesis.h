@@ -3,7 +3,7 @@ class TextureSynthesis
 {
 public:
 
-	void Init(const AppParameters &parameters, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension);
+	void Init(const AppParameters &parameters, const String &results_dir, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension);
 
 	void Synthesize(const GaussianPyramid &rgbpyr, const GaussianPyramid &exemplar, const AppParameters &parameters, NeighborhoodGenerator &generator);
 
@@ -30,6 +30,7 @@ private:
 
 
 	void WriteImage(const GaussianPyramid &rgbpyr, const GaussianPyramid &exemplar, const Grid<Vec2i> &coordinates, int level, int width, int height, int pad, String label);
+	void WriteOutput(const AppParameters &parameters, const GaussianPyramid &rgbpyr, const GaussianPyramid &exemplar, const Grid<Vec2i> &coordinates, int level, int width, int height, int pad);
 
 
 	UINT _reducedDimension;
@@ -43,6 +44,7 @@ private:
 	
 	bool _debug;
 	String _outdir;
+	String _resultsdir;
 };
 
 

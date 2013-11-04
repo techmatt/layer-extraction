@@ -1,9 +1,11 @@
 #include "Main.h"
 
-void TextureSynthesis::Init(const AppParameters &parameters, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension)
+void TextureSynthesis::Init(const AppParameters &parameters, const String &results_dir, const GaussianPyramid &exemplar, const NeighborhoodGenerator &generator, int nlevels, int reducedDimension)
 {
 	_debug = true;
 	CreateOutputDirectory(parameters);
+	_resultsdir = results_dir;
+	Console::WriteLine(_resultsdir);
 
 	if (_debug) {
 		// write out pyramid
@@ -318,6 +320,8 @@ void TextureSynthesis::Synthesize(const GaussianPyramid &rgbpyr, const GaussianP
 		}
 	}
 
+	WriteOutput(parameters, rgbpyr, exemplar, coordinates, 0, outputwidth, outputheight, pad);
+
 	/*delete [] neighbourhood;
 	delete [] transformedNeighbourhood;
 	delete [] coherentneighbourhood;
@@ -462,17 +466,6 @@ void TextureSynthesis::WriteImage(const GaussianPyramid &rgbpyr, const GaussianP
 	for (int row = 0; row < height; row++) { // image
 		for (int col = 0; col < width; col++) {
 
-			if (coordinates(row+pad,col+pad).x < 0 || coordinates(row+pad,col+pad).x >= (int)rgbpyr[level][0].pixelWeights.Cols()) {
-				int tx = coordinates(row,col).x;
-				int bound = rgbpyr[level][0].pixelWeights.Cols();
-				Console::WriteLine("xxx");
-			}
-			if (coordinates(row+pad,col+pad).y < 0 || coordinates(row+pad,col+pad).y >= (int)rgbpyr[level][0].pixelWeights.Rows()) {
-				int ty = coordinates(row,col).y;
-				int bound = rgbpyr[level][0].pixelWeights.Rows();
-				Console::WriteLine("yyy");
-			}
-
 			coordimage[row][col] = RGBColor(Vec3f(rgbpyr[level][0].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
 				rgbpyr[level][1].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
 				rgbpyr[level][2].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x)));
@@ -480,4 +473,39 @@ void TextureSynthesis::WriteImage(const GaussianPyramid &rgbpyr, const GaussianP
 	}
 	coordimage.SavePNG(_outdir + String("image-") + String(level) + String("_") + label + String(".png"));
 	Console::WriteLine(_outdir + String("image-") + String(level) + String("_") + label + String(".png"));
+}
+
+
+void TextureSynthesis::WriteOutput(const AppParameters &parameters, const GaussianPyramid &rgbpyr, const GaussianPyramid &exemplar,
+								   const Grid<Vec2i> &coordinates, int level, int width, int height, int pad)
+{
+	String filename = "output-";
+	String type = "";
+	if (parameters.texsyn_usergb) 
+		type += "rgb";
+	if (parameters.texsyn_uselayers) {
+		if (type.Length() == 0) type += "layers-" + String(parameters.texsyn_klayers);
+		else                    type += "-layers-" + String(parameters.texsyn_klayers);
+	}
+	if (parameters.texsyn_usedistancetransform) {
+		if (type.Length() == 0) type += "dist-" + String(parameters.texsyn_klayers);
+		else                    type += "-dist-" + String(parameters.texsyn_klayers);
+	}
+
+	filename += type + "_k-" + String(parameters.texsyn_kappa) + "_s-" + String(parameters.texsyn_initrandsize) + "_nr-" + String(parameters.texsyn_neighbourhoodsize) +
+		"_nl-" + String(parameters.texsyn_nlevels) + "_pca-" + String(parameters.texsyn_pcadim) + 
+		"_size-" + String(parameters.texsyn_outputwidth) + "-" + String(parameters.texsyn_outputheight) + ".png";
+
+	Console::WriteLine("Outputting to " + _resultsdir + filename);
+
+	Bitmap image(height, width);
+	for (int row = 0; row < height; row++) { // image
+		for (int col = 0; col < width; col++) {
+
+			image[row][col] = RGBColor(Vec3f(rgbpyr[level][0].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
+				rgbpyr[level][1].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
+				rgbpyr[level][2].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x)));
+		}
+	}
+	image.SavePNG(_resultsdir + filename);
 }

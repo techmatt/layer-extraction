@@ -114,5 +114,6 @@ texsyn_pcadim=32
 texsyn_usergb=true
 texsyn_uselayers=false
 texsyn_usedistancetransform=false
+texsyn_usergbdistance=false
 texsyn_klayers=4
 texsyn_initrandsize=8

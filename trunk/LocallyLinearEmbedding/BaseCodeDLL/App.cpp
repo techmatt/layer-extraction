@@ -18,29 +18,29 @@ void App::Init()
 	LayerSet layers;
 	if(_parameters.useKMeansPalette)
 	{
-		KMeansClustering<Vec3f, Vec3fKMeansMetric> clustering;
-		Vector<Vec3f> bmpColors;
+	KMeansClustering<Vec3f, Vec3fKMeansMetric> clustering;
+	Vector<Vec3f> bmpColors;
 
-		for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) bmpColors.PushEnd(Vec3f(bmp[y][x]));
-		bmpColors.Randomize();
+	for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) bmpColors.PushEnd(Vec3f(bmp[y][x]));
+	bmpColors.Randomize();
 
-		clustering.Cluster(bmpColors, _parameters.KMeansPaletteSize, 10000, true, 0.000001);
+	clustering.Cluster(bmpColors, _parameters.KMeansPaletteSize, 10000, true, 0.000001);
 
-		Vector<Vec3f> palette(_parameters.KMeansPaletteSize);
-		for(int i = 0; i < _parameters.KMeansPaletteSize; i++) palette[i] = clustering.ClusterCenter(i);
+	Vector<Vec3f> palette(_parameters.KMeansPaletteSize);
+	for(int i = 0; i < _parameters.KMeansPaletteSize; i++) palette[i] = clustering.ClusterCenter(i);
 
-		//palette.Sort([](const Vec3f &a, const Vec3f &b){ return a.LengthSq() < b.LengthSq(); });
-		palette.Sort([](const Vec3f &a, const Vec3f &b){ return a.y < b.y; });
+	//palette.Sort([](const Vec3f &a, const Vec3f &b){ return a.LengthSq() < b.LengthSq(); });
+	palette.Sort([](const Vec3f &a, const Vec3f &b){ return a.y < b.y; });
 
-		_extractor.InitLayersFromPalette(_parameters, bmp, palette, layers);
+	_extractor.InitLayersFromPalette(_parameters, bmp, palette, layers);
 	}
 	else
 	{
-		Bitmap mask;
-		mask.LoadPNG("../Data/" + _parameters.maskFile);
-		Vector<PixelConstraint> pixelColors;
-		Utility::AddMaskConstraints(bmp, mask, pixelColors);
-		_extractor.InitLayersFromPixelConstraints(_parameters, bmp, pixelColors, layers);
+	Bitmap mask;
+	mask.LoadPNG("../Data/" + _parameters.maskFile);
+	Vector<PixelConstraint> pixelColors;
+	Utility::AddMaskConstraints(bmp, mask, pixelColors);
+	_extractor.InitLayersFromPixelConstraints(_parameters, bmp, pixelColors, layers);
 	}
 
 	_extractor.ExtractLayers(_parameters, bmp, layers);
@@ -179,7 +179,7 @@ void App::ExtractVideoLayers()
     video.frames.Allocate(10);
     for (UINT frameIndex = 0; frameIndex < frameCount; frameIndex++)
     {
-        video.frames[frameIndex].LoadPNG("../Data/bigbuckbunny/bigbuckbunny_" + String::ZeroPad(frameIndex, 4) + ".png");
+        video.frames[frameIndex].LoadPNG("../Data/softboy/softboy_intro_1" + String::ZeroPad(frameIndex, 3) + ".png");
     }
 
     LayerSet layers;
@@ -195,6 +195,7 @@ void App::ExtractVideoLayers()
     }
     
     //layers.Dump("../Results/Layers.txt", videoExtractor.SuperpixelColors());
+	Console::WriteLine("Done!");
 }
 
 BCLayers* App::PixelLayersToBCLayers(const PixelLayerSet &pixellayers)
@@ -321,7 +322,7 @@ BCLayers* App::SynthesizeLayers()
 void App::SynthesizeTextureByLayers(const String &parameterFilename)
 {
 	if(parameterFilename.Length() > 0) _parameters.Init(parameterFilename);
-    else _parameters.Init("../Parameters.txt");
+	else _parameters.Init("../Parameters.txt");
 
 	int reducedDimension = _parameters.texsyn_pcadim;
 	int neighborhoodSize = _parameters.texsyn_neighbourhoodsize; // radius
@@ -431,10 +432,197 @@ void App::SynthesizeTextureByLayers(const String &parameterFilename)
 	synthesizer.Synthesize(input, rgblayers, _parameters, generator, order);
 }
 
+void App::DeleteLayer(const String &parameterFilename)
+{
+	_parameters.Init("../Parameters.txt");
+
+	const int klayers = 4;
+	const int idx = 2; // layer to delete
+	bool del = true;
+	String imagename = "whiteboard.png";
+	String imagelocation = "../TextureSynthesisExemplars/";
+	String cachedir = "../TexSynCache/";
+	String outdir = "./";
+
+	// read in image
+	Bitmap image;
+	image.LoadPNG(imagelocation + imagename);
+
+	image.SavePNG(outdir + "input.png");
+
+	// check if layers are cached
+	PixelLayerSet layers;
+	Vector<Vec3f> palette(klayers);
+	String cache = cachedir + imagename + "_";
+	String palettecache = cache + "kmeans-palette_k-" + String(klayers) + ".txt";
+	if (Utility::FileExists(palettecache)) { 
+		// load from file
+		Vector<String> lines = Utility::GetFileLines(palettecache);
+		for (int i = 0; i < klayers; i++) {
+			Vector<String> colourFields = lines[i].Partition('\t');
+			palette[i] = Vec3f(colourFields[0].ConvertToFloat(), colourFields[1].ConvertToFloat(), colourFields[2].ConvertToFloat());
+		}
+		for (int i = 0; i < klayers; i++) {
+			String layerfile = cache + "layers_k-" + String(klayers) + "_l-" + String(i) + ".txt";
+			layers.PushEnd(PixelLayer(layerfile));
+			layers[i].SavePNG(outdir + "layers_k-" + String(klayers) + "_l-" + String(i) + ".png");
+		}
+	}
+	else { // generate palette & layers
+		LayerSet superpixellayers;
+		KMeansClustering<Vec3f, Vec3fKMeansMetric> clustering;
+		Vector<Vec3f> bmpColors;
+
+		for(UINT y = 0; y < image.Height(); y++) for(UINT x = 0; x < image.Width(); x++) bmpColors.PushEnd(Vec3f(image[y][x]));
+		bmpColors.Randomize();
+
+		clustering.Cluster(bmpColors, klayers, 10000, true, 0.000001);
+
+		for(int i = 0; i < klayers; i++) palette[i] = clustering.ClusterCenter(i);
+		palette.Sort([](const Vec3f &a, const Vec3f &b){ return a.y < b.y; });
+
+		_extractor.Init(_parameters, image);
+		_extractor.InitLayersFromPalette(_parameters, image, palette, superpixellayers);
+		_extractor.ExtractLayers(_parameters, image, superpixellayers);
+		for (int i = 0; i < 4; i++) {
+			_extractor.AddNegativeConstraints(_parameters, image, superpixellayers);
+			_extractor.ExtractLayers(_parameters, image, superpixellayers);
+		}
+		layers = _extractor.GetPixelLayers(image, superpixellayers);
+
+		// cache palette
+		ofstream File(palettecache.CString());
+		PersistentAssert(!File.fail(), "Failed to open file");
+		for (int i = 0; i < klayers; i++)
+			File << palette[i].TabSeparatedString() << endl;
+		File.close();
+		// cache layers
+		for (int i = 0; i < klayers; i++) {
+			String layerfile = cache + "layers_k-" + String(klayers) + "_l-" + String(i) + ".txt";
+			layers[i].WriteToFile(layerfile);
+			layers[i].SavePNG(outdir + "layers_k-" + String(klayers) + "_l-" + String(i) + ".png");
+		}
+	}
+
+	// re-compose (debugging)
+	Bitmap debug(image.Width(), image.Height());
+	for (int y = 0; y < image.Height(); y++) {
+		for (int x = 0; x < image.Width(); x++) {
+			Vec3f v(0,0,0);
+			for (int k = 0; k < (int)layers.Length(); k++)
+				v += layers[k].color * (float)layers[k].pixelWeights(y,x);
+			debug[y][x] = RGBColor(v);
+		}
+	}
+	debug.SavePNG(outdir + "output-debug.png");
+
+	if (del) {
+		// erase layer
+		Bitmap output(image.Width(), image.Height());
+		for (int y = 0; y < image.Height(); y++) {
+			for (int x = 0; x < image.Width(); x++) {
+				Vec3f v(0,0,0);
+				for (int k = 0; k < (int)layers.Length(); k++)
+					v += layers[k].color * (float)layers[k].pixelWeights(y,x);
+				v -= layers[idx].color * (float)layers[idx].pixelWeights(y,x);
+				output[y][x] = RGBColor(v);
+			}
+		}
+		output.SavePNG(outdir + "output-erased.png");
+
+		// scale to 1 approach
+		float scale;
+		for (int y = 0; y < image.Height(); y++) {
+			for (int x = 0; x < image.Width(); x++) {
+				Vec3f v(0,0,0);
+				scale = 0;
+				for (int k = 0; k < klayers; k++) { 
+					v += layers[k].color * (float)layers[k].pixelWeights(y,x);
+					scale += (float) layers[k].pixelWeights(y,x);
+				}
+				v -= layers[idx].color * (float)layers[idx].pixelWeights(y,x);
+				scale -= (float) layers[idx].pixelWeights(y,x);
+				if (scale < FLT_EPSILON) scale = 1;
+				v /= scale;
+				output[y][x] = RGBColor(v);
+			}
+		}
+		output.SavePNG(outdir + "output-scaled.png");
+
+		PixelLayerSet nlayers;
+		Vector<Vec3f> npalette;
+		for (int k = 0; k < klayers; k++) {
+			if (k != idx)
+				npalette.PushEnd(palette[k]);
+		}
+		// check if layers are cached
+		bool cached = true;
+		for (int k = 0; k < klayers-1; k++) {
+			String layercache = cache + "nlayer-" + String(k) + "-of-" + String(klayers-1) + "_colour-" + 
+				String(npalette[k][0]) + "-" + String(npalette[k][1]) + "-" + String(npalette[k][2]) + ".txt";
+			if (Utility::FileExists(layercache)) {
+				nlayers.PushEnd(PixelLayer(layercache));
+				nlayers[k].SavePNG(outdir + "nlayer-" + String(k) + "-of-" + String(klayers-1) + "_colour-" + 
+					String(npalette[k][0]) + "-" + String(npalette[k][1]) + "-" + String(npalette[k][2]) + ".png");
+			}
+			else {
+				cached = false;
+				break;
+			}
+		}
+		if (!cached) {
+			nlayers.FreeMemory();
+			LayerSet superpixellayers;
+
+			_extractor.Init(_parameters, image);
+			_extractor.InitLayersFromPalette(_parameters, image, npalette, superpixellayers);
+			_extractor.ExtractLayers(_parameters, image, superpixellayers);
+			for (int i = 0; i < 4; i++) {
+				_extractor.AddNegativeConstraints(_parameters, image, superpixellayers);
+				_extractor.ExtractLayers(_parameters, image, superpixellayers);
+			}
+			nlayers = _extractor.GetPixelLayers(image, superpixellayers);
+
+			// cache layers
+			for (int k = 0; k < klayers-1; k++) {
+				String layercache = cache + "nlayer-" + String(k) + "-of-" + String(klayers-1) + "_colour-" + 
+					String(npalette[k][0]) + "-" + String(npalette[k][1]) + "-" + String(npalette[k][2]) + ".txt";
+				nlayers[k].WriteToFile(layercache);
+				nlayers[k].SavePNG(outdir + "nlayer-" + String(k) + "-of-" + String(klayers-1) + "_colour-" + 
+					String(npalette[k][0]) + "-" + String(npalette[k][1]) + "-" + String(npalette[k][2]) + ".png");
+			}
+		}
+		// scaling
+		Vector<float> scaled(klayers-1);
+		int i;
+		for (int y = 0; y < image.Height(); y++) {
+			for (int x = 0; x < image.Width(); x++) {
+				Vec3f v(0,0,0);
+				i = 0;
+				scale = 0;
+				for (int k = 0; k < klayers; k++) {
+					if (k != idx) {
+						scaled[i] = (float) layers[k].pixelWeights(y,x) * nlayers[i].pixelWeights(y,x);
+						scale += scaled[i];
+						i++;
+					}
+				}
+				if (scale < FLT_EPSILON) scale = 1;
+				for (int k = 0; k < klayers-1; k++) 
+					v += nlayers[k].color * scaled[k] / scale;
+				output[y][x] = RGBColor(v);
+			}
+		}
+		output.SavePNG(outdir + "output-scaled-2.png");
+	}
+
+	Console::WriteLine("Done!");
+}
+
 void App::SynthesizeTexture(const String &parameterFilename)
 {
 	if(parameterFilename.Length() > 0) _parameters.Init(parameterFilename);
-    else _parameters.Init("../Parameters.txt");
+	else _parameters.Init("../Parameters.txt");
 
 	TextureSynthesis synthesizer;
 
@@ -453,6 +641,15 @@ void App::SynthesizeTexture(const String &parameterFilename)
 	String outdir = synthesizer.CreateOutputDirectory(_parameters);
 	if (!Utility::FileExists(outdir))
 		Utility::MakeDirectory(outdir);
+
+	// results directory
+	String results_dir = "../TextureSynthesisResults/";
+	if (!Utility::FileExists(results_dir)) Utility::MakeDirectory(results_dir);
+	results_dir += _parameters.texsyn_exemplar + "/";
+	if (!Utility::FileExists(results_dir)) {
+		Utility::MakeDirectory(results_dir);
+		rgbimg.SavePNG(results_dir + String("exemplar.png"));
+	}
 
 	rgbimg.SavePNG(outdir + String("input.png"));
 
@@ -487,6 +684,15 @@ void App::SynthesizeTexture(const String &parameterFilename)
 	rgblayers.PushEnd(red);
 	rgblayers.PushEnd(green);
 	rgblayers.PushEnd(blue);
+	if (_parameters.texsyn_usergbdistance) {
+		for (int i = 0; i < rgblayers.Length(); i++) {
+			PixelLayer p;
+			p.color = rgblayers[i].color;
+			p.pixelWeights = DistanceTransform::Transform(rgblayers[i].pixelWeights);
+			p.SavePNG(outdir + "input-rgb-" + String(i) + "-dist_trans.png");
+			input.PushEnd(p);
+		}
+	}
 
 	// use layers from k-means colour selection
 	if (_parameters.texsyn_uselayers || _parameters.texsyn_usedistancetransform) {
@@ -576,14 +782,14 @@ void App::SynthesizeTexture(const String &parameterFilename)
 	GaussianPyramid pyramid(input, nlevels);
 	GaussianPyramid rgbpyr(rgblayers, nlevels); // for visualising synthesis
 	// synthesize
-	synthesizer.Init(_parameters, pyramid, generator, nlevels, reducedDimension);
+	synthesizer.Init(_parameters, results_dir, pyramid, generator, nlevels, reducedDimension);
 	synthesizer.Synthesize(rgbpyr, pyramid, _parameters, generator);
 }
 
 UINT32 App::ProcessCommand(const String &command)
 {
-    Vector<String> words = command.Partition(" ");
-    while(words.Length() < 5) words.PushEnd("");
+	Vector<String> words = command.Partition(" ");
+	while(words.Length() < 5) words.PushEnd("");
 
 	if (words[0] == "SynthesizeTexture") {
 		SynthesizeTexture(words[1]);
@@ -591,10 +797,13 @@ UINT32 App::ProcessCommand(const String &command)
 	else if (words[0] == "SynthesizeTextureByLayers") {
 		SynthesizeTextureByLayers(words[1]);
 	}
+	else if (words[0] == "deletelayer") {
+		DeleteLayer(words[1]);
+	}
     else if (words[0] == "ExtractVideoLayers") {
         ExtractVideoLayers();
     }
-    
+
 	return 0;
 }
 

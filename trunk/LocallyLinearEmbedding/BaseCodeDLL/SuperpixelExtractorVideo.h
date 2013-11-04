@@ -45,37 +45,54 @@ public:
     Vector<ColorCoordinateVideo> Extract(const AppParameters &parameters, const Video &video);
 };
 
-/*class SuperpixelExtractorVideoSuperpixel
+struct Superpixel3D
+{
+	void Reset(const Video &vid, const Vec3i &seed);
+
+	Vec3i MassCentroid() const;
+	double AssignmentError(const Video &vid, const Vec3i &coord) const;
+
+	__forceinline void AddCoord(const Vec3i &coord)
+	{
+		pixels.PushEnd(coord);
+	}
+	void ResetColor( const RGBColor &_color );
+	void ComputeColor( const Video &vid );
+
+	Vec3f color;
+	Vector<Vec3i> pixels;
+	Vec3i seed;
+};
+
+class SuperpixelExtractorVideoSuperpixel
 {
 public:
     struct QueueEntry
     {
         double priority;
-        Vec2i coord;
+        Vec3i coord;
         UINT superpixelIndex;
     };
 
-    Vector<ColorCoordinate> Extract(const AppParameters &parameters, const Bitmap &bmp);
-    void Extract(const AppParameters &parameters, const Bitmap &bmp, UINT paletteCount, Vector<Superpixel> &superpixelsOut, Grid<UINT> &assignmentsOut);
+    Vector<ColorCoordinateVideo> Extract(const AppParameters &parameters, const Video &vid);
+    void Extract(const AppParameters &parameters, const Video &vid, Vector<Superpixel3D> &superpixelsOut, Vector< Grid<UINT> > &assignmentsOut);
 
 private:
-    void InitializeSuperpixels(const AppParameters &parameters, const Bitmap &bmp);
-    void AssignPixel(const AppParameters &parameters, const Bitmap &bmp, const Vec2i &coord, UINT clusterIndex);
-    void GrowSuperpixels(const AppParameters &parameters, const Bitmap &bmp);
-    void RecenterSuperpixels(const AppParameters &parameters, const Bitmap &bmp);
+    void InitializeSuperpixels(const AppParameters &parameters, const Video &vid);
+    void AssignPixel(const AppParameters &parameters, const Video &vid, const Vec3i &coord, UINT clusterIndex);
+    void GrowSuperpixels(const AppParameters &parameters, const Video &vid);
+    void RecenterSuperpixels(const AppParameters &parameters, const Video &vid);
     
-    static void DrawSuperpixelIDs(const Grid<UINT> &superpixelIDs, Bitmap &bmp);
-    void DrawSuperpixelColors(const Bitmap &inputBmp, Bitmap &outputBmp);
+    static void DrawSuperpixelIDs(const Vector< Grid<UINT> > &superpixelIDs, Video &vid, int startframeid, int nframes);
+    void DrawSuperpixelColors(const Video &inputVid, Video &outputVid, int startframeid, int nframes);
 
-    Vector<Superpixel> _superpixels;
+    Vector<Superpixel3D> _superpixels;
     priority_queue<QueueEntry> _queue;
-    Grid<UINT> _assignments;
-    Vec2i _dimensions;
-    UINT _paletteCount;
+    Vector< Grid<UINT> > _assignments;
+    Vec3i _dimensions;
 };
 
-__forceinline bool operator < (const SuperpixelExtractorSuperpixel::QueueEntry &a, const SuperpixelExtractorSuperpixel::QueueEntry &b)
+__forceinline bool operator < (const SuperpixelExtractorVideoSuperpixel::QueueEntry &a, const SuperpixelExtractorVideoSuperpixel::QueueEntry &b)
 {
     return (a.priority < b.priority);
 }
-*/

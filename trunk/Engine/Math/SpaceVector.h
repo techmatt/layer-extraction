@@ -185,6 +185,15 @@ struct Vec3i
     __forceinline Vec3i& operator += (const Vec3i &Right);
     __forceinline Vec3i& operator -= (const Vec3i &Right);
 
+	__forceinline float& operator[](UINT Index)
+	{
+		return ((float *)this)[Index];
+	}
+	__forceinline float operator[](UINT Index) const
+	{
+		return ((float *)this)[Index];
+	}
+
     //
     // Accessors
     //
@@ -230,6 +239,7 @@ struct Vec3f
     __forceinline Vec3f(const Vec2f &V, float _z);
     __forceinline Vec3f(float _x, float _y, float _z);
     __forceinline explicit Vec3f(RGBColor c);
+	__forceinline explicit Vec3f(const Vec3i &V);
 
     //
     // Assignment
