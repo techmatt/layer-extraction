@@ -81,7 +81,7 @@ public:
     //
     // Helper functions
     //
-    UINT TotalElements();
+    UINT TotalElements() const;
     bool Square() const;
     bool Symmetric() const;
     SparseMatrix<T> Transpose() const;
