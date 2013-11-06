@@ -906,6 +906,14 @@ const char* App::QueryStringByName(const String &s)
 
 void App::OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename)
 {	
+	Console::WriteLine("Extracting mesh to "+filename);
+	/*ifstream File(filename.CString());
+	if (File)
+	{
+		Console::WriteLine("File already exists");
+		return;
+	}*/
+
 	Bitmap bmp;
 	bmp.Allocate(bcbmp.width, bcbmp.height);
 	for (UINT x=0; x<bcbmp.width; x++)
@@ -918,6 +926,8 @@ void App::OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, co
 	}
 
 	PixelLayerSet layers = ExtractLayers(bmp, palette, "", false);
+	Console::WriteLine("Extracting mesh");
 	LayerMesh mesh(layers);
+	Console::WriteLine("Saving mesh");
 	mesh.SaveToFile(filename);
 }

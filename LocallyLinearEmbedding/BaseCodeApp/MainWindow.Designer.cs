@@ -57,6 +57,7 @@
             this.textureByLayerButton = new System.Windows.Forms.Button();
             this.getRecoloringsButton = new System.Windows.Forms.Button();
             this.outputMeshes = new System.Windows.Forms.Button();
+            this.trainModelButton = new System.Windows.Forms.Button();
             this.buttonVideo = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
@@ -325,6 +326,7 @@
             this.getRecoloringsButton.TabIndex = 25;
             this.getRecoloringsButton.Text = "Get Recolorings";
             this.getRecoloringsButton.UseVisualStyleBackColor = true;
+            this.getRecoloringsButton.Click += new System.EventHandler(this.getRecoloringsButton_Click);
             // 
             // outputMeshes
             // 
@@ -335,6 +337,16 @@
             this.outputMeshes.Text = "Output Training Meshes";
             this.outputMeshes.UseVisualStyleBackColor = true;
             this.outputMeshes.Click += new System.EventHandler(this.outputMeshes_Click);
+            // 
+            // trainModelButton
+            // 
+            this.trainModelButton.Location = new System.Drawing.Point(431, 755);
+            this.trainModelButton.Name = "trainModelButton";
+            this.trainModelButton.Size = new System.Drawing.Size(126, 38);
+            this.trainModelButton.TabIndex = 27;
+            this.trainModelButton.Text = "Train";
+            this.trainModelButton.UseVisualStyleBackColor = true;
+            this.trainModelButton.Click += new System.EventHandler(this.trainModelButton_Click);
             // 
             // buttonVideo
             // 
@@ -352,6 +364,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1328, 800);
+            this.Controls.Add(this.trainModelButton);
             this.Controls.Add(this.outputMeshes);
             this.Controls.Add(this.getRecoloringsButton);
             this.Controls.Add(this.buttonVideo);
@@ -426,6 +439,7 @@
         private System.Windows.Forms.Button textureByLayerButton;
         private System.Windows.Forms.Button getRecoloringsButton;
         private System.Windows.Forms.Button outputMeshes;
+        private System.Windows.Forms.Button trainModelButton;
         private System.Windows.Forms.Button buttonVideo;
     }
 }
