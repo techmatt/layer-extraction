@@ -233,3 +233,9 @@ void PCA<T>::LoadFromFile(const String &filename)
     stream.LoadFromFile(filename);
     stream >> _Means >> _Eigenvalues >> _Eigenvectors;
 }
+
+template<class T>
+T PCA<T>::GetEigenvalue(UINT Dimension)
+{
+	return _Eigenvalues[Dimension];
+}
