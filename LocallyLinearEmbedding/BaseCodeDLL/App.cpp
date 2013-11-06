@@ -175,11 +175,13 @@ void App::ExtractVideoLayers()
 
     Video video;
 
-    const UINT frameCount = 10;
-    video.frames.Allocate(10);
-    for (UINT frameIndex = 0; frameIndex < frameCount; frameIndex++)
+    const UINT frameCount = 100;
+    for (UINT frameIndex = 0; frameIndex < frameCount; frameIndex += 3)
     {
-        video.frames[frameIndex].LoadPNG("../Data/softboy/softboy_intro_1" + String::ZeroPad(frameIndex, 3) + ".png");
+        Bitmap bmp;
+        //bmp.LoadPNG("../Data/softboy/softboy_intro_1" + String::ZeroPad(frameIndex, 3) + ".png");
+        bmp.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_" + String::ZeroPad(frameIndex, 4) + ".png");
+        video.frames.PushEnd(bmp);
     }
 
     LayerSet layers;
@@ -193,9 +195,23 @@ void App::ExtractVideoLayers()
         videoExtractor.ExtractLayers(_parameters, video, layers);
         videoExtractor.AddNegativeConstraints(_parameters, video, layers);
     }
-    
+
     //layers.Dump("../Results/Layers.txt", videoExtractor.SuperpixelColors());
-	Console::WriteLine("Done!");
+
+    Utility::MakeDirectory("../Results/VideoLayers/");
+
+    for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+    {
+        String layerDirectory = "../Results/VideoLayers/Layer" + String(layerIndex); 
+        Utility::MakeDirectory(layerDirectory);
+        for(UINT frameIndex = 0; frameIndex < video.frames.Length(); frameIndex++)
+        {
+            Bitmap bmp = videoExtractor.VisualizeLayer(_parameters, video, frameIndex, layerIndex, layers);
+            bmp.SavePNG(layerDirectory + "/f" + String::ZeroPad(frameIndex, 4) + ".png");
+        }
+    }
+
+    Console::WriteLine("Done extracting video layers");
 }
 
 BCLayers* App::PixelLayersToBCLayers(const PixelLayerSet &pixellayers)
