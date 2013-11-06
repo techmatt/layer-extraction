@@ -23,12 +23,18 @@ superpixelNeighborCount=30
 useKMeansPalette=true
 KMeansPaletteSize=7
 manifoldWeight=1
-pixelConstraintWeight=0
+#manifoldWeight=0
+pixelConstraintWeight=0.01
+#pixelConstraintWeight=0
 sumToOneWeight=0.1
 reconstructionWeight=0.5
-midpointWeight=0
+#reconstructionWeight=0
+#midpointWeight=0.0000001;
+midpointWeight=0;
 regularizationWeight=0
 negativeSupressionWeight=0.01
+#negativeSupressionWeight=0
+#preferenceWeight = 0.1
 preferenceWeight = 0
 
 #
@@ -114,6 +120,5 @@ texsyn_pcadim=32
 texsyn_usergb=true
 texsyn_uselayers=false
 texsyn_usedistancetransform=false
-texsyn_usergbdistance=false
 texsyn_klayers=4
 texsyn_initrandsize=8

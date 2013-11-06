@@ -1350,11 +1350,74 @@ namespace BaseCodeApp
             return plist;
         }
 
+        private void OutputMesh(String filename)
+        {
+            //save the mesh
+            PaletteData data;
+            int pmethod = paletteMethodBox.SelectedIndex;
+
+            if (currPalette.colors.Count() == 0)
+            {
+                ExtractPalette(pmethod);
+                data = currPalette;
+            }
+            else
+            {
+                currPalette = new PaletteData();
+                currPalette.colors = this.palette.Select(c => c.BackColor).ToList<Color>();
+                currPalette.lab = this.palette.Select(c => Util.RGBtoLAB(c.BackColor)).ToList<CIELAB>();
+                data = currPalette;
+            }
+
+            //read and process the file
+            Bitmap bmp = new Bitmap(currImageFile);
+            List<Color> bmpData = Util.BitmapTo1DArray(bmp).ToList<Color>();
+
+            double[] palette = new double[data.colors.Count * 3];
+            for (int i = 0; i < data.colors.Count; i++)
+            {
+                Color color = data.colors[i];
+                palette[3 * i] = color.R / 255.0;
+                palette[3 * i + 1] = color.G / 255.0;
+                palette[3 * i + 2] = color.B / 255.0;
+            }
+            IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
+
+            //for now, pass in RGB format
+            byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
+            for (int idx = 0; idx < bmpData.Count; idx++)
+            {
+                Color color = bmpData[idx];
+                rgbData[3 * idx] = (byte)color.R;
+                rgbData[3 * idx + 1] = (byte)color.G;
+                rgbData[3 * idx + 2] = (byte)color.B;
+            }
+
+            BCBitmapInfo bmpInfo = new BCBitmapInfo();
+            bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
+            bmpInfo.width = bmp.Width;
+            bmpInfo.height = bmp.Height;
+
+            try
+            {
+                Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
+                Marshal.Copy(palette, 0, palettePtr, palette.Length);
+            }
+            finally
+            {
+            }
+
+            BCOutputMesh(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, filename);
+            Marshal.FreeHGlobal(bmpInfo.colorData);
+            Marshal.FreeHGlobal(palettePtr);
+
+        }
+
         private void outputMeshes_Click(object sender, EventArgs e)
         {
             //Hardcoded directory for now
             String directory = "../Training/CLdata";
-            String paletteFile = "../Training/template.csv";
+            String paletteFile = "../Training/templates.csv";
             String outDir = "../Training/CLmeshes";
 
             Dictionary<String, PaletteData> palettes = LoadFilePalettes(paletteFile);
@@ -1363,59 +1426,200 @@ namespace BaseCodeApp
             foreach (String dir in subdirs)
             {
                 String outSubDir = Path.Combine(outDir, new DirectoryInfo(dir).Name);
+                Directory.CreateDirectory(outSubDir);
                 String[] files = Directory.GetFiles(dir);
                 foreach (String file in files)
                 {
-                    String baseName = new FileInfo(file).Name;
-                    String outFile = Path.Combine(outSubDir, Util.ConvertFileName(baseName,"",".txt"));
-
-                    //read and process the file
-                    Bitmap bmp = new Bitmap(file);
-                    List<Color> bmpData = Util.BitmapTo1DArray(bmp).ToList<Color>();
-
-                    PaletteData data = palettes[baseName];
-
-                    double[] palette = new double[data.colors.Count * 3];
-                    for (int i = 0; i < data.colors.Count; i++)
-                    {
-                        Color color = data.colors[i];
-                        palette[3 * i] = color.R / 255.0;
-                        palette[3 * i + 1] = color.G / 255.0;
-                        palette[3 * i + 2] = color.B / 255.0;
-                    }
-                    IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
-
-                    //for now, pass in RGB format
-                    byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
-                    for (int idx = 0; idx < bmpData.Count; idx++)
-                    {
-                        Color color = bmpData[idx];
-                        rgbData[3 * idx] = (byte)color.R;
-                        rgbData[3 * idx + 1] = (byte)color.G;
-                        rgbData[3 * idx + 2] = (byte)color.B;
-                    }
-
-                    BCBitmapInfo bmpInfo = new BCBitmapInfo();
-                    bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
-                    bmpInfo.width = bmp.Width;
-                    bmpInfo.height = bmp.Height;
-
                     try
                     {
-                        Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
-                        Marshal.Copy(palette, 0, palettePtr, palette.Length);
-                    }
-                    finally
-                    {
-                    }
+                        Console.WriteLine("Handling "+file);
+                        String baseName = new FileInfo(file).Name;
+                        String outFile = Path.Combine(outSubDir, Util.ConvertFileName(baseName, "", ".txt"));
 
-                    BCOutputMesh(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, outFile);
-                    Marshal.FreeHGlobal(bmpInfo.colorData);
-                    Marshal.FreeHGlobal(palettePtr);
+                        //read and process the file
+                        Bitmap bmp = new Bitmap(file);
+                        List<Color> bmpData = Util.BitmapTo1DArray(bmp).ToList<Color>();
+
+                        PaletteData data = palettes[baseName];
+
+                        double[] palette = new double[data.colors.Count * 3];
+                        for (int i = 0; i < data.colors.Count; i++)
+                        {
+                            Color color = data.colors[i];
+                            palette[3 * i] = color.R / 255.0;
+                            palette[3 * i + 1] = color.G / 255.0;
+                            palette[3 * i + 2] = color.B / 255.0;
+                        }
+                        IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
+
+                        //for now, pass in RGB format
+                        byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
+                        for (int idx = 0; idx < bmpData.Count; idx++)
+                        {
+                            Color color = bmpData[idx];
+                            rgbData[3 * idx] = (byte)color.R;
+                            rgbData[3 * idx + 1] = (byte)color.G;
+                            rgbData[3 * idx + 2] = (byte)color.B;
+                        }
+                        Console.WriteLine("Allocating");
+                        BCBitmapInfo bmpInfo = new BCBitmapInfo();
+                        bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
+                        bmpInfo.width = bmp.Width;
+                        bmpInfo.height = bmp.Height;
+
+                        try
+                        {
+                            Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
+                            Marshal.Copy(palette, 0, palettePtr, palette.Length);
+                        }
+                        catch (Exception t)
+                        {
+                            Console.WriteLine(t.StackTrace);
+                            Console.WriteLine(t.Message);
+                        }
+                        finally
+                        {
+                        }
+                        Console.WriteLine("Outputting Mesh");
+                        BCOutputMesh(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, outFile);
+                        Console.WriteLine("Freeing");
+                        Marshal.FreeHGlobal(bmpInfo.colorData);
+                        Marshal.FreeHGlobal(palettePtr);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.StackTrace);
+                        Console.WriteLine(ex.Message);
+                    }
 
                 }
             }
 
+        }
+
+        private void getRecoloringsButton_Click(object sender, EventArgs e)
+        {
+            //first extract layers
+            int method = paletteMethodBox.SelectedIndex;
+            int layerMethod = layerMethodBox.SelectedIndex;
+            ColorSpace space = (colorSpaceBox.SelectedIndex == 0) ? ColorSpace.RGB : ColorSpace.LAB;
+            ExtractLayers(method, layerMethod, space);
+            UpdatePaletteDisplay();
+
+            //first save the mesh
+            OutputMesh("../Training/Models/mesh.txt");
+
+            String exeDir = new DirectoryInfo("../Training/Models").FullName.Replace("\\","/");
+            String jar = "colorinference.SuggestApp";
+            Console.WriteLine("Starting " + jar);
+
+            Console.WriteLine("Outputting suggestions");
+
+            String dependencies = "-Djava.library.path=\"" +"."+";"+"dependencies" + "\"";
+            String classPath = "-classpath \"" +"*.jar;" + "dependencies/*.jar" + ";" + "dependencies/*.dll"+ "\"";
+
+            ProcessStartInfo info = new ProcessStartInfo();
+            info.FileName = "\"C:/Program Files (x86)/scala/bin/scala.bat\"";
+            info.WorkingDirectory = exeDir;
+
+            info.Arguments = dependencies+" "+classPath+" "+jar+" suggest mesh.txt AlineDam 10 -lightness";
+            info.UseShellExecute = false;
+            info.RedirectStandardOutput = true;
+            info.RedirectStandardError = true;
+            info.CreateNoWindow = true;
+
+            Console.WriteLine(info.FileName);
+            Console.WriteLine(info.Arguments);
+            File.WriteAllLines("test.txt", new String[] {info.FileName, info.Arguments});
+
+            Process process = new Process();
+            process.StartInfo = info;
+            process.Start();
+
+            String basename = new FileInfo(currImageFile).Name;
+            int count = 0;
+            while (!process.StandardError.EndOfStream)
+            {
+                String line = process.StandardError.ReadLine();
+                Console.WriteLine(line);
+            }
+
+            bool start = false;
+            while (!process.StandardOutput.EndOfStream)
+            {
+                string line = process.StandardOutput.ReadLine();
+                if (line.StartsWith("Response"))
+                {
+                    start = true;
+                    continue;
+                }
+
+                if (!start)
+                    continue;
+
+                Console.WriteLine("Processing suggestion " + count);
+
+                // do something with line
+                Console.WriteLine(line);
+
+                String[] hexCodes = line.Split(',');
+                List<DenseVector> colors = hexCodes.Select(h => ColorTranslator.FromHtml(h)).Select(c => new DenseVector(new double[]{c.R, c.G, c.B})).ToList<DenseVector>();
+
+                // recolor the image
+                Bitmap recoloring = Recolor(this.layers, colors, ColorSpace.RGB);
+
+                recoloring.Save(Path.Combine("../ColorSuggestions/", Util.ConvertFileName(basename, "_"+count)));
+                count++;
+            }
+            Bitmap orig = new Bitmap(currImageFile);
+            orig.Save(Path.Combine("../ColorSuggestions/", basename));
+
+            Console.WriteLine("Done");
+        }
+
+        private void trainModelButton_Click(object sender, EventArgs e)
+        {
+            String exeDir = new DirectoryInfo("../Training/Models").FullName.Replace("\\", "/");
+            String jar = "colorinference.SuggestApp";
+            Console.WriteLine("Starting " + jar);
+
+            Console.WriteLine("Outputting suggestions");
+
+            String dependencies = "-Djava.library.path=\"" + "." + ";" + "dependencies" + "\"";
+            String classPath = "-classpath \"" + "*.jar;" + "dependencies/*.jar" + ";" + "dependencies/*.dll" + "\"";
+
+            ProcessStartInfo info = new ProcessStartInfo();
+            info.FileName = "\"C:/Program Files (x86)/scala/bin/scala.bat\"";
+            info.WorkingDirectory = exeDir;
+
+            info.Arguments = dependencies + " " + classPath + " " + jar + " train ../CLmeshes/AlineDam AlineDam";
+            info.UseShellExecute = false;
+            info.RedirectStandardOutput = true;
+            info.RedirectStandardError = true;
+            info.CreateNoWindow = true;
+
+            Console.WriteLine(info.FileName);
+            Console.WriteLine(info.Arguments);
+            File.WriteAllLines("test.txt", new String[] { info.FileName, info.Arguments });
+
+            Process process = new Process();
+            process.StartInfo = info;
+            process.Start();
+
+        
+            while (!process.StandardOutput.EndOfStream)
+            {
+                string line = process.StandardOutput.ReadLine();
+                Console.WriteLine(line);
+            }
+            while (!process.StandardError.EndOfStream)
+            {
+                String line = process.StandardError.ReadLine();
+                Console.WriteLine(line);
+            }
+
+
+            Console.WriteLine("Done");
         }
 
         private void buttonVideo_Click(object sender, EventArgs e)

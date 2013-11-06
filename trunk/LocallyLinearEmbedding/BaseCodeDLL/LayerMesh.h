@@ -7,6 +7,8 @@ public:
 	LayerMesh(const PixelLayerSet &layers);
 	~LayerMesh(void);
 
+	void VisualizeContrast();
+
 	struct Segment
 	{
 		Dictionary<String, Vector<double>> features;
@@ -28,7 +30,7 @@ public:
 	String StringJoin(Vector<T> vector, String separator)
 	{
 		String result = "";
-		result += vector.First();
+		result += String(vector.First());
 		for (int i=1; i<vector.Length(); i++)
 			result += (separator + String(vector[i]));
 		return result;
@@ -37,6 +39,8 @@ public:
 private:
 	Vector<Segment> segments;
 	Vector<SegmentGroup> groups;
+	PixelLayerSet _layers;
+	PixelLayerSet _blurredLayers;
 
 
 };

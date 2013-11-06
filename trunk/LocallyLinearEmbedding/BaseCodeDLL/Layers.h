@@ -127,6 +127,16 @@ struct PixelLayer
 		return mean;
 	}
 
+	double TotalNonNegativeWeight() const
+	{
+		double sum = 0;
+		for (UINT r=0; r<pixelWeights.Rows(); r++)
+			for (UINT c=0; c<pixelWeights.Cols(); c++)
+				if (pixelWeights(r,c) >= 0)
+					sum += pixelWeights(r,c);
+		return sum;
+	}
+
 	double WeightVariance() const
 	{
 		double variance = 0;
