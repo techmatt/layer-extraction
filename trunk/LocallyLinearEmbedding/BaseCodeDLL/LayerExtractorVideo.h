@@ -10,6 +10,8 @@ public:
     Bitmap RecolorSuperpixels(const Video &video, UINT frameIndex, const Vector<Vec3f> &newSuperpixelColors) const;
     Bitmap RecolorLayers(const Video &video, UINT frameIndex, const LayerSet &layers, const Vector<RGBColor> &newLayerColors) const;
 
+    Bitmap VisualizeLayer(const AppParameters &parameters, const Video &video, UINT frameIndex, UINT layerIndex, const LayerSet &layers) const;
+
 	const Vector<ColorCoordinateVideo>& SuperpixelColors() const
     {
         return superpixelColors;

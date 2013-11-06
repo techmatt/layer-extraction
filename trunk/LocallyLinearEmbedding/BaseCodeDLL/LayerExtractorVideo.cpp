@@ -601,3 +601,19 @@ void LayerExtractorVideo::VisualizeLayers(const AppParameters &parameters, const
         smoothBmp.SavePNG("../Results/LayerS" + String(layerIndex) + "_P" + String(pass) + ".png");
     }
 }
+
+Bitmap LayerExtractorVideo::VisualizeLayer( const AppParameters &parameters, const Video &video, UINT frameIndex, UINT layerIndex, const LayerSet &layers ) const
+{
+    const Layer &curLayer = layers.layers[layerIndex];
+
+    const UINT superpixelCount = superpixelColors.Length();
+    Vector<Vec3f> newColors(superpixelCount);
+    for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+    {
+        newColors[superpixelIndex] = Vec3f(RGBColor::Interpolate(RGBColor::Black, RGBColor::White, (float)curLayer.superpixelWeights[superpixelIndex]));
+    }
+
+    Bitmap bmp = RecolorSuperpixels(video, frameIndex, newColors);
+    for(UINT y = 0; y < video.Height(); y++) for(UINT x = 0; x < 10; x++) bmp[y][x] = RGBColor(curLayer.color);
+    return bmp;
+}

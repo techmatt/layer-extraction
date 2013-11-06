@@ -3,7 +3,7 @@
 Vector<Vec3f> Video::ComputePaletteKMeans(UINT paletteSize) const
 {
 	Vector<Vec3f> colors;
-	for(UINT sample = 0; sample < 512 * 512; sample++)
+	for(UINT sample = 0; sample < 1024 * 1024; sample++)
 	{
 		colors.PushEnd(Vec3f(frames.RandomElement()[rand() % Height()][rand() % Width()]));
 	}
