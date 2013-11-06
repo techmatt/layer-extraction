@@ -18,6 +18,9 @@ public:
     void Transform(T *Result, const T *Input, UINT ReducedDimension);
 	void InverseTransform(T *Result, const T *Input, UINT ReducedDimension);
 
+	T GetEigenvalue(UINT Dimension);
+
+
 private:
     void InitFromCorrelationMatrix(const DenseMatrix<T> &M);
     void FinalizeFromEigenSystem();
