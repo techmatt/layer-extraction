@@ -19,6 +19,25 @@ Vector<Vec3f> Video::ComputePaletteKMeans(UINT paletteSize) const
 	return result;
 }
 
+Vector<Vec3f> Video::ComputeFrame0Palette( const String &filename ) const
+{
+    Bitmap bmp;
+    bmp.LoadPNG(filename);
+
+    Vector<Vec3f> result;
+    for(int y = 0; y < bmp.Height(); y++)
+        for(int x = 0; x < bmp.Width(); x++)
+        {
+            if(bmp[y][x] != frames[0][y][x])
+            {
+                result.PushEnd(Vec3f(frames[0][y][x]));
+            }
+        }
+
+    Console::WriteLine("User-selected palette: " + String(result.Length()));
+    return result;
+}
+
 Vector<ColorCoordinateVideo> SuperpixelExtractorVideoPeriodic::Extract(const AppParameters &parameters, const Video &video)
 {
 	Vector<ColorCoordinateVideo> result;

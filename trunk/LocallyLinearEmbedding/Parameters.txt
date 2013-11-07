@@ -6,7 +6,7 @@ maskFile=angelSkyMaskB.png
 # Superpixel terms
 #
 superpixelIterations=5
-superpixelCount=2000
+superpixelCount=5000
 
 #
 # Locally-linear embedding constants
@@ -118,6 +118,7 @@ texsyn_kappa=5
 texsyn_usepca=true
 texsyn_pcadim=32
 texsyn_usergb=true
+texsyn_usergbdistance=false
 texsyn_uselayers=false
 texsyn_usedistancetransform=false
 texsyn_klayers=4

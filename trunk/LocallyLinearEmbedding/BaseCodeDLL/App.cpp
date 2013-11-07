@@ -175,12 +175,13 @@ void App::ExtractVideoLayers()
 
     Video video;
 
-    const UINT frameCount = 100;
-    for (UINT frameIndex = 0; frameIndex < frameCount; frameIndex += 3)
+    const UINT frameCount = 23;
+    for (UINT frameIndex = 0; frameIndex < frameCount; frameIndex++)
     {
         Bitmap bmp;
         //bmp.LoadPNG("../Data/softboy/softboy_intro_1" + String::ZeroPad(frameIndex, 3) + ".png");
-        bmp.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_" + String::ZeroPad(frameIndex, 4) + ".png");
+        //bmp.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_" + String::ZeroPad(frameIndex, 4) + ".png");
+        bmp.LoadPNG("../Data/sintel-5/sintel-5_" + String::ZeroPad(frameIndex, 2) + ".png");
         video.frames.PushEnd(bmp);
     }
 
@@ -188,7 +189,9 @@ void App::ExtractVideoLayers()
     LayerExtractorVideo videoExtractor;
     videoExtractor.Init(_parameters, video);
 
-    videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputePaletteKMeans(6), layers);
+    //videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputePaletteKMeans(6), layers);
+    videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputeFrame0Palette("../Data/sintel-5/sintel-5_00_palette.png"), layers);
+    //videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputeFrame0Palette("../Data/bigbuckbunny/bigbuckbunny_0000_palette.png"), layers);
 
     for(UINT negativeSuppressionIndex = 0; negativeSuppressionIndex < 4; negativeSuppressionIndex++)
     {

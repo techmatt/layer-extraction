@@ -64,10 +64,63 @@ void LayerExtractorVideo::InitLayersFromPalette(const AppParameters &parameters,
     const UINT superpixelCount = superpixelColors.Length();
     result.layers.Allocate(layerCount);
 
+    const double distScale = 1.0 / Math::Max(video.Width(), video.Height());
+
+    unordered_set<const ColorCoordinateVideo*> constrainedSuperpixels;
     for(UINT layerIndex = 0; layerIndex < layerCount; layerIndex++)
     {
         Layer &curLayer = result.layers[layerIndex];
         curLayer.color = palette[layerIndex];
+
+        Vector<UINT> superpixelsToConstrain;
+
+        const UINT bestSuperpixel = superpixelColors.MinIndex(
+            [&curLayer](const ColorCoordinateVideo &c)
+        {
+            return Vec3f::Dist(Vec3f(c.color), curLayer.color);
+        });
+        superpixelsToConstrain.PushEnd(bestSuperpixel);
+        constrainedSuperpixels.insert(&superpixelColors[bestSuperpixel]);
+
+        bool done = false;
+        while(!done)
+        {
+            const auto &colors = superpixelColors;
+            auto valueFunction = [&superpixelsToConstrain,&constrainedSuperpixels,&colors,&curLayer,distScale](const ColorCoordinateVideo &c)
+            {
+                const double similarityThreshold = 0.03;
+                const double minDistThreshold = 0.2;
+
+                if(constrainedSuperpixels.count(&c) == 1) return 1.0;
+
+                for(int i : superpixelsToConstrain)
+                {
+                    if(Vec2i::Dist(colors[i].coord, c.coord) * distScale < minDistThreshold) return 1.0;
+                }
+
+                double dist = Vec3f::Dist(Vec3f(c.color), curLayer.color);
+                if(dist > similarityThreshold) return 1.0;
+                return dist;
+            };
+
+            const UINT bestSuperpixel = superpixelColors.MinIndex(valueFunction);
+            if(valueFunction(superpixelColors[bestSuperpixel]) < 1.0)
+            {
+                superpixelsToConstrain.PushEnd(bestSuperpixel);
+                constrainedSuperpixels.insert(&superpixelColors[bestSuperpixel]);
+            } else done = true;
+        }
+
+        Console::WriteLine("Layer " + String(layerIndex) + " constraints: " + String(superpixelsToConstrain.Length()));
+        for(int i : superpixelsToConstrain)
+        {
+            for(UINT layerIndexInner = 0; layerIndexInner < layerCount; layerIndexInner++)
+            {
+                double targetValue = 0.0;
+                if(layerIndex == layerIndexInner) targetValue = 1.0;
+                result.constraints[key].PushEnd(SuperpixelLayerConstraint(i, layerIndexInner, targetValue, parameters.pixelConstraintWeight));
+            }
+        }
     }
 
     VisualizeLayerConstraints(parameters, video, 0, result);
