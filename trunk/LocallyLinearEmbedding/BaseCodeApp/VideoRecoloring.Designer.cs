@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.previewBox = new System.Windows.Forms.PictureBox();
             this.videoBox = new System.Windows.Forms.PictureBox();
             this.palettePanel = new System.Windows.Forms.Panel();
@@ -37,6 +38,7 @@
             this.fpsLabel = new System.Windows.Forms.Label();
             this.KBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.timerVideoFrame = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.previewBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.videoBox)).BeginInit();
             this.SuspendLayout();
@@ -123,6 +125,11 @@
             this.label1.TabIndex = 7;
             this.label1.Text = "K =";
             // 
+            // timerVideoFrame
+            // 
+            this.timerVideoFrame.Enabled = true;
+            this.timerVideoFrame.Tick += new System.EventHandler(this.timerVideoFrame_Tick);
+            // 
             // VideoRecoloring
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -157,5 +164,6 @@
         private System.Windows.Forms.Label fpsLabel;
         private System.Windows.Forms.TextBox KBox;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Timer timerVideoFrame;
     }
 }

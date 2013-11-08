@@ -20,8 +20,11 @@ namespace BaseCodeApp
         private PaletteCache paletteCache = new PaletteCache("../VideoCache/");
         private List<Color> currPalette = new List<Color>();
 
-        public VideoRecoloring()
+        DLLInterface DLL;
+
+        public VideoRecoloring(DLLInterface _DLL)
         {
+            DLL = _DLL;
             InitializeComponent();
         }
 
@@ -64,6 +67,11 @@ namespace BaseCodeApp
             previewBox.Image = new Bitmap(100, 100);
             //pictureBoxOriginal.Image = new Bitmap(100, 100);
             //layers = new Layers();
+        }
+
+        private void timerVideoFrame_Tick(object sender, EventArgs e)
+        {
+            videoBox.Image = (Image)DLL.GetBitmap("videoFrame");
         }
     }
 }

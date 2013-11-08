@@ -1150,7 +1150,7 @@ namespace BaseCodeApp
 
         private void videoWindowButton_Click(object sender, EventArgs e)
         {
-            VideoRecoloring window = new VideoRecoloring();
+            VideoRecoloring window = new VideoRecoloring(DLL);
             window.ShowDialog();
         }
 

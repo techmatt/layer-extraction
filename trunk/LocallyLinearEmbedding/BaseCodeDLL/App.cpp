@@ -828,12 +828,18 @@ UINT32 App::ProcessCommand(const String &command)
 
 BCBitmapInfo* App::QueryBitmapByName(const String &s)
 {
-	const UINT width = _image.Width();
-	const UINT height = _image.Height();
+	Bitmap *resultPtr = NULL;
 
-	Bitmap *resultPtr = &_image;
+    if(s == "videoFrame")
+    {
+        Bitmap *bmpDebug = new Bitmap(8, 8);
+        bmpDebug->Clear(RGBColor::RandomColor());
+        resultPtr = bmpDebug;
+    }
 
-	resultPtr->FlipVertical();
+    if(resultPtr == NULL) return NULL;
+    
+    resultPtr->FlipVertical();
 	resultPtr->FlipBlueAndRed();
 	_queryBitmapInfo.width = resultPtr->Width();
 	_queryBitmapInfo.height = resultPtr->Height();
