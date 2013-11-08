@@ -46,4 +46,6 @@ Main.h is included by all source files and includes every header file in the cor
 #include "LayerTextureSynthesizer.h"
 #include "LayerMesh.h"
 
+#include "VideoController.h"
+
 
