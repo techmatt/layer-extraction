@@ -1,0 +1,6 @@
+
+videoFramesDirectory=Data/sintel-5/
+videoName=sintel-5_
+zeropad=2
+frameCount=23
+fps=24

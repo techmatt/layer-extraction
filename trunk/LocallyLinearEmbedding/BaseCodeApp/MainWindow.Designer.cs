@@ -59,6 +59,7 @@
             this.outputMeshes = new System.Windows.Forms.Button();
             this.trainModelButton = new System.Windows.Forms.Button();
             this.buttonVideo = new System.Windows.Forms.Button();
+            this.videoWindowButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -359,11 +360,23 @@
             this.buttonVideo.UseVisualStyleBackColor = true;
             this.buttonVideo.Click += new System.EventHandler(this.buttonVideo_Click);
             // 
+            // videoWindowButton
+            // 
+            this.videoWindowButton.Font = new System.Drawing.Font("Calibri", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.videoWindowButton.Location = new System.Drawing.Point(555, 609);
+            this.videoWindowButton.Name = "videoWindowButton";
+            this.videoWindowButton.Size = new System.Drawing.Size(73, 35);
+            this.videoWindowButton.TabIndex = 28;
+            this.videoWindowButton.Text = "video window";
+            this.videoWindowButton.UseVisualStyleBackColor = true;
+            this.videoWindowButton.Click += new System.EventHandler(this.videoWindowButton_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1328, 800);
+            this.Controls.Add(this.videoWindowButton);
             this.Controls.Add(this.trainModelButton);
             this.Controls.Add(this.outputMeshes);
             this.Controls.Add(this.getRecoloringsButton);
@@ -441,6 +454,7 @@
         private System.Windows.Forms.Button outputMeshes;
         private System.Windows.Forms.Button trainModelButton;
         private System.Windows.Forms.Button buttonVideo;
+        private System.Windows.Forms.Button videoWindowButton;
     }
 }
 

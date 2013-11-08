@@ -455,10 +455,10 @@ void App::DeleteLayer(const String &parameterFilename)
 {
 	_parameters.Init("../Parameters.txt");
 
-	const int klayers = 4;
-	const int idx = 2; // layer to delete
-	bool del = true;
-	String imagename = "whiteboard.png";
+	const int klayers = 6;
+	const int idx = 1; // layer to delete
+	bool del = false;
+	String imagename = "reflection.png";
 	String imagelocation = "../TextureSynthesisExemplars/";
 	String cachedir = "../TexSynCache/";
 	String outdir = "./";
@@ -816,7 +816,7 @@ UINT32 App::ProcessCommand(const String &command)
 	else if (words[0] == "SynthesizeTextureByLayers") {
 		SynthesizeTextureByLayers(words[1]);
 	}
-	else if (words[0] == "deletelayer") {
+	else if (words[0] == "DeleteLayer") {
 		DeleteLayer(words[1]);
 	}
     else if (words[0] == "ExtractVideoLayers") {

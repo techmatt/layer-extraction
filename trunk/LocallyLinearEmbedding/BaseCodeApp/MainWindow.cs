@@ -929,6 +929,10 @@ namespace BaseCodeApp
         {
             BCProcessCommand(baseCodeDLLContext, "SynthesizeTextureByLayers");
         }
+        private void deleteLayerButton_Click(object sender, EventArgs e)
+        {
+            BCProcessCommand(baseCodeDLLContext, "DeleteLayer");
+        }
 
         private void extractLayersButton_Click(object sender, EventArgs e)
         {
@@ -1231,6 +1235,12 @@ namespace BaseCodeApp
             result.Save("synthesized.png");
 
             LayerSynthesisWindow window = new LayerSynthesisWindow();
+            window.ShowDialog();
+        }
+
+        private void videoWindowButton_Click(object sender, EventArgs e)
+        {
+            VideoRecoloring window = new VideoRecoloring();
             window.ShowDialog();
         }
 
