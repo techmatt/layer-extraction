@@ -52,6 +52,7 @@
     <ClInclude Include="SuperpixelExtractorVideo.h" />
     <ClInclude Include="TextureSynthesis.h" />
     <ClInclude Include="Utility.h" />
+    <ClInclude Include="VideoController.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Include\lodepng\lodepng.cpp">
@@ -84,6 +85,7 @@
     <ClCompile Include="SuperpixelExtractor.cpp" />
     <ClCompile Include="SuperpixelExtractorVideo.cpp" />
     <ClCompile Include="TextureSynthesis.cpp" />
+    <ClCompile Include="VideoController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\bin\Console.txt" />
@@ -92,6 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Parameters.txt" />
+    <Text Include="..\VideoParameters.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A1FD2443-4B10-42D8-AEE2-3444225A8D1C}</ProjectGuid>

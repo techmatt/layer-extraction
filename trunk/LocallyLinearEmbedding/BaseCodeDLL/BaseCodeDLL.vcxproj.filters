@@ -100,6 +100,9 @@
     <ClInclude Include="DistanceTransform.h">
       <Filter>TextureSynthesis</Filter>
     </ClInclude>
+    <ClInclude Include="VideoController.h">
+      <Filter>App</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -159,6 +162,9 @@
     <ClCompile Include="DistanceTransform.cpp">
       <Filter>TextureSynthesis</Filter>
     </ClCompile>
+    <ClCompile Include="VideoController.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Base">
@@ -197,6 +203,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Parameters.txt">
+      <Filter>Files</Filter>
+    </Text>
+    <Text Include="..\VideoParameters.txt">
       <Filter>Files</Filter>
     </Text>
   </ItemGroup>

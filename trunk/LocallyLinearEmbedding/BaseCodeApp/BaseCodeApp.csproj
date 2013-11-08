@@ -81,6 +81,7 @@
     <Compile Include="Clustering.cs" />
     <Compile Include="Color.cs" />
     <Compile Include="ColorNames.cs" />
+    <Compile Include="DLLInterface.cs" />
     <Compile Include="HungarianAlgorithm.cs" />
     <Compile Include="LayerExtract.cs" />
     <Compile Include="LayerSynthesisWindow.cs">
