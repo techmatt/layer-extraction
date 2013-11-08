@@ -18,67 +18,6 @@ namespace BaseCodeApp
 {
     public partial class MainWindow : Form
     {
-        [StructLayout(LayoutKind.Sequential), Serializable]
-        public struct BCBitmapInfo
-        {
-            [MarshalAs(UnmanagedType.U4)]
-            public int width;
-            [MarshalAs(UnmanagedType.U4)]
-            public int height;
-            [MarshalAs(UnmanagedType.SysInt)]
-            public IntPtr colorData;
-        }
-
-        [StructLayout(LayoutKind.Sequential), Serializable]
-        public struct BCLayerInfo
-        {
-            [MarshalAs(UnmanagedType.U4)]
-            public int width;
-            [MarshalAs(UnmanagedType.U4)]
-            public int height;
-            [MarshalAs(UnmanagedType.R8)]
-            public double d0;
-            [MarshalAs(UnmanagedType.R8)]
-            public double d1;
-            [MarshalAs(UnmanagedType.R8)]
-            public double d2;
-            [MarshalAs(UnmanagedType.SysInt)]
-            public IntPtr weights;
-        };
-
-        [StructLayout(LayoutKind.Sequential), Serializable]
-        struct BCLayers
-        {
-            [MarshalAs(UnmanagedType.U4)]
-            public int numLayers;
-            [MarshalAs(UnmanagedType.SysInt)]
-            public IntPtr layers;
-        };
-
-
-
-        const string BaseCodeDLL = "BaseCode.dll";
-        [DllImport(BaseCodeDLL)]
-        private static extern IntPtr BCInit();
-        [DllImport(BaseCodeDLL)]
-        private static extern UInt32 BCProcessCommand(IntPtr context, [In, MarshalAs(UnmanagedType.LPStr)] String command);
-        [DllImport(BaseCodeDLL)]
-        private static extern IntPtr BCQueryBitmapByName(IntPtr context, [In, MarshalAs(UnmanagedType.LPStr)] String bitmapName);
-        [DllImport(BaseCodeDLL)]
-        private static extern IntPtr BCQueryStringByName(IntPtr context, [In, MarshalAs(UnmanagedType.LPStr)] String stringName);
-        [DllImport(BaseCodeDLL)]
-        private static extern Int32 BCQueryIntegerByName(IntPtr context, [In, MarshalAs(UnmanagedType.LPStr)] String integerName);
-        [DllImport(BaseCodeDLL)]
-        private static extern IntPtr BCExtractLayers(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize, [In, MarshalAs(UnmanagedType.LPStr)] String layerConstraints, [In,MarshalAs(UnmanagedType.Bool)] bool autoCorrect);
-        [DllImport(BaseCodeDLL)]
-        private static extern IntPtr BCSegmentImage(IntPtr context, BCBitmapInfo bitmap);
-        [DllImport(BaseCodeDLL)]
-        private static extern IntPtr BCSynthesizeLayers(IntPtr context);
-        [DllImport(BaseCodeDLL)]
-        private static extern IntPtr BCOutputMesh(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize, [In, MarshalAs(UnmanagedType.LPStr)] String filename);
-
-        IntPtr baseCodeDLLContext = (IntPtr)0;
-
         Image activeImage;
         Bitmap pictureBoxBitmap;
         Graphics g;
@@ -136,25 +75,26 @@ namespace BaseCodeApp
         LayerConstraints constraints;
         int activePaletteIndex;
         
+        DLLInterface DLL;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            if (baseCodeDLLContext == (IntPtr)0)
+            if (DLL == null)
             {
-                baseCodeDLLContext = BCInit();
+                DLL = new DLLInterface();
             }
 
             String[] commandLine = Environment.GetCommandLineArgs();
             if (commandLine.Length >= 3 && commandLine[1] == "--SynthesizeTexture")
             {
-                BCProcessCommand(baseCodeDLLContext, "SynthesizeTexture " + commandLine[2]);
+                DLL.ProcessCommand("SynthesizeTexture " + commandLine[2]);
                 throw new EarlyAbortException();
             }
             if (commandLine.Length >= 3 && commandLine[1] == "--SynthesizeTextureByLayers")
             {
-                BCProcessCommand(baseCodeDLLContext, "SynthesizeTextureByLayers " + commandLine[2]);
+                DLL.ProcessCommand("SynthesizeTextureByLayers " + commandLine[2]);
                 throw new EarlyAbortException();
             }
 
@@ -230,7 +170,7 @@ namespace BaseCodeApp
             {
             }
 
-            IntPtr bitmapInfoUnmanaged = BCSegmentImage(baseCodeDLLContext, bmpInfo);
+            IntPtr bitmapInfoUnmanaged = DLLInterface.BCSegmentImage(DLL.baseCodeDLLContext, bmpInfo);
             Marshal.FreeHGlobal(bmpInfo.colorData);
 
             if (bitmapInfoUnmanaged == (IntPtr)0) return;
@@ -438,7 +378,7 @@ namespace BaseCodeApp
                     {
                     }
 
-                    IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, constraintString, autoCorrect);
+                    IntPtr layersUnmanaged = DLLInterface.BCExtractLayers(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, constraintString, autoCorrect);
                     Marshal.FreeHGlobal(bmpInfo.colorData);
                     Marshal.FreeHGlobal(palettePtr);
 
@@ -480,7 +420,7 @@ namespace BaseCodeApp
                     {
                     }
 
-                    IntPtr layersUnmanaged = BCExtractLayers(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, constraintString, autoCorrect);
+                    IntPtr layersUnmanaged = DLLInterface.BCExtractLayers(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, constraintString, autoCorrect);
                     Marshal.FreeHGlobal(bmpInfo.colorData);
                     Marshal.FreeHGlobal(palettePtr);
 
@@ -732,40 +672,10 @@ namespace BaseCodeApp
 
         }
 
-
-
-        private Bitmap GetBitmap(String bitmapName)
-        {
-            IntPtr bitmapInfoUnmanaged = BCQueryBitmapByName(baseCodeDLLContext, bitmapName);
-            if (bitmapInfoUnmanaged == (IntPtr)0) return null;
-
-            BCBitmapInfo bitmapInfo = (BCBitmapInfo)Marshal.PtrToStructure(bitmapInfoUnmanaged, typeof(BCBitmapInfo));
-
-            return new Bitmap(bitmapInfo.width, bitmapInfo.height, bitmapInfo.width * 4, System.Drawing.Imaging.PixelFormat.Format32bppRgb, bitmapInfo.colorData);
-        }
-
-        private String GetString(String stringName)
-        {
-            IntPtr stringPtr = BCQueryStringByName(baseCodeDLLContext, stringName);
-            if (stringPtr == (IntPtr)0)
-            {
-                return null;
-            }
-            else
-            {
-                return Marshal.PtrToStringAnsi(stringPtr);
-            }
-        }
-
         private void UpdateImages()
         {
             
-            pictureBox.Image = (Image)GetBitmap("original");
-
-            /*String color = GetString("layerColor_" + layerString);
-            pictureBoxColor.BackColor = Color.FromArgb(Convert.ToInt32(color.Split(' ')[0]),
-                                                       Convert.ToInt32(color.Split(' ')[1]),
-                                                       Convert.ToInt32(color.Split(' ')[2]));*/
+            pictureBox.Image = (Image)DLL.GetBitmap("original");
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
@@ -923,15 +833,15 @@ namespace BaseCodeApp
 
         private void textureSynthesisButton_Click(object sender, EventArgs e)
         {
-            BCProcessCommand(baseCodeDLLContext, "SynthesizeTexture");
+            DLL.ProcessCommand("SynthesizeTexture");
         }
         private void textureByLayerButton_Click(object sender, EventArgs e)
         {
-            BCProcessCommand(baseCodeDLLContext, "SynthesizeTextureByLayers");
+            DLL.ProcessCommand("SynthesizeTextureByLayers");
         }
         private void deleteLayerButton_Click(object sender, EventArgs e)
         {
-            BCProcessCommand(baseCodeDLLContext, "DeleteLayer");
+            DLL.ProcessCommand("DeleteLayer");
         }
 
         private void extractLayersButton_Click(object sender, EventArgs e)
@@ -1229,7 +1139,7 @@ namespace BaseCodeApp
         private void layerSynthesisButton_Click(object sender, EventArgs e)
         {
             //do a test for now
-            IntPtr layersUnmanaged = BCSynthesizeLayers(baseCodeDLLContext);
+            IntPtr layersUnmanaged = DLLInterface.BCSynthesizeLayers(DLL.baseCodeDLLContext);
             Layers synth = ProcessLayers(layersUnmanaged, ColorSpace.RGB);
             Bitmap result = Recolor(synth, synth.colors, ColorSpace.RGB);
             result.Save("synthesized.png");
@@ -1417,7 +1327,7 @@ namespace BaseCodeApp
             {
             }
 
-            BCOutputMesh(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, filename);
+            DLLInterface.BCOutputMesh(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, filename);
             Marshal.FreeHGlobal(bmpInfo.colorData);
             Marshal.FreeHGlobal(palettePtr);
 
@@ -1491,7 +1401,7 @@ namespace BaseCodeApp
                         {
                         }
                         Console.WriteLine("Outputting Mesh");
-                        BCOutputMesh(baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, outFile);
+                        DLLInterface.BCOutputMesh(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, outFile);
                         Console.WriteLine("Freeing");
                         Marshal.FreeHGlobal(bmpInfo.colorData);
                         Marshal.FreeHGlobal(palettePtr);
@@ -1634,7 +1544,7 @@ namespace BaseCodeApp
 
         private void buttonVideo_Click(object sender, EventArgs e)
         {
-            BCProcessCommand(baseCodeDLLContext, "ExtractVideoLayers");
+            DLL.ProcessCommand("ExtractVideoLayers");
         }
 
     }
