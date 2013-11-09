@@ -1,6 +1,10 @@
 
-videoFramesDirectory=Data/sintel-5/
+videoFramesDirectory=../Data/sintel-5/
 videoName=sintel-5_
 zeropad=2
 frameCount=23
 fps=24
+
+videoPaletteFile=../Data/sintel-5/sintel-5_00_palette.png
+
+videoSaveName=sintel-5

@@ -155,12 +155,12 @@ PixelLayerSet App::ExtractLayers(const Bitmap &bmp, const Vector<Vec3f> &palette
 		Console::WriteLine("Done correcting");
 	}
 
-    for(UINT negativeSuppressionIndex = 0; negativeSuppressionIndex < 4; negativeSuppressionIndex++)
-    {
-	    _extractor.ExtractLayers(_parameters, bmp, layers);
-	    _extractor.AddNegativeConstraints(_parameters, bmp, layers);
-    }
-	
+	for(UINT negativeSuppressionIndex = 0; negativeSuppressionIndex < 4; negativeSuppressionIndex++)
+	{
+		_extractor.ExtractLayers(_parameters, bmp, layers);
+		_extractor.AddNegativeConstraints(_parameters, bmp, layers);
+	}
+
 	layers.Dump("../Results/Layers.txt", _extractor.SuperpixelColors());
 
 	_layers = layers;
@@ -171,50 +171,50 @@ PixelLayerSet App::ExtractLayers(const Bitmap &bmp, const Vector<Vec3f> &palette
 
 void App::ExtractVideoLayers()
 {
-    _parameters.Init("../Parameters.txt");
+	_parameters.Init("../Parameters.txt");
 
-    Video video;
+	Video video;
 
-    const UINT frameCount = 23;
-    for (UINT frameIndex = 0; frameIndex < frameCount; frameIndex++)
-    {
-        Bitmap bmp;
-        //bmp.LoadPNG("../Data/softboy/softboy_intro_1" + String::ZeroPad(frameIndex, 3) + ".png");
-        //bmp.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_" + String::ZeroPad(frameIndex, 4) + ".png");
-        bmp.LoadPNG("../Data/sintel-5/sintel-5_" + String::ZeroPad(frameIndex, 2) + ".png");
-        video.frames.PushEnd(bmp);
-    }
+	const UINT frameCount = 23;
+	for (UINT frameIndex = 0; frameIndex < frameCount; frameIndex++)
+	{
+		Bitmap bmp;
+		//bmp.LoadPNG("../Data/softboy/softboy_intro_1" + String::ZeroPad(frameIndex, 3) + ".png");
+		//bmp.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_" + String::ZeroPad(frameIndex, 4) + ".png");
+		bmp.LoadPNG("../Data/sintel-5/sintel-5_" + String::ZeroPad(frameIndex, 2) + ".png");
+		video.frames.PushEnd(bmp);
+	}
 
-    LayerSet layers;
-    LayerExtractorVideo videoExtractor;
-    videoExtractor.Init(_parameters, video);
+	LayerSet layers;
+	LayerExtractorVideo videoExtractor;
+	videoExtractor.Init(_parameters, video);
 
-    //videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputePaletteKMeans(6), layers);
-    videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputeFrame0Palette("../Data/sintel-5/sintel-5_00_palette.png"), layers);
-    //videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputeFrame0Palette("../Data/bigbuckbunny/bigbuckbunny_0000_palette.png"), layers);
+	//videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputePaletteKMeans(6), layers);
+	videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputeFrame0Palette("../Data/sintel-5/sintel-5_00_palette.png"), layers);
+	//videoExtractor.InitLayersFromPalette(_parameters, video, video.ComputeFrame0Palette("../Data/bigbuckbunny/bigbuckbunny_0000_palette.png"), layers);
 
-    for(UINT negativeSuppressionIndex = 0; negativeSuppressionIndex < 4; negativeSuppressionIndex++)
-    {
-        videoExtractor.ExtractLayers(_parameters, video, layers);
-        videoExtractor.AddNegativeConstraints(_parameters, video, layers);
-    }
+	for(UINT negativeSuppressionIndex = 0; negativeSuppressionIndex < 4; negativeSuppressionIndex++)
+	{
+		videoExtractor.ExtractLayers(_parameters, video, layers);
+		videoExtractor.AddNegativeConstraints(_parameters, video, layers);
+	}
 
-    //layers.Dump("../Results/Layers.txt", videoExtractor.SuperpixelColors());
+	//layers.Dump("../Results/Layers.txt", videoExtractor.SuperpixelColors());
 
-    Utility::MakeDirectory("../Results/VideoLayers/");
+	Utility::MakeDirectory("../Results/VideoLayers/");
 
-    for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
-    {
-        String layerDirectory = "../Results/VideoLayers/Layer" + String(layerIndex); 
-        Utility::MakeDirectory(layerDirectory);
-        for(UINT frameIndex = 0; frameIndex < video.frames.Length(); frameIndex++)
-        {
-            Bitmap bmp = videoExtractor.VisualizeLayer(_parameters, video, frameIndex, layerIndex, layers);
-            bmp.SavePNG(layerDirectory + "/f" + String::ZeroPad(frameIndex, 4) + ".png");
-        }
-    }
+	for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+	{
+		String layerDirectory = "../Results/VideoLayers/Layer" + String(layerIndex); 
+		Utility::MakeDirectory(layerDirectory);
+		for(UINT frameIndex = 0; frameIndex < video.frames.Length(); frameIndex++)
+		{
+			Bitmap bmp = videoExtractor.VisualizeLayer(_parameters, video, frameIndex, layerIndex, layers);
+			bmp.SavePNG(layerDirectory + "/f" + String::ZeroPad(frameIndex, 4) + ".png");
+		}
+	}
 
-    Console::WriteLine("Done extracting video layers");
+	Console::WriteLine("Done extracting video layers");
 }
 
 BCLayers* App::PixelLayersToBCLayers(const PixelLayerSet &pixellayers)
@@ -819,9 +819,9 @@ UINT32 App::ProcessCommand(const String &command)
 	else if (words[0] == "DeleteLayer") {
 		DeleteLayer(words[1]);
 	}
-    else if (words[0] == "ExtractVideoLayers") {
-        ExtractVideoLayers();
-    }
+	else if (words[0] == "ExtractVideoLayers") {
+		ExtractVideoLayers();
+	}
 
 	return 0;
 }
@@ -830,16 +830,16 @@ BCBitmapInfo* App::QueryBitmapByName(const String &s)
 {
 	Bitmap *resultPtr = NULL;
 
-    if(s == "videoFrame")
-    {
-        Bitmap *bmpDebug = new Bitmap(8, 8);
-        bmpDebug->Clear(RGBColor::RandomColor());
-        resultPtr = bmpDebug;
-    }
+	if(s == "videoFrame")
+	{
+		if (_videocontroller.hasVideo()) {
+			Bitmap *frame = _videocontroller.GetNextFrame();
+			resultPtr = frame;
+		}
+	}
 
-    if(resultPtr == NULL) return NULL;
-    
-    resultPtr->FlipVertical();
+	if(resultPtr == NULL) return NULL;
+
 	resultPtr->FlipBlueAndRed();
 	_queryBitmapInfo.width = resultPtr->Width();
 	_queryBitmapInfo.height = resultPtr->Height();
@@ -919,8 +919,8 @@ void App::OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, co
 	/*ifstream File(filename.CString());
 	if (File)
 	{
-		Console::WriteLine("File already exists");
-		return;
+	Console::WriteLine("File already exists");
+	return;
 	}*/
 
 	Bitmap bmp;
@@ -939,4 +939,9 @@ void App::OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, co
 	LayerMesh mesh(layers);
 	Console::WriteLine("Saving mesh");
 	mesh.SaveToFile(filename);
+}
+
+void App::LoadVideo(const String &filename, int paletteSize)
+{
+	_videocontroller.LoadVideo(filename, paletteSize);
 }

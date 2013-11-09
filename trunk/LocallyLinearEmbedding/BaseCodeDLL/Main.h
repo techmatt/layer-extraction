@@ -35,6 +35,8 @@ Main.h is included by all source files and includes every header file in the cor
 #include "LayerExtractorVideo.h"
 #include "Utility.h"
 
+#include "VideoController.h"
+
 #include "App.h"
 
 #include "DistanceTransform.h"
@@ -46,6 +48,5 @@ Main.h is included by all source files and includes every header file in the cor
 #include "LayerTextureSynthesizer.h"
 #include "LayerMesh.h"
 
-#include "VideoController.h"
 
 

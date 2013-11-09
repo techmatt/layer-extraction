@@ -74,6 +74,8 @@ namespace BaseCodeApp
         public static extern IntPtr BCSynthesizeLayers(IntPtr context);
         [DllImport(BaseCodeDLL)]
         public static extern IntPtr BCOutputMesh(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize, [In, MarshalAs(UnmanagedType.LPStr)] String filename);
+        [DllImport(BaseCodeDLL)]
+        public static extern IntPtr BCLoadVideo(IntPtr context, [In, MarshalAs(UnmanagedType.LPStr)] String filename, [In, MarshalAs(UnmanagedType.I4)]int paletteSize);
 
         public IntPtr baseCodeDLLContext = (IntPtr)0;
 
@@ -111,6 +113,11 @@ namespace BaseCodeApp
             {
                 return Marshal.PtrToStringAnsi(stringPtr);
             }
+        }
+
+        public void LoadVideo(String filename, int paletteSize)
+        {
+            BCLoadVideo(baseCodeDLLContext, filename, paletteSize);
         }
     }
 }

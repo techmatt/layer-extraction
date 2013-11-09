@@ -138,7 +138,7 @@ template<class type> InputDataStream& operator >> (InputDataStream &S, Vector<ty
     return S;
 }
 
-template<class type> InputDataStream& operator >> (InputDataStream &S, const Grid<type> &G)
+template<class type> InputDataStream& operator >> (InputDataStream &S, Grid<type> &G)
 {
     UINT rows, cols;
     S >> rows >> cols;

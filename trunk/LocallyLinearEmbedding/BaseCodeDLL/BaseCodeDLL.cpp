@@ -93,3 +93,11 @@ BASECODEDLL_API void BCOutputMesh(void* context, BCBitmapInfo bitmap, const doub
 	app->OutputMesh(bitmap, p, filename);
 
 }
+
+BASECODEDLL_API void BCLoadVideo(void* context, const char* filename, int paletteSize)
+{
+	if (context == NULL) return;
+	App *app = (App*) context;
+
+	app->LoadVideo(filename, paletteSize);
+}

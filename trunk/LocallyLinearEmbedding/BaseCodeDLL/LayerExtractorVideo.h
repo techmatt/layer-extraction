@@ -12,6 +12,8 @@ public:
 
     Bitmap VisualizeLayer(const AppParameters &parameters, const Video &video, UINT frameIndex, UINT layerIndex, const LayerSet &layers) const;
 
+	Vector<PixelLayer> GetPixelLayers(const Video &video, UINT frameIndex, const LayerSet &layers) const;
+
 	const Vector<ColorCoordinateVideo>& SuperpixelColors() const
     {
         return superpixelColors;

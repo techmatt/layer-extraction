@@ -45,3 +45,4 @@ BASECODEDLL_API BCLayers*     __stdcall BCExtractLayers(void* context, BCBitmapI
 BASECODEDLL_API BCBitmapInfo* __stdcall BCSegmentImage(void* context, BCBitmapInfo image);
 BASECODEDLL_API BCLayers*	  __stdcall BCSynthesizeLayers(void* context);
 BASECODEDLL_API void		  __stdcall BCOutputMesh(void* context, BCBitmapInfo image, const double* palette, int paletteSize, const char* filename);
+BASECODEDLL_API void		  __stdcall BCLoadVideo(void* context, const char* filename, int paletteSize);
