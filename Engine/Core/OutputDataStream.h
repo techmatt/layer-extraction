@@ -150,6 +150,17 @@ template<class type> OutputDataStream& operator << (OutputDataStream &S, const V
     return S;
 }
 
+template<class type> OutputDataStream& operator << (OutputDataStream &S, const Grid<type> &G)
+{
+    UINT rows = G.Rows();
+    UINT cols = G.Cols();
+    S << rows << cols;
+    for(UINT row = 0; row < rows; row++)
+        for(UINT col = 0; col < cols; col++)
+            S << G(row, col);
+    return S;
+}
+
 #ifdef __MULTIGRID_H
 template<class type> OutputDataStream& operator << (OutputDataStream &S, const MultiGrid<type> &G)
 {
