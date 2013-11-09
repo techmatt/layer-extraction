@@ -39,6 +39,7 @@
             this.KBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.timerVideoFrame = new System.Windows.Forms.Timer(this.components);
+            this.colorPicker = new System.Windows.Forms.ColorDialog();
             ((System.ComponentModel.ISupportInitialize)(this.previewBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.videoBox)).BeginInit();
             this.SuspendLayout();
@@ -80,7 +81,7 @@
             // resetButton
             // 
             this.resetButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.resetButton.Location = new System.Drawing.Point(12, 551);
+            this.resetButton.Location = new System.Drawing.Point(12, 553);
             this.resetButton.Name = "resetButton";
             this.resetButton.Size = new System.Drawing.Size(152, 42);
             this.resetButton.TabIndex = 4;
@@ -165,5 +166,6 @@
         private System.Windows.Forms.TextBox KBox;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Timer timerVideoFrame;
+        private System.Windows.Forms.ColorDialog colorPicker;
     }
 }

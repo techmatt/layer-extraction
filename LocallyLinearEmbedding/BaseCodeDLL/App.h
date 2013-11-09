@@ -11,6 +11,8 @@ public:
 	BCBitmapInfo* SegmentImage(const BCBitmapInfo &bitmap);
     BCLayers* SynthesizeLayers();
 
+	void LoadVideo(const String &filename, int paletteSize);
+
 	void OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename);
 
 private:
@@ -18,7 +20,6 @@ private:
 	//BCLayers* SynthesizeLayers();
 	void SynthesizeTexture(const String &parameterFilename);
 	void SynthesizeTextureByLayers(const String &parameterFilename);
-
 	void DeleteLayer(const String &parameterFilename);
 	void ExtractVideoLayers();
     
@@ -28,6 +29,8 @@ private:
 	LayerSet _layers;
 
     LayerExtractor _extractor;
+
+	VideoController _videocontroller;
 
     String _queryString;
 

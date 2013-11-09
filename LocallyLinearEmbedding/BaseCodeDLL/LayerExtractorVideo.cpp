@@ -670,3 +670,36 @@ Bitmap LayerExtractorVideo::VisualizeLayer( const AppParameters &parameters, con
     for(UINT y = 0; y < video.Height(); y++) for(UINT x = 0; x < 10; x++) bmp[y][x] = RGBColor(curLayer.color);
     return bmp;
 }
+
+Vector<PixelLayer> LayerExtractorVideo::GetPixelLayers( const Video &video, UINT frameIndex, const LayerSet &layers ) const
+{
+	//for each pixel, compute it's layer membership
+	Vector<PixelLayer> result;
+	for (UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+	{
+		PixelLayer layer;
+		layer.color = layers.layers[layerIndex].color;
+		layer.pixelWeights = Grid<double>(video.Height(), video.Width(), 0);
+		result.PushEnd(layer);
+	}
+	for (UINT y=0; y<video.Height(); y++)
+	{
+		for (UINT x=0; x<video.Width(); x++)
+		{
+			const PixelNeighborhood &curPixel = pixelNeighborhoods[frameIndex](y, x);
+			const UINT k = curPixel.indices.Length();
+
+			for (UINT neighborIndex = 0; neighborIndex < k; neighborIndex++)
+			{
+				for (UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+				{
+					UINT superpixelIndex = curPixel.indices[neighborIndex];
+					double superpixelWeight = curPixel.weights[neighborIndex];
+					result[layerIndex].pixelWeights(y,x) += layers.layers[layerIndex].superpixelWeights[superpixelIndex]*superpixelWeight;
+				}
+			}
+
+		}
+	}
+	return result;
+}
