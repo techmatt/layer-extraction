@@ -30,6 +30,8 @@ namespace BaseCodeApp
 
         private void openButton_Click(object sender, EventArgs e)
         {
+            if (_bw.IsBusy) return;
+
             ClearPalette();
 
             String defaultparamsfile = "../VideoParameters.txt";
@@ -50,7 +52,32 @@ namespace BaseCodeApp
             if (_paletteSize <= 0) _paletteSize = 5;
 
             if (_currVideoFile != "")
-                _DLL.LoadVideo(_currVideoFile, _paletteSize);
+            {
+                _bw = new BackgroundWorker();
+                _bw.DoWork += delegate
+                {
+                    _DLL.LoadVideo(_currVideoFile, _paletteSize);
+                };
+                _bw.RunWorkerCompleted += delegate
+                {
+                    for (int k = 0; k < _paletteSize; k++)
+                        _currPalette.Add(Color.FromArgb(_DLL.GetVideoPalette(k, 0), _DLL.GetVideoPalette(k, 1), _DLL.GetVideoPalette(k, 2)));
+                    UpdatePaletteDisplay(true);
+                    this.Cursor = System.Windows.Forms.Cursors.Default;
+                };
+                _bw.RunWorkerAsync();
+            }
+        }
+
+        private void resetButton_Click(object sender, EventArgs e)
+        {
+            // reset the palette (which resets the video)
+            for (int i = 0; i < _currPalette.Count; i++)
+            {
+                _currPalette[i] = Color.FromArgb(_DLL.GetOriginalVideoPalette(i, 0), _DLL.GetOriginalVideoPalette(i, 1), _DLL.GetOriginalVideoPalette(i, 2));
+                _DLL.SetVideoPalette(i, _currPalette[i].R, _currPalette[i].G, _currPalette[i].B);
+            }
+            UpdatePaletteDisplay(true);
         }
 
         private void ClearPalette()
@@ -70,6 +97,8 @@ namespace BaseCodeApp
 
         private void UpdatePaletteDisplay(bool enableEvents = true)
         {
+            Console.WriteLine("updating palette display");
+
             palettePanel.Controls.Clear();
             _paletteButtons.Clear();
 
@@ -81,9 +110,9 @@ namespace BaseCodeApp
 
                 Button element = new Button();
                 element.BackColor = rgb;
-                element.Width = 150;
-                element.Height = 20;
-                element.Top = element.Height * l + padding;
+                element.Width = 40;
+                element.Height = 150;
+                element.Left = element.Width * l + padding;
                 element.FlatStyle = FlatStyle.Flat;
 
                 if (enableEvents)
@@ -102,7 +131,7 @@ namespace BaseCodeApp
                             {
                                 btn.BackColor = colorPicker.Color;
 
-                                //DLL.RecolorVideo(index, colorPicker.Color.R / 255.f, colorPicker.Color.G / 255.f, colorPicker.Color.B / 255.f);
+                                _DLL.SetVideoPalette(index, colorPicker.Color.R, colorPicker.Color.G, colorPicker.Color.B);
                                 /*pictureBox.Image = Recolor(layers, palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);*/
                             }
                         }

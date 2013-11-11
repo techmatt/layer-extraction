@@ -76,6 +76,12 @@ namespace BaseCodeApp
         public static extern IntPtr BCOutputMesh(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize, [In, MarshalAs(UnmanagedType.LPStr)] String filename);
         [DllImport(BaseCodeDLL)]
         public static extern IntPtr BCLoadVideo(IntPtr context, [In, MarshalAs(UnmanagedType.LPStr)] String filename, [In, MarshalAs(UnmanagedType.I4)]int paletteSize);
+        [DllImport(BaseCodeDLL)]
+        public static extern Byte BCGetVideoPalette(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int paletteindex, [In, MarshalAs(UnmanagedType.I4)]int index);
+        [DllImport(BaseCodeDLL)]
+        public static extern Byte BCSetVideoPalette(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int paletteindex, byte r, byte g, byte b);
+        [DllImport(BaseCodeDLL)]
+        public static extern Byte BCGetOriginalVideoPalette(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int paletteindex, [In, MarshalAs(UnmanagedType.I4)]int index);
 
         public IntPtr baseCodeDLLContext = (IntPtr)0;
 
@@ -118,6 +124,21 @@ namespace BaseCodeApp
         public void LoadVideo(String filename, int paletteSize)
         {
             BCLoadVideo(baseCodeDLLContext, filename, paletteSize);
+        }
+
+        public byte GetVideoPalette(int paletteindex, int index)
+        {
+            return BCGetVideoPalette(baseCodeDLLContext, paletteindex, index);
+        }
+
+        public void SetVideoPalette(int paletteindex, byte r, byte g, byte b)
+        {
+            BCSetVideoPalette(baseCodeDLLContext, paletteindex, r, g, b);
+        }
+
+        public byte GetOriginalVideoPalette(int paletteindex, int index)
+        {
+            return BCGetOriginalVideoPalette(baseCodeDLLContext, paletteindex, index);
         }
     }
 }
