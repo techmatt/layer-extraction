@@ -11,3 +11,6 @@ EXPORTS
 	BCSynthesizeLayers
 	BCOutputMesh
 	BCLoadVideo
+	BCGetVideoPalette
+	BCSetVideoPalette
+	BCGetOriginalVideoPalette

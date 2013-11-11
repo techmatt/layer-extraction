@@ -37,6 +37,9 @@ public:
 	void WriteLayerFrames( const String& location, const Video &video, const LayerSet &layers );
 	Bitmap* GetNextFrame(void);
 	Bitmap* GetCurrentFrame(void);
+	byte GetOriginalPalette(int paletteindex, int index);
+	byte GetPalette(int paletteindex, int index);
+	void SetPalette(int paletteindex, byte r, byte g, byte b);
 
 	//const Bitmap* GetNextFrameOriginal(void);
 	//const Bitmap* GetCurrentFrameOriginal(void);

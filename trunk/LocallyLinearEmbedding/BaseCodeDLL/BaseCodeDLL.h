@@ -46,3 +46,6 @@ BASECODEDLL_API BCBitmapInfo* __stdcall BCSegmentImage(void* context, BCBitmapIn
 BASECODEDLL_API BCLayers*	  __stdcall BCSynthesizeLayers(void* context);
 BASECODEDLL_API void		  __stdcall BCOutputMesh(void* context, BCBitmapInfo image, const double* palette, int paletteSize, const char* filename);
 BASECODEDLL_API void		  __stdcall BCLoadVideo(void* context, const char* filename, int paletteSize);
+BASECODEDLL_API byte          __stdcall BCGetVideoPalette(void* context, int paletteindex, int index);
+BASECODEDLL_API void		  __stdcall BCSetVideoPalette(void* context, int paletteindex, byte r, byte g, byte b);
+BASECODEDLL_API byte          __stdcall BCGetOriginalVideoPalette(void* context, int paletteindex, int index);

@@ -945,3 +945,18 @@ void App::LoadVideo(const String &filename, int paletteSize)
 {
 	_videocontroller.LoadVideo(filename, paletteSize);
 }
+
+byte App::GetVideoPalette(int paletteindex, int index)
+{
+	return _videocontroller.GetPalette(paletteindex, index);
+}
+
+void App::SetVideoPalette(int paletteindex, byte r, byte g, byte b)
+{
+	_videocontroller.SetPalette(paletteindex, r, g, b);
+}
+
+byte App::GetOriginalVideoPalette(int paletteindex, int index)
+{
+	return _videocontroller.GetOriginalPalette(paletteindex, index);
+}

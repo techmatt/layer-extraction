@@ -31,6 +31,12 @@ void VideoController::LoadVideo(const String& filename, int paletteSize)
 	_hasVideo = true;
 }
 
+void VideoController::SetPalette(int paletteindex, byte r, byte g, byte b)
+{
+	Assert(paletteindex >= 0 && paletteindex < _palette.Length(), "trying to set palette index out of bounds");
+	_palette[paletteindex] = Vec3f(RGBColor(r, g, b));
+}
+
 Bitmap* VideoController::GetNextFrame(void)
 {
 	if (!_hasVideo) return NULL;
@@ -84,10 +90,9 @@ RGBColor VideoController::GetColor(UINT frameIndex, int x, int y)
 	if (_players.Length() > 0) {
 		Vec3f v(0,0,0);
 		for (UINT layerIndex = 0; layerIndex < _palette.Length(); layerIndex++) 
-			v += _players[frameIndex][layerIndex].color * _players[frameIndex][layerIndex].pixelWeights(y,x);//_palette[layerIndex] * _players[frameIndex][layerIndex].pixelWeights(y,x);
+			v += _palette[layerIndex] * _players[frameIndex][layerIndex].pixelWeights(y,x);
 		return RGBColor(v);
 	}
-	// original video
 	return RGBColor(0,0,0); // todo!!!!
 }
 
@@ -211,3 +216,14 @@ void VideoController::WriteLayerFrames( const String& location, const Video &vid
 	}
 }
 
+byte VideoController::GetPalette( int paletteindex, int index )
+{
+	Assert(paletteindex >= 0 && paletteindex < _palette.Length() && index >= 0 && index < 3, "palette query out of bounds");
+	return Utility::BoundToByte(_palette[paletteindex][index] * 255.0f);
+}
+
+byte VideoController::GetOriginalPalette( int paletteindex, int index )
+{
+	Assert(paletteindex >= 0 && paletteindex < _palette.Length() && index >= 0 && index < 3, "palette query out of bounds");
+	return Utility::BoundToByte(_players[0][paletteindex].color[index] * 255.0f);
+}
