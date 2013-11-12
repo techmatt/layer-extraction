@@ -1,0 +1,10 @@
+
+videoFramesDirectory=../Data/bigbuckbunny-5fps/
+videoName=bigbuckbunny_
+zeropad=2
+frameCount=42
+fps=5
+
+videoPaletteFile=../Data/bigbuckbunny-5fps/bigbuckbunny_00_palette.png
+
+videoSaveName=bigbuckbunny-5fps

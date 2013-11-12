@@ -14,9 +14,11 @@ namespace BaseCodeApp
         //private Layers layers = new Layers();
         private BackgroundWorker _bw = new BackgroundWorker();
         private List<Button> _paletteButtons = new List<Button>();
+        private List<bool> _layerPreview = new List<bool>();
         private String _currVideoFile = "";
-        private float _FPS = 24;
+        private float[] _FPS = { 5, 8, 9, 10, 12.5f, 15, 24 };
         private int _paletteSize = 5;
+        private int _paletteButtonWidth = 9;
         private PaletteCache _paletteCache = new PaletteCache("../VideoCache/");
         private List<Color> _currPalette = new List<Color>();
 
@@ -26,6 +28,7 @@ namespace BaseCodeApp
         {
             _DLL = DLL;
             InitializeComponent();
+            fpsBox.SelectedIndex = 6;
         }
 
         private void openButton_Click(object sender, EventArgs e)
@@ -57,11 +60,16 @@ namespace BaseCodeApp
                 _bw.DoWork += delegate
                 {
                     _DLL.LoadVideo(_currVideoFile, _paletteSize);
+                    _paletteSize = _DLL.GetVideoPaletteSize(); // may have changed if using user-defined palette
+                    KBox.Text = _paletteSize.ToString();
                 };
                 _bw.RunWorkerCompleted += delegate
                 {
                     for (int k = 0; k < _paletteSize; k++)
+                    {
                         _currPalette.Add(Color.FromArgb(_DLL.GetVideoPalette(k, 0), _DLL.GetVideoPalette(k, 1), _DLL.GetVideoPalette(k, 2)));
+                        _layerPreview.Add(false);
+                    }
                     UpdatePaletteDisplay(true);
                     this.Cursor = System.Windows.Forms.Cursors.Default;
                 };
@@ -76,18 +84,28 @@ namespace BaseCodeApp
             {
                 _currPalette[i] = Color.FromArgb(_DLL.GetOriginalVideoPalette(i, 0), _DLL.GetOriginalVideoPalette(i, 1), _DLL.GetOriginalVideoPalette(i, 2));
                 _DLL.SetVideoPalette(i, _currPalette[i].R, _currPalette[i].G, _currPalette[i].B);
+                _layerPreview[i] = false;
             }
             UpdatePaletteDisplay(true);
+        }
+
+        private void saveButton_Click(object sender, EventArgs e)
+        {
+            _DLL.SaveVideoFrames();
+        }
+
+        private void fpsBox_Changed(object sender, EventArgs e)
+        {
+            int idx = fpsBox.SelectedIndex;
+            timerVideoFrame.Interval = (int)(1000 / _FPS[idx]);
         }
 
         private void ClearPalette()
         {
             _currPalette.Clear();
             _paletteButtons.Clear();
+            _layerPreview.Clear();
             palettePanel.Controls.Clear();
-            previewBox.Image = new Bitmap(100, 100);
-            //pictureBoxOriginal.Image = new Bitmap(100, 100);
-            //layers = new Layers();
         }
 
         private void timerVideoFrame_Tick(object sender, EventArgs e)
@@ -97,8 +115,6 @@ namespace BaseCodeApp
 
         private void UpdatePaletteDisplay(bool enableEvents = true)
         {
-            Console.WriteLine("updating palette display");
-
             palettePanel.Controls.Clear();
             _paletteButtons.Clear();
 
@@ -112,30 +128,53 @@ namespace BaseCodeApp
                 element.BackColor = rgb;
                 element.Width = 40;
                 element.Height = 150;
-                element.Left = element.Width * l + padding;
+                if (l < _paletteButtonWidth)
+                    element.Left = element.Width * l + padding;
+                else
+                {
+                    element.Left = element.Width * (l-_paletteButtonWidth) + padding;
+                    element.Top = element.Height + padding;
+                }
+
                 element.FlatStyle = FlatStyle.Flat;
 
                 if (enableEvents)
                 {
                     element.MouseUp += delegate(Object sender, System.Windows.Forms.MouseEventArgs e)
                     {
-                        //Open the color picker and recolor
                         Button btn = ((Button)sender);
                         int index = _paletteButtons.IndexOf(btn);
+
+
                         if (e.Button == MouseButtons.Left)
                         {
-                            colorPicker.Color = btn.BackColor;
-                            colorPicker.ShowDialog();
-
-                            if (colorPicker.Color != btn.BackColor)
+                            if (Control.ModifierKeys == Keys.Shift)
                             {
-                                btn.BackColor = colorPicker.Color;
+                                // layer preview
+                                if (!_layerPreview[index])
+                                    _DLL.SetVideoPreviewLayerIndex(index);
+                                else
+                                    _DLL.SetVideoPreviewLayerIndex(-1);
+                                _layerPreview[index] = !_layerPreview[index];
+                            }
+                            else
+                            {
+                                //Open the color picker and recolor
+                                colorPicker.Color = btn.BackColor;
+                                colorPicker.ShowDialog();
 
-                                _DLL.SetVideoPalette(index, colorPicker.Color.R, colorPicker.Color.G, colorPicker.Color.B);
-                                /*pictureBox.Image = Recolor(layers, palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);*/
+                                if (colorPicker.Color != btn.BackColor)
+                                {
+                                    btn.BackColor = colorPicker.Color;
+
+                                    _DLL.SetVideoPalette(index, colorPicker.Color.R, colorPicker.Color.G, colorPicker.Color.B);
+                                    _layerPreview[index] = false;
+                                    /*pictureBox.Image = Recolor(layers, palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);*/
+                                }
                             }
                         }
                     };
+
                 }
 
                 _paletteButtons.Add(element);
