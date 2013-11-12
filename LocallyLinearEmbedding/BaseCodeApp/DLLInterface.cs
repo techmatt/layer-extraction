@@ -77,11 +77,17 @@ namespace BaseCodeApp
         [DllImport(BaseCodeDLL)]
         public static extern IntPtr BCLoadVideo(IntPtr context, [In, MarshalAs(UnmanagedType.LPStr)] String filename, [In, MarshalAs(UnmanagedType.I4)]int paletteSize);
         [DllImport(BaseCodeDLL)]
+        public static extern Int32 BCGetVideoPaletteSize(IntPtr context);
+        [DllImport(BaseCodeDLL)]
         public static extern Byte BCGetVideoPalette(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int paletteindex, [In, MarshalAs(UnmanagedType.I4)]int index);
         [DllImport(BaseCodeDLL)]
-        public static extern Byte BCSetVideoPalette(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int paletteindex, byte r, byte g, byte b);
+        public static extern IntPtr BCSetVideoPalette(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int paletteindex, byte r, byte g, byte b);
         [DllImport(BaseCodeDLL)]
         public static extern Byte BCGetOriginalVideoPalette(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int paletteindex, [In, MarshalAs(UnmanagedType.I4)]int index);
+        [DllImport(BaseCodeDLL)]
+        public static extern IntPtr BCSaveVideoFrames(IntPtr context);
+        [DllImport(BaseCodeDLL)]
+        public static extern IntPtr BCSetVideoPreviewLayerIndex(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int index);
 
         public IntPtr baseCodeDLLContext = (IntPtr)0;
 
@@ -126,6 +132,11 @@ namespace BaseCodeApp
             BCLoadVideo(baseCodeDLLContext, filename, paletteSize);
         }
 
+        public int GetVideoPaletteSize()
+        {
+            return BCGetVideoPaletteSize(baseCodeDLLContext);
+        }
+
         public byte GetVideoPalette(int paletteindex, int index)
         {
             return BCGetVideoPalette(baseCodeDLLContext, paletteindex, index);
@@ -139,6 +150,16 @@ namespace BaseCodeApp
         public byte GetOriginalVideoPalette(int paletteindex, int index)
         {
             return BCGetOriginalVideoPalette(baseCodeDLLContext, paletteindex, index);
+        }
+
+        public void SaveVideoFrames()
+        {
+            BCSaveVideoFrames(baseCodeDLLContext);
+        }
+
+        public void SetVideoPreviewLayerIndex(int index)
+        {
+            BCSetVideoPreviewLayerIndex(baseCodeDLLContext, index);
         }
     }
 }

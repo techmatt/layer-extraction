@@ -37,9 +37,12 @@ public:
 	void WriteLayerFrames( const String& location, const Video &video, const LayerSet &layers );
 	Bitmap* GetNextFrame(void);
 	Bitmap* GetCurrentFrame(void);
+	int getPaletteSize(void) { return _palette.Length(); }
 	byte GetOriginalPalette(int paletteindex, int index);
 	byte GetPalette(int paletteindex, int index);
 	void SetPalette(int paletteindex, byte r, byte g, byte b);
+	void SaveFrames(const String& resultdirectory);
+	void SetPreviewLayerIndex(int index);
 
 	//const Bitmap* GetNextFrameOriginal(void);
 	//const Bitmap* GetCurrentFrameOriginal(void);
@@ -64,7 +67,7 @@ private:
 	Vector<PixelLayerSet> _players;
 	LayerExtractorVideo _videoExtractor;
 
-	int _currFrameIndex;
+	int _currFrameIndex, _previewLayerIndex;
 	Bitmap *_frameA, *_frameB;
 	bool _usingframeA;
 

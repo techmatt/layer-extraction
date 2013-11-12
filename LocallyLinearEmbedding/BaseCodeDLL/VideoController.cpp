@@ -5,6 +5,11 @@ VideoController::VideoController(void)
 {
 	_frameA = NULL;
 	_frameB = NULL;
+	_frameCount = 0;
+	_videoWidth = 0;
+	_videoHeight = 0;
+	_previewLayerIndex = -1;
+	_currFrameIndex = -1;
 	_hasVideo = false;
 }
 
@@ -54,9 +59,14 @@ Bitmap* VideoController::GetNextFrame(void)
 	_currFrameIndex = (_currFrameIndex + 1) % _frameCount;
 	Assert(_currFrameIndex >= 0 && _currFrameIndex < _frameCount, "frame index out of bounds!");
 
-	for (int y = 0; y < _videoHeight; y++)
-		for (int x = 0; x < _videoWidth; x++)
-			(*currframe)[y][x] = GetColor(_currFrameIndex, x, y);
+	if (_previewLayerIndex < 0) { // full colour
+		for (int y = 0; y < _videoHeight; y++)
+			for (int x = 0; x < _videoWidth; x++)
+				(*currframe)[y][x] = GetColor(_currFrameIndex, x, y);
+	}
+	else {
+		(*currframe).LoadGrid(_players[_currFrameIndex][_previewLayerIndex].pixelWeights);
+	}
 
 	_usingframeA = !_usingframeA;
 
@@ -78,9 +88,14 @@ Bitmap* VideoController::GetCurrentFrame(void)
 	Bitmap *currframe = _frameA;
 	if (_usingframeA) currframe = _frameB;
 
-	for (int y = 0; y < _videoHeight; y++)
-		for (int x = 0; x < _videoWidth; x++)
-			(*currframe)[y][x] = GetColor(_currFrameIndex, x, y);
+	if (_previewLayerIndex < 0) { // full colour
+		for (int y = 0; y < _videoHeight; y++)
+			for (int x = 0; x < _videoWidth; x++)
+				(*currframe)[y][x] = GetColor(_currFrameIndex, x, y);
+	}
+	else {
+		(*currframe).LoadGrid(_players[_currFrameIndex][_previewLayerIndex].pixelWeights);
+	}
 
 	return currframe;
 }
@@ -227,3 +242,28 @@ byte VideoController::GetOriginalPalette( int paletteindex, int index )
 	Assert(paletteindex >= 0 && paletteindex < _palette.Length() && index >= 0 && index < 3, "palette query out of bounds");
 	return Utility::BoundToByte(_players[0][paletteindex].color[index] * 255.0f);
 }
+
+void VideoController::SaveFrames( const String& resultdirectory )
+{
+	Utility::MakeDirectory(resultdirectory);
+	String saveDirectory = resultdirectory + _vidparams.videoSaveName + "/";
+	Utility::MakeDirectory(saveDirectory);
+	String saveLocation = saveDirectory + _vidparams.videoSaveName;
+
+	Bitmap currFrame(_videoWidth, _videoHeight);
+	for (int f = 0; f < _frameCount; f++) {
+		for (int y = 0; y < _videoHeight; y++)
+			for (int x = 0; x < _videoWidth; x++)
+				currFrame[y][x] = GetColor(f, x, y);
+
+		currFrame.SavePNG(saveLocation + "_" + String::ZeroPad(f, _vidparams.zeropad) + ".png");
+	}
+	Console::WriteLine("saved video to " + saveDirectory);
+}
+
+void VideoController::SetPreviewLayerIndex( int index )
+{
+	if (index >= -1 && index < (int)_palette.Length())
+		_previewLayerIndex = index;
+}
+

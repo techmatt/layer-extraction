@@ -960,3 +960,18 @@ byte App::GetOriginalVideoPalette(int paletteindex, int index)
 {
 	return _videocontroller.GetOriginalPalette(paletteindex, index);
 }
+
+void App::SaveVideoFrames( void )
+{
+	_videocontroller.SaveFrames("../VideoResults/");
+}
+
+int App::GetVideoPaletteSize( void )
+{
+	return _videocontroller.getPaletteSize();
+}
+
+void App::SetVideoPreviewLayerIndex( int index )
+{
+	_videocontroller.SetPreviewLayerIndex(index);
+}

@@ -102,6 +102,14 @@ BASECODEDLL_API void BCLoadVideo(void* context, const char* filename, int palett
 	app->LoadVideo(filename, paletteSize);
 }
 
+BASECODEDLL_API int BCGetVideoPaletteSize(void* context)
+{
+	if (context == NULL) return 0;
+	App *app = (App*) context;
+
+	return app->GetVideoPaletteSize();
+}
+
 BASECODEDLL_API byte BCGetVideoPalette(void* context, int paletteindex, int index)
 {
 	if (context == NULL) return 0;
@@ -124,4 +132,20 @@ BASECODEDLL_API byte BCGetOriginalVideoPalette(void* context, int paletteindex, 
 	App *app = (App*) context;
 
 	return app->GetOriginalVideoPalette(paletteindex, index);
+}
+
+BASECODEDLL_API void BCSaveVideoFrames(void* context)
+{
+	if (context == NULL) return;
+	App *app = (App*) context;
+
+	app->SaveVideoFrames();
+}
+
+BASECODEDLL_API void BCSetVideoPreviewLayerIndex( void* context, int index )
+{
+	if (context == NULL) return;
+	App *app = (App*) context;
+
+	app->SetVideoPreviewLayerIndex(index);
 }
