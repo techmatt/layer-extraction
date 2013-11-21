@@ -61,6 +61,7 @@ void App::Init()
 
 void App::Recolorize()
 {
+    Console::WriteLine("Recolorizing...");
 	Bitmap bmp, mask;
 	bmp.LoadPNG("../Data/" + _parameters.imageFile);
 	mask.LoadPNG("../Data/" + _parameters.maskFile);
@@ -97,12 +98,6 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 
 PixelLayerSet App::ExtractLayers(const Bitmap &bmp, const Vector<Vec3f> &palette, const String &constraints, const bool autoCorrect)
 {
-#ifdef _DEBUG
-	Console::WriteLine("DLL compiled in release mode");
-#else
-	Console::WriteLine("DLL compiled in debug mode");
-#endif
-
 	_parameters.Init("../Parameters.txt");
 
 	if(usingRecolorizer)
