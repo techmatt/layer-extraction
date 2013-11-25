@@ -87,6 +87,13 @@ public:
     void LoadPNGFromMemory(const Vector<BYTE> &Buffer); //loads bitmap from Buffer in *.PNG format
     void LoadSDL(const String &Filename); //loads bitmap from most file formats using SDL
 
+    static Bitmap Load(const String &Filename)
+    {
+        Bitmap result;
+        result.LoadPNG(Filename);
+        return result;
+    }
+
 #ifdef USE_D3D9
     void LoadFromSurface(LPDIRECT3DSURFACE9 Surface);
 	static void SaveSurfaceToPNG(LPDIRECT3DSURFACE9 Surface, const String &Filename, const BitmapSaveOptions &Options);

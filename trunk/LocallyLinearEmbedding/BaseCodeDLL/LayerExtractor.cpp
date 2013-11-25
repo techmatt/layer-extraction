@@ -569,6 +569,7 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
     {
         VisualizeLayers(parameters, bmp, layers);
         VisualizeReconstruction(parameters, bmp, layers);
+        VisualizeLayerGrid(parameters, bmp, layers);
     }
 }
 
@@ -1016,6 +1017,48 @@ void LayerExtractor::VisualizeReconstruction(const AppParameters &parameters, co
     }
 
     RecolorSuperpixels(bmp, newColors).SavePNG("../Results/Reconstruction_P" + String(pass) + ".png");
+}
+
+void LayerExtractor::VisualizeLayerGrid(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const
+{
+    const Vec2i gridSize(3, 2);
+    const Vec2i buffer(45, 45);
+    const UINT paletteSize = 40;
+    const Vec2i gridStride(bmp.Width() + paletteSize + buffer.x, bmp.Height() + buffer.y);
+    Bitmap result(gridStride.x * gridSize.x - buffer.x, gridStride.y * gridSize.y - buffer.y, RGBColor::White);
+
+    Vec2i gridPos = Vec2i::Origin;
+    for(UINT layerIndex = 0; layerIndex < layers.layers.Length(); layerIndex++)
+    {
+        const Layer &curLayer = layers.layers[layerIndex];
+
+        const UINT superpixelCount = superpixelColors.Length();
+        Vector<Vec3f> newColors(superpixelCount);
+        for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+        {
+            newColors[superpixelIndex] = Vec3f(RGBColor::Interpolate(RGBColor::Black, RGBColor::White, (float)curLayer.superpixelWeights[superpixelIndex]));
+        }
+
+        Bitmap smoothBmp = RecolorSuperpixels(bmp, newColors);
+        
+        Vec2i startPos = Vec2i(gridStride.x * gridPos.x, gridStride.y * gridPos.y);
+        for(UINT y = 0; y < bmp.Height(); y++)
+        {
+            for(UINT x = 0; x < paletteSize; x++)
+            {
+                if(result.ValidCoordinates(x + startPos.x, y + startPos.y)) result[y + startPos.y][x + startPos.x] = RGBColor(curLayer.color);
+            }
+        }
+        smoothBmp.BltTo(result, startPos + Vec2i(paletteSize, 0));
+
+        gridPos.x++;
+        if(gridPos.x == gridSize.x)
+        {
+            gridPos.x = 0;
+            gridPos.y++;
+        }
+    }
+    result.SavePNG("../Results/LayerGrid.png");
 }
 
 void LayerExtractor::VisualizeLayers(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const
