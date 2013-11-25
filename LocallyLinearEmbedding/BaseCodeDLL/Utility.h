@@ -95,4 +95,29 @@ namespace Utility
             }
         }
     }
+
+    __forceinline Bitmap MakePaletteOverlay(const Bitmap &bmp)
+    {
+        const UINT buffer = 3;
+        const UINT size = 50 * 1280 / 960;
+        Vector<RGBColor> colors;
+        for(UINT y = 0; y < bmp.Height(); y++)
+            for(UINT x = 0; x < bmp.Width(); x++)
+            {
+                RGBColor c = bmp[y][x];
+                if(c != RGBColor::Black && !colors.Contains(c)) colors.PushEnd(c);
+            }
+        Bitmap result(size, size * colors.Length(), RGBColor::Black);
+        for(UINT colorIndex = 0; colorIndex < colors.Length(); colorIndex++)
+        {
+            for(UINT y = buffer; y < size - buffer; y++)
+            {
+                for(UINT x = buffer; x < size - buffer; x++)
+                {
+                    result[y + colorIndex * size][x] = colors[colorIndex];
+                }
+            }
+        }
+        return result;
+    }
 };

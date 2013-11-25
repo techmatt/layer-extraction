@@ -37,6 +37,7 @@ private:
     void VisualizeNearestNeighbors(const AppParameters &parameters, const Bitmap &bmp) const;
 	void VisualizeLayerPalette(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers, int index, int superpixelIndex) const;
 	void VisualizeLayerPreferences(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const;
+    void VisualizeLayerGrid(const AppParameters &parameters, const Bitmap &bmp, const LayerSet &layers) const;
 
     void TestNeighborWeights(const AppParameters &parameters, const Bitmap &bmp) const;
 
