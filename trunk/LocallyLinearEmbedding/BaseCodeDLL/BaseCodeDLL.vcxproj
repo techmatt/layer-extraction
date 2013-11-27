@@ -94,7 +94,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Parameters.txt" />
-    <Text Include="..\VideoParameters.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A1FD2443-4B10-42D8-AEE2-3444225A8D1C}</ProjectGuid>

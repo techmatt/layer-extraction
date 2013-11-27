@@ -358,7 +358,7 @@
             this.buttonVideo.TabIndex = 23;
             this.buttonVideo.Text = "Video";
             this.buttonVideo.UseVisualStyleBackColor = true;
-            this.buttonVideo.Click += new System.EventHandler(this.buttonVideo_Click);
+            this.buttonVideo.Click += new System.EventHandler(this.videoWindowButton_Click);
             // 
             // videoWindowButton
             // 
@@ -367,9 +367,9 @@
             this.videoWindowButton.Name = "videoWindowButton";
             this.videoWindowButton.Size = new System.Drawing.Size(73, 35);
             this.videoWindowButton.TabIndex = 28;
-            this.videoWindowButton.Text = "video window";
+            this.videoWindowButton.Text = "delete layer";
             this.videoWindowButton.UseVisualStyleBackColor = true;
-            this.videoWindowButton.Click += new System.EventHandler(this.videoWindowButton_Click);
+            this.videoWindowButton.Click += new System.EventHandler(this.deleteLayerButton_Click);
             // 
             // MainWindow
             // 

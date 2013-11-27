@@ -61,7 +61,7 @@ void App::Init()
 
 void App::Recolorize()
 {
-    Console::WriteLine("Recolorizing...");
+	Console::WriteLine("Recolorizing...");
 	Bitmap bmp, mask;
 	bmp.LoadPNG("../Data/" + _parameters.imageFile);
 	mask.LoadPNG("../Data/" + _parameters.maskFile);
@@ -450,10 +450,10 @@ void App::DeleteLayer(const String &parameterFilename)
 {
 	_parameters.Init("../Parameters.txt");
 
-	const int klayers = 6;
-	const int idx = 1; // layer to delete
-	bool del = false;
-	String imagename = "reflection.png";
+	const int klayers = 5;
+	const int idx = 4; // layer to delete
+	bool del = true;
+	String imagename = "water.png";
 	String imagelocation = "../TextureSynthesisExemplars/";
 	String cachedir = "../TexSynCache/";
 	String outdir = "./";
@@ -481,6 +481,7 @@ void App::DeleteLayer(const String &parameterFilename)
 			layers.PushEnd(PixelLayer(layerfile));
 			layers[i].SavePNG(outdir + "layers_k-" + String(klayers) + "_l-" + String(i) + ".png");
 		}
+		Console::WriteLine("read layers from cache");
 	}
 	else { // generate palette & layers
 		LayerSet superpixellayers;
@@ -584,7 +585,9 @@ void App::DeleteLayer(const String &parameterFilename)
 				break;
 			}
 		}
-		if (!cached) {
+		if (cached)
+			Console::WriteLine("read layers from cache");
+		else {
 			nlayers.FreeMemory();
 			LayerSet superpixellayers;
 
@@ -607,6 +610,7 @@ void App::DeleteLayer(const String &parameterFilename)
 			}
 		}
 		// scaling
+		//Grid<int> mask(image.Height(), image.Width(), 1);
 		Vector<float> scaled(klayers-1);
 		int i;
 		for (int y = 0; y < image.Height(); y++) {
@@ -616,12 +620,15 @@ void App::DeleteLayer(const String &parameterFilename)
 				scale = 0;
 				for (int k = 0; k < klayers; k++) {
 					if (k != idx) {
-						scaled[i] = (float) layers[k].pixelWeights(y,x) * nlayers[i].pixelWeights(y,x);
+						scaled[i] = (float) max(max(layers[k].pixelWeights(y,x), nlayers[i].pixelWeights(y,x)), layers[k].pixelWeights(y,x) * nlayers[i].pixelWeights(y,x));
 						scale += scaled[i];
 						i++;
 					}
 				}
-				if (scale < FLT_EPSILON) scale = 1;
+				if (scale < .01) {
+					scale = 1;
+					//mask(y,x) = 0;
+				}
 				for (int k = 0; k < klayers-1; k++) 
 					v += nlayers[k].color * scaled[k] / scale;
 				output[y][x] = RGBColor(v);
@@ -629,10 +636,87 @@ void App::DeleteLayer(const String &parameterFilename)
 		}
 		output.SavePNG(outdir + "output-scaled-2.png");
 	}
-
 	Console::WriteLine("Done!");
 }
+/*
+void App::FillHoles(Bitmap& image, Grid<int>& mask)
+{
+	// gaussian filter
+	double sigma = 1.5;
+	double denom = -2 * sigma * sigma;
+	double filter[5][5];
+	for (int i = -2; i <= 2; i++) {
+		for (int j = -2; j <= 2; j++)
+			filter[i+2][j+2] = exp((i*i+j*j)/denom);
+	}
 
+	// fill from outside in
+	const int on_queue = 2;
+	std::queue<Vec2i> queue;
+	for (int y = 0; y < image.Height(); y++) {
+		for (int x = 0; x < image.Width(); x++) {
+			if (mask(y,x) == 0) continue; // unknown
+			if (mask(y,x) == 2) continue; // on queue
+
+			// neighbors with unknown values
+			if (x > 0 && mask(y,x-1) == 0) {
+				queue.push(Vec2i(x-1,y));
+				mask(y,x-1) = 2;
+			}
+			if (x < image.Width()-1 && mask(y,x+1) == 0) {
+				queue.push(Vec2i(x+1,y));
+				mask(y,x+1) = 2;
+			}
+			if (y > 0 && mask(y-1,x) == 0) {
+				queue.push(Vec2i(x,y-1));
+				mask(y-1,x) = 2;
+			}
+			if (y < image.Height()-1 && mask(y+1,x) == 0) {
+				queue.push(Vec2i(x,y+1));
+				mask(y+1,x) = 2;
+			}
+		}
+	}
+	// update
+	Vec3f sum;
+	double weight;
+	while (!queue.empty()) {
+		Vec2i coord = queue.front();
+		queue.pop();
+		Assert(coord.x >= 0 && coord.y >= 0 && coord.x < image.Width() && coord.y < image.Width(),"coords out of bounds");
+		Assert(mask(coord.y,coord.x) == 2, "not on queue");
+		// filter
+		sum = Vec3f(0,0,0); weight = 0;
+		for (int i = -2; i <= 2; i++) {
+			for (int j = -2; j <= 2; j++) {
+				if (coord.x+i < 0 || coord.x+i >= image.Width()) continue;
+				if (coord.y+j < 0 || coord.y+j >= image.Height()) continue;
+				if (mask(coord.y+j,coord.x+i) == 0 || mask(coord.y+j,coord.x+i) == 2) continue;
+				sum += filter[i+2][j+2] * Vec3f(image[coord.y+j][coord.x+i]);
+				weight += filter[i+2][j+2];
+			}
+		}
+		if (weight > 0) image[coord.y][coord.x] = RGBColor(sum / weight);
+		// neighbors with unknown values
+		if (coord.x > 0 && mask(coord.y,coord.x-1) == 0) {
+			queue.push(Vec2i(coord.x-1,coord.y));
+			mask(coord.y,coord.x-1) = 2;
+		}
+		if (coord.x < image.Width()-1 && mask(coord.y,coord.x+1) == 0) {
+			queue.push(Vec2i(coord.x+1,coord.y));
+			mask(coord.y,coord.x+1) = 2;
+		}
+		if (coord.y > 0 && mask(coord.y-1,coord.x) == 0) {
+			queue.push(Vec2i(coord.x,coord.y-1));
+			mask(coord.y-1,coord.x) = 2;
+		}
+		if (coord.y < image.Height()-1 && mask(coord.y+1,coord.x) == 0) {
+			queue.push(Vec2i(coord.x,coord.y+1));
+			mask(coord.y+1,coord.x) = 2;
+		}
+	}
+}
+*/
 void App::SynthesizeTexture(const String &parameterFilename)
 {
 	if(parameterFilename.Length() > 0) _parameters.Init(parameterFilename);
@@ -969,4 +1053,9 @@ int App::GetVideoPaletteSize( void )
 void App::SetVideoPreviewLayerIndex( int index )
 {
 	_videocontroller.SetPreviewLayerIndex(index);
+}
+
+void App::saveVideoPaletteImage( void )
+{
+	_videocontroller.SavePaletteImage("../VideoResults/");
 }

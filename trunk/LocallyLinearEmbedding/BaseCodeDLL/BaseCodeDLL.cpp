@@ -149,3 +149,11 @@ BASECODEDLL_API void BCSetVideoPreviewLayerIndex( void* context, int index )
 
 	app->SetVideoPreviewLayerIndex(index);
 }
+
+BASECODEDLL_API void BCSaveVideoPaletteImage(void* context)
+{
+	if (context == NULL) return;
+	App *app = (App*) context;
+
+	app->saveVideoPaletteImage();
+}

@@ -16,4 +16,5 @@ EXPORTS
 	BCSetVideoPalette
 	BCGetOriginalVideoPalette
 	BCSaveVideoFrames
+	BCSaveVideoPaletteImage
 	BCSetVideoPreviewLayerIndex
