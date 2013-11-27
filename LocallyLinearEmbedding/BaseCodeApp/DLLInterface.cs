@@ -87,6 +87,8 @@ namespace BaseCodeApp
         [DllImport(BaseCodeDLL)]
         public static extern IntPtr BCSaveVideoFrames(IntPtr context);
         [DllImport(BaseCodeDLL)]
+        public static extern IntPtr BCSaveVideoPaletteImage(IntPtr context);
+        [DllImport(BaseCodeDLL)]
         public static extern IntPtr BCSetVideoPreviewLayerIndex(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int index);
 
         public IntPtr baseCodeDLLContext = (IntPtr)0;
@@ -155,6 +157,11 @@ namespace BaseCodeApp
         public void SaveVideoFrames()
         {
             BCSaveVideoFrames(baseCodeDLLContext);
+        }
+
+        public void SaveVideoPaletteImage()
+        {
+            BCSaveVideoPaletteImage(baseCodeDLLContext);
         }
 
         public void SetVideoPreviewLayerIndex(int index)

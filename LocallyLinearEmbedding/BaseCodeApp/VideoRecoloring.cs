@@ -94,6 +94,11 @@ namespace BaseCodeApp
             _DLL.SaveVideoFrames();
         }
 
+        private void savePaletteImageButton_Click(object sender, EventArgs e)
+        {
+            _DLL.SaveVideoPaletteImage();
+        }
+
         private void fpsBox_Changed(object sender, EventArgs e)
         {
             int idx = fpsBox.SelectedIndex;

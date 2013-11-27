@@ -60,8 +60,8 @@ Bitmap* VideoController::GetNextFrame(void)
 	Assert(_currFrameIndex >= 0 && _currFrameIndex < _frameCount, "frame index out of bounds!");
 
 	if (_previewLayerIndex < 0) { // full colour
-		for (int y = 0; y < _videoHeight; y++)
-			for (int x = 0; x < _videoWidth; x++)
+		for (UINT y = 0; y < _videoHeight; y++)
+			for (UINT x = 0; x < _videoWidth; x++)
 				(*currframe)[y][x] = GetColor(_currFrameIndex, x, y);
 	}
 	else {
@@ -89,8 +89,8 @@ Bitmap* VideoController::GetCurrentFrame(void)
 	if (_usingframeA) currframe = _frameB;
 
 	if (_previewLayerIndex < 0) { // full colour
-		for (int y = 0; y < _videoHeight; y++)
-			for (int x = 0; x < _videoWidth; x++)
+		for (UINT y = 0; y < _videoHeight; y++)
+			for (UINT x = 0; x < _videoWidth; x++)
 				(*currframe)[y][x] = GetColor(_currFrameIndex, x, y);
 	}
 	else {
@@ -251,14 +251,34 @@ void VideoController::SaveFrames( const String& resultdirectory )
 	String saveLocation = saveDirectory + _vidparams.videoSaveName;
 
 	Bitmap currFrame(_videoWidth, _videoHeight);
-	for (int f = 0; f < _frameCount; f++) {
-		for (int y = 0; y < _videoHeight; y++)
-			for (int x = 0; x < _videoWidth; x++)
+	for (UINT f = 0; f < _frameCount; f++) {
+		for (UINT y = 0; y < _videoHeight; y++)
+			for (UINT x = 0; x < _videoWidth; x++)
 				currFrame[y][x] = GetColor(f, x, y);
 
 		currFrame.SavePNG(saveLocation + "_" + String::ZeroPad(f, _vidparams.zeropad) + ".png");
 	}
+	SavePaletteImage(resultdirectory);
 	Console::WriteLine("saved video to " + saveDirectory);
+}
+
+void VideoController::SavePaletteImage( const String& resultdirectory )
+{
+	Utility::MakeDirectory(resultdirectory);
+	String saveDirectory = resultdirectory + _vidparams.videoSaveName + "/";
+	Utility::MakeDirectory(saveDirectory);
+	String saveLocation = saveDirectory + _vidparams.videoSaveName;
+
+	const UINT height = 50;
+	const UINT width = 20;
+	Bitmap vispalette(width * _palette.Length(), height);
+	for (UINT p = 0; p < _palette.Length(); p++) {
+		for (UINT y = 0; y < height; y++)
+			for (UINT x = width * p; x < width * (p + 1); x++)
+				vispalette[y][x] = RGBColor(_palette[p]);
+	}
+	vispalette.SavePNG(saveLocation + "_palette.png");
+	Console::WriteLine("saved palette to " + saveDirectory);
 }
 
 void VideoController::SetPreviewLayerIndex( int index )

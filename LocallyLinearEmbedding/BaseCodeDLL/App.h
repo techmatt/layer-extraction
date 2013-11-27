@@ -17,6 +17,7 @@ public:
 	void SetVideoPalette(int paletteindex, byte r, byte g, byte b);
 	byte GetOriginalVideoPalette(int paletteindex, int index);
 	void SaveVideoFrames(void);
+	void saveVideoPaletteImage(void);
 	void SetVideoPreviewLayerIndex(int index);
 
 	void OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename);

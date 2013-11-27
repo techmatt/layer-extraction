@@ -205,8 +205,5 @@
     <Text Include="..\Parameters.txt">
       <Filter>Files</Filter>
     </Text>
-    <Text Include="..\VideoParameters.txt">
-      <Filter>Files</Filter>
-    </Text>
   </ItemGroup>
 </Project>

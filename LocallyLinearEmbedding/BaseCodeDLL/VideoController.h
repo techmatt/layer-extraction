@@ -42,6 +42,7 @@ public:
 	byte GetPalette(int paletteindex, int index);
 	void SetPalette(int paletteindex, byte r, byte g, byte b);
 	void SaveFrames(const String& resultdirectory);
+	void SavePaletteImage(const String& resultdirectory);
 	void SetPreviewLayerIndex(int index);
 
 	//const Bitmap* GetNextFrameOriginal(void);
