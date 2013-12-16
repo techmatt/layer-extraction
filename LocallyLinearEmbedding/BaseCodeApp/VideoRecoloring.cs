@@ -22,6 +22,9 @@ namespace BaseCodeApp
         private PaletteCache _paletteCache = new PaletteCache("../VideoCache/");
         private List<Color> _currPalette = new List<Color>();
 
+        private Image paletteImage, scrollImage;
+        private Bitmap paletteBitmap, scrollBitmap;
+
         DLLInterface _DLL;
 
         public VideoRecoloring(DLLInterface DLL)
@@ -29,6 +32,16 @@ namespace BaseCodeApp
             _DLL = DLL;
             InitializeComponent();
             fpsBox.SelectedIndex = 6;
+
+            paletteImage = Image.FromFile("../Data/palette.png");
+            pictureBoxPalette.Image = paletteImage;
+            paletteBitmap = new Bitmap(paletteImage.Width, paletteImage.Height);
+            Graphics g = Graphics.FromImage(paletteBitmap);
+            g.DrawImage(paletteImage, new Point(0, 0));
+
+            scrollImage = Image.FromFile("../Data/scroll.png");
+            pictureBoxScroll.Image = scrollImage;
+            scrollBitmap = new Bitmap(scrollImage.Width, scrollImage.Height);
         }
 
         private void openButton_Click(object sender, EventArgs e)
@@ -192,6 +205,22 @@ namespace BaseCodeApp
                 statusBox.Text = "Convex hull error: " + WithinConvexHull(space);
             }*/
 
+        }
+
+        private void VideoRecoloring_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBoxPalette_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBoxPalette_MouseDown(object sender, MouseEventArgs e)
+        {
+            Color rgb = paletteBitmap.GetPixel(e.X, e.Y);
+            this.BackColor = Color.FromArgb(rgb.R, rgb.G, rgb.B);
         }
     }
 }

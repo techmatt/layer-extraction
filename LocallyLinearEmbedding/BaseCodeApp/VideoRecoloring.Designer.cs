@@ -41,7 +41,11 @@
             this.colorPicker = new System.Windows.Forms.ColorDialog();
             this.saveVideoButton = new System.Windows.Forms.Button();
             this.savePaletteImageButton = new System.Windows.Forms.Button();
+            this.pictureBoxPalette = new System.Windows.Forms.PictureBox();
+            this.pictureBoxScroll = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.videoBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPalette)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxScroll)).BeginInit();
             this.SuspendLayout();
             // 
             // videoBox
@@ -155,11 +159,32 @@
             this.savePaletteImageButton.UseVisualStyleBackColor = true;
             this.savePaletteImageButton.Click += new System.EventHandler(this.savePaletteImageButton_Click);
             // 
+            // pictureBoxPalette
+            // 
+            this.pictureBoxPalette.Location = new System.Drawing.Point(262, 564);
+            this.pictureBoxPalette.Name = "pictureBoxPalette";
+            this.pictureBoxPalette.Size = new System.Drawing.Size(265, 254);
+            this.pictureBoxPalette.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.pictureBoxPalette.TabIndex = 11;
+            this.pictureBoxPalette.TabStop = false;
+            this.pictureBoxPalette.Click += new System.EventHandler(this.pictureBoxPalette_Click);
+            this.pictureBoxPalette.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxPalette_MouseDown);
+            // 
+            // pictureBoxScroll
+            // 
+            this.pictureBoxScroll.Location = new System.Drawing.Point(536, 565);
+            this.pictureBoxScroll.Name = "pictureBoxScroll";
+            this.pictureBoxScroll.Size = new System.Drawing.Size(30, 252);
+            this.pictureBoxScroll.TabIndex = 12;
+            this.pictureBoxScroll.TabStop = false;
+            // 
             // VideoRecoloring
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1061, 630);
+            this.ClientSize = new System.Drawing.Size(1061, 881);
+            this.Controls.Add(this.pictureBoxScroll);
+            this.Controls.Add(this.pictureBoxPalette);
             this.Controls.Add(this.savePaletteImageButton);
             this.Controls.Add(this.saveVideoButton);
             this.Controls.Add(this.KBox);
@@ -172,7 +197,10 @@
             this.Controls.Add(this.videoBox);
             this.Name = "VideoRecoloring";
             this.Text = "VideoRecoloring";
+            this.Load += new System.EventHandler(this.VideoRecoloring_Load);
             ((System.ComponentModel.ISupportInitialize)(this.videoBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPalette)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxScroll)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -192,5 +220,7 @@
         private System.Windows.Forms.ColorDialog colorPicker;
         private System.Windows.Forms.Button saveVideoButton;
         private System.Windows.Forms.Button savePaletteImageButton;
+        private System.Windows.Forms.PictureBox pictureBoxPalette;
+        private System.Windows.Forms.PictureBox pictureBoxScroll;
     }
 }
