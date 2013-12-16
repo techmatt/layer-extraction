@@ -5,7 +5,11 @@ const bool usingRecolorizer = false;
 
 void App::Init()
 {
-	/*AllocConsole();
+    /*const String dir = "C:\\Code\\GoogleCode\\layer-extraction-paper\\trunk\\figs\\teaser\\";
+    Utility::MakePaletteOverlay(Bitmap::Load(dir + "landscapePaletteA.png")).SavePNG(dir + "landscapePaletteA.png");
+    Utility::MakePaletteOverlay(Bitmap::Load(dir + "landscapePaletteB.png")).SavePNG(dir + "landscapePaletteB.png");
+    Utility::MakePaletteOverlay(Bitmap::Load(dir + "landscapePaletteC.png")).SavePNG(dir + "landscapePaletteC.png");
+	AllocConsole();
 	_parameters.Init("../Parameters.txt");
 
 	Bitmap bmp;
