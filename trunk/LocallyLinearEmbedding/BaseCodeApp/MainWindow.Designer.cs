@@ -367,7 +367,7 @@
             this.videoWindowButton.Name = "videoWindowButton";
             this.videoWindowButton.Size = new System.Drawing.Size(73, 35);
             this.videoWindowButton.TabIndex = 28;
-            this.videoWindowButton.Text = "delete layer";
+            this.videoWindowButton.Text = "test";
             this.videoWindowButton.UseVisualStyleBackColor = true;
             this.videoWindowButton.Click += new System.EventHandler(this.deleteLayerButton_Click);
             // 

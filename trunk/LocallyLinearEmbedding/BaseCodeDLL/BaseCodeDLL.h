@@ -41,7 +41,7 @@ BASECODEDLL_API UINT32        __stdcall BCProcessCommand(void *context, const ch
 BASECODEDLL_API const char*   __stdcall BCQueryStringByName(void *context, const char *s);
 BASECODEDLL_API int           __stdcall BCQueryIntegerByName(void *context, const char *s);
 BASECODEDLL_API BCBitmapInfo* __stdcall BCQueryBitmapByName(void *context, const char *s);
-BASECODEDLL_API BCLayers*     __stdcall BCExtractLayers(void* context, BCBitmapInfo image, const double* palette, int paletteSize, const char *constraints, const bool autoCorrect);
+BASECODEDLL_API BCLayers*     __stdcall BCExtractLayers(void* context, BCBitmapInfo image, const double* palette, int paletteSize, const char *constraints, const bool autoCorrect, const char* imagefile);
 BASECODEDLL_API BCBitmapInfo* __stdcall BCSegmentImage(void* context, BCBitmapInfo image);
 BASECODEDLL_API BCLayers*	  __stdcall BCSynthesizeLayers(void* context);
 BASECODEDLL_API void		  __stdcall BCOutputMesh(void* context, BCBitmapInfo image, const double* palette, int paletteSize, const char* filename);

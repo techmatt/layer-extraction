@@ -7,7 +7,7 @@ public:
     BCBitmapInfo* QueryBitmapByName(const String &s);
     int QueryIntegerByName(const String &s);
     const char *QueryStringByName(const String &s);
-	BCLayers* ExtractLayers(const BCBitmapInfo &bitmap, const Vector<Vec3f> &palette, const String &constraints, const bool autoCorrect);
+	BCLayers* ExtractLayers(const BCBitmapInfo &bitmap, const Vector<Vec3f> &palette, const String &constraints, const bool autoCorrect, const String& imageFile);
 	BCBitmapInfo* SegmentImage(const BCBitmapInfo &bitmap);
     BCLayers* SynthesizeLayers();
 
@@ -29,6 +29,11 @@ private:
 	void SynthesizeTextureByLayers(const String &parameterFilename);
 	void DeleteLayer(const String &parameterFilename);
 	void ExtractVideoLayers();
+	void CacheLayers(const Vector<Vec3f> &palette, const Vector<PixelLayer> &pixellayers, const String& imageFile);
+
+	void FilterLayers(const String &parameterFilename);
+	bool ReadLayersFromCache(const String& cache, PixelLayerSet &layers, Vector<Vec3f>& palette, const Vector<PixelConstraint>& constraints);
+	void ComputeLayers(const String& cache, const Bitmap& image, PixelLayerSet &layers, Vector<Vec3f>& palette, const Vector<PixelConstraint>& constraints);
     
     AppParameters _parameters;
 

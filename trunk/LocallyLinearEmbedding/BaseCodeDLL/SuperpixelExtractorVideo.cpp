@@ -19,23 +19,25 @@ Vector<Vec3f> Video::ComputePaletteKMeans(UINT paletteSize) const
 	return result;
 }
 
-Vector<Vec3f> Video::ComputeFrame0Palette( const String &filename ) const
+Vector<Vec3f> Video::ComputeFrame0Palette( const Vector<UINT>& frameids, const Vector<String> &filenames ) const
 {
-    Bitmap bmp;
-    bmp.LoadPNG(filename);
+	Vector<Vec3f> result;
+	Bitmap bmp;
 
-    Vector<Vec3f> result;
-    for(int y = 0; y < bmp.Height(); y++)
-        for(int x = 0; x < bmp.Width(); x++)
-        {
-            if(bmp[y][x] != frames[0][y][x])
-            {
-                result.PushEnd(Vec3f(frames[0][y][x]));
-            }
-        }
+	for (UINT i = 0; i < filenames.Length(); i++) {
+		bmp.LoadPNG(filenames[i]);
 
-    Console::WriteLine("User-selected palette: " + String(result.Length()));
-    return result;
+		for(UINT y = 0; y < bmp.Height(); y++)
+			for(UINT x = 0; x < bmp.Width(); x++)
+			{
+				if(bmp[y][x] != frames[frameids[i]][y][x])
+				{
+					result.PushEnd(Vec3f(frames[frameids[i]][y][x]));
+				}
+			}
+	}
+	Console::WriteLine("User-selected palette: " + String(result.Length()));
+	return result;
 }
 
 Vector<ColorCoordinateVideo> SuperpixelExtractorVideoPeriodic::Extract(const AppParameters &parameters, const Video &video)
@@ -199,7 +201,7 @@ void SuperpixelExtractorVideoSuperpixel::AssignPixel(const AppParameters &parame
 	for(UINT neighborIndex = 0; neighborIndex < neighborCount; neighborIndex++)
 	{
 		Vec3i finalCoord(coord.x + XOffsets[neighborIndex], coord.y + YOffsets[neighborIndex], coord.z + FOffsets[neighborIndex]);
-		if(finalCoord.z >= 0 && finalCoord.z < _assignments.Length() && _assignments[finalCoord.z].ValidCoordinates(finalCoord.y, finalCoord.x) && 
+		if(finalCoord.z >= 0 && finalCoord.z < (int)_assignments.Length() && _assignments[finalCoord.z].ValidCoordinates(finalCoord.y, finalCoord.x) && 
 			_assignments[finalCoord.z](finalCoord.y, finalCoord.x) == 0xFFFFFFFF) // bounds check
 		{
 			QueueEntry newEntry;

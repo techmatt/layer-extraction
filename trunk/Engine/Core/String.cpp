@@ -135,6 +135,7 @@ String String::ZeroPad(int i, UINT ZeroPadding)
 
 String String::ZeroPad(const String &S, UINT ZeroPadding)
 {
+	if (ZeroPadding == 0) return "";
     String Prefix;
     for(UINT i = S.Length(); i < ZeroPadding; i++)
     {
@@ -430,6 +431,18 @@ bool String::Contains(const String &Find) const
         }
     }
     return false;
+}
+
+int String::FindFirstIndex(const String &Find) const
+{
+	for(int Index = 0; Index < (int)_Length; Index++)
+	{
+		if(ExactMatchAtOffset(Find, Index))
+		{
+			return Index;
+		}
+	}
+	return -1;
 }
 
 String String::FindAndReplace(const String &Find, const String &Replace) const
