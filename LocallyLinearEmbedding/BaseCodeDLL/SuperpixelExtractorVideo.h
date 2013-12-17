@@ -5,7 +5,7 @@ struct Video
     UINT Height() const { return frames[0].Height(); }
 
     Vector<Vec3f> ComputePaletteKMeans(UINT paletteSize) const;
-    Vector<Vec3f> ComputeFrame0Palette(const String &filename) const;
+    Vector<Vec3f> ComputeFrame0Palette( const Vector<UINT>& frameids, const Vector<String> &filename ) const;
 
     Vector<Bitmap> frames;
 };

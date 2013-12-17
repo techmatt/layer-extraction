@@ -67,7 +67,7 @@ namespace BaseCodeApp
         [DllImport(BaseCodeDLL)]
         public static extern Int32 BCQueryIntegerByName(IntPtr context, [In, MarshalAs(UnmanagedType.LPStr)] String integerName);
         [DllImport(BaseCodeDLL)]
-        public static extern IntPtr BCExtractLayers(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize, [In, MarshalAs(UnmanagedType.LPStr)] String layerConstraints, [In, MarshalAs(UnmanagedType.Bool)] bool autoCorrect);
+        public static extern IntPtr BCExtractLayers(IntPtr context, BCBitmapInfo bitmap, IntPtr palette, [In, MarshalAs(UnmanagedType.I4)]int paletteSize, [In, MarshalAs(UnmanagedType.LPStr)] String layerConstraints, [In, MarshalAs(UnmanagedType.Bool)] bool autoCorrect, [In, MarshalAs(UnmanagedType.LPStr)] String imageFile);
         [DllImport(BaseCodeDLL)]
         public static extern IntPtr BCSegmentImage(IntPtr context, BCBitmapInfo bitmap);
         [DllImport(BaseCodeDLL)]

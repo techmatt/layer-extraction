@@ -5,6 +5,6 @@ zeropad=2
 frameCount=42
 fps=5
 
-videoPaletteFile=../Data/bigbuckbunny-5fps/bigbuckbunny_00_palette.png
+videoPaletteFile=0
 
 videoSaveName=bigbuckbunny-5fps

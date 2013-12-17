@@ -117,8 +117,8 @@ namespace Engine
             return result;
         }
 
-        public static Bitmap GetImage(String filename, bool resize=false, int maxDim=125)
-        {         
+        public static Bitmap GetImage(String filename, bool resize = false, int maxDim = 125)
+        {
             if (resize)
             {
                 Bitmap orig = new Bitmap(filename);
@@ -143,7 +143,7 @@ namespace Engine
                 return image;
             }
             else
-                return new Bitmap(filename);       
+                return new Bitmap(filename);
         }
 
 
@@ -177,11 +177,11 @@ namespace Engine
             if (hue < 0)
                 hue += 360;
 
-           /* double alpha = 0.5 * (2 * color.R - color.G - color.B);
-            double beta = Math.Sqrt(3) / 2.0 * (color.G - color.B);
-            double hue = Math.Atan2(beta, alpha) * 180 / Math.PI;
-            if (hue < 0)
-                hue += 360;*/
+            /* double alpha = 0.5 * (2 * color.R - color.G - color.B);
+             double beta = Math.Sqrt(3) / 2.0 * (color.G - color.B);
+             double hue = Math.Atan2(beta, alpha) * 180 / Math.PI;
+             if (hue < 0)
+                 hue += 360;*/
 
             //double hue = color.GetHue();
 
@@ -219,6 +219,71 @@ namespace Engine
                 return Color.FromArgb(255, t, p, v);
             else
                 return Color.FromArgb(255, v, p, q);
+        }
+
+        public static Color HSLtoRGB(HSV hsl)
+        {
+            double hue = hsl.H;
+            double luminosity = hsl.V;
+            double saturation = hsl.S;
+
+            double v;
+            double r, g, b;
+
+            r = luminosity;   // default to gray
+            g = luminosity;
+            b = luminosity;
+            v = (luminosity <= 0.5) ? (luminosity * (1.0 + saturation)) : (luminosity + saturation - luminosity * saturation);
+            if (v > 0)
+            {
+                double m;
+                double sv;
+                int sextant;
+                double fract, vsf, mid1, mid2;
+
+                m = luminosity + luminosity - v;
+                sv = (v - m) / v;
+                hue *= 6.0;
+                sextant = (int) hue;
+                fract = hue - sextant;
+                vsf = v * sv * fract;
+                mid1 = m + vsf;
+                mid2 = v - vsf;
+                switch (sextant)
+                {
+                    case 0:
+                        r = v;
+                        g = mid1;
+                        b = m;
+                        break;
+                    case 1:
+                        r = mid2;
+                        g = v;
+                        b = m;
+                        break;
+                    case 2:
+                        r = m;
+                        g = v;
+                        b = mid1;
+                        break;
+                    case 3:
+                        r = m;
+                        g = mid2;
+                        b = v;
+                        break;
+                    case 4:
+                        r = mid1;
+                        g = m;
+                        b = v;
+                        break;
+                    case 5:
+                        r = v;
+                        g = m;
+                        b = mid2;
+                        break;
+                }
+            }
+            return Color.FromArgb(Convert.ToByte(r * 255.0f), Convert.ToByte(g * 255.0f), Convert.ToByte(b * 255.0f));
         }
 
         public static Color[,] BitmapToArray(Bitmap image)
@@ -287,7 +352,7 @@ namespace Engine
         }
 
         //Shuffle function
-        public static void Shuffle<T>(List<T> shuffled, Random random=null)
+        public static void Shuffle<T>(List<T> shuffled, Random random = null)
         {
             if (random == null)
                 random = new Random();
@@ -321,7 +386,7 @@ namespace Engine
                 vertices[i] = location;
             }
             var hull = ConvexHull.Create(vertices);
-            
+
             return hull;
 
         }
@@ -365,7 +430,7 @@ namespace Engine
             {
                 DenseVector normal = new DenseVector(f.Normal);
                 DenseVector vert = new DenseVector(f.Vertices.First().Position);
-                double magnitude = normal.DotProduct(point-vert);
+                double magnitude = normal.DotProduct(point - vert);
                 if (magnitude > 0) //point is facing opposite direction of face (?)
                 {
                     return false;

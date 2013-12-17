@@ -338,6 +338,7 @@ public:
     bool EndsWith(const String &EndCanidate) const;
     int FindFirstIndex(char Seperator) const;
     int FindLastIndex(char Seperator) const;
+	int FindFirstIndex(const String &Find) const;
     String FindAndReplace(const String &Find, const String &Replace) const;
     String MakeLowercase() const;
     String MakeUppercase() const;

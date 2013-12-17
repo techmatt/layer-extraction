@@ -378,7 +378,7 @@ namespace BaseCodeApp
                     {
                     }
 
-                    IntPtr layersUnmanaged = DLLInterface.BCExtractLayers(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, constraintString, autoCorrect);
+                    IntPtr layersUnmanaged = DLLInterface.BCExtractLayers(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, constraintString, autoCorrect, currImageFile);
                     Marshal.FreeHGlobal(bmpInfo.colorData);
                     Marshal.FreeHGlobal(palettePtr);
 
@@ -420,7 +420,7 @@ namespace BaseCodeApp
                     {
                     }
 
-                    IntPtr layersUnmanaged = DLLInterface.BCExtractLayers(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, constraintString, autoCorrect);
+                    IntPtr layersUnmanaged = DLLInterface.BCExtractLayers(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, constraintString, autoCorrect, currImageFile);
                     Marshal.FreeHGlobal(bmpInfo.colorData);
                     Marshal.FreeHGlobal(palettePtr);
 

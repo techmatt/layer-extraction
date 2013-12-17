@@ -10,7 +10,10 @@ struct VideoParameters
 		frameCount = file.GetInteger("frameCount");
 		fps = file.GetFloat("fps");
 
-		videoPaletteFile = file.GetString("videoPaletteFile", "");
+		videoPaletteFile.FreeMemory();
+		Vector<String> videoPaletteIndices = file.GetString("videoPaletteFile", "").Partition(",");
+		for (UINT i = 0; i < (UINT) videoPaletteIndices.Length(); i++)
+			videoPaletteFile.PushEnd(videoPaletteIndices[i].ConvertToUnsignedInteger());
 
 		videoSaveName = file.GetString("videoSaveName", videoName);
 	}
@@ -21,7 +24,7 @@ struct VideoParameters
 	int frameCount;
 	float fps;
 
-	String videoPaletteFile;
+	Vector<UINT> videoPaletteFile;
 
 	String videoSaveName;
 };

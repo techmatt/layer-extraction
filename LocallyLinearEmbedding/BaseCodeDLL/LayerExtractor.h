@@ -11,6 +11,8 @@ public:
 	bool CorrectLayerSet(const AppParameters &parameters, const Bitmap &bmp, LayerSet &layers);
 	void AddMidpointConstraints(const AppParameters &parameters, const Bitmap &bmp, LayerSet &result);
 
+	Vector<PixelConstraint> ComputePalette(const String &filename, const Bitmap &bmp) const;
+
     void TestLayerRecoloring(const Bitmap &bmp, const LayerSet &layers) const;
     Bitmap RecolorSuperpixels(const Bitmap &bmp, const Vector<Vec3f> &newSuperpixelColors) const;
     Bitmap RecolorLayers(const Bitmap &bmp, const LayerSet &layers, const Vector<RGBColor> &newLayerColors) const;

@@ -466,9 +466,9 @@ void TextureSynthesis::WriteImage(const GaussianPyramid &rgbpyr, const GaussianP
 	for (int row = 0; row < height; row++) { // image
 		for (int col = 0; col < width; col++) {
 
-			coordimage[row][col] = RGBColor(Vec3f(rgbpyr[level][0].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
-				rgbpyr[level][1].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
-				rgbpyr[level][2].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x)));
+			coordimage[row][col] = RGBColor(Vec3f((float)rgbpyr[level][0].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
+				(float)rgbpyr[level][1].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
+				(float)rgbpyr[level][2].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x)));
 		}
 	}
 	coordimage.SavePNG(_outdir + String("image-") + String(level) + String("_") + label + String(".png"));
@@ -502,9 +502,9 @@ void TextureSynthesis::WriteOutput(const AppParameters &parameters, const Gaussi
 	for (int row = 0; row < height; row++) { // image
 		for (int col = 0; col < width; col++) {
 
-			image[row][col] = RGBColor(Vec3f(rgbpyr[level][0].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
-				rgbpyr[level][1].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
-				rgbpyr[level][2].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x)));
+			image[row][col] = RGBColor(Vec3f((float) rgbpyr[level][0].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
+				(float) rgbpyr[level][1].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x),
+				(float) rgbpyr[level][2].pixelWeights(coordinates(row+pad,col+pad).y, coordinates(row+pad,col+pad).x)));
 		}
 	}
 	image.SavePNG(_resultsdir + filename);

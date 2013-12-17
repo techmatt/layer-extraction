@@ -6,12 +6,12 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Engine;
 
 namespace BaseCodeApp
 {
     public partial class VideoRecoloring : Form
     {
-        //private Layers layers = new Layers();
         private BackgroundWorker _bw = new BackgroundWorker();
         private List<Button> _paletteButtons = new List<Button>();
         private List<bool> _layerPreview = new List<bool>();
@@ -24,6 +24,13 @@ namespace BaseCodeApp
 
         private Image paletteImage, scrollImage;
         private Bitmap paletteBitmap, scrollBitmap;
+        private Graphics g_scroll;
+        private HSV hslPaletteColor;
+        private Color paletteColor;
+        private bool setLuminosity;
+
+        private int paletteIndex; // index of palette for changing color
+        private int interfaceHeight;
 
         DLLInterface _DLL;
 
@@ -31,7 +38,8 @@ namespace BaseCodeApp
         {
             _DLL = DLL;
             InitializeComponent();
-            fpsBox.SelectedIndex = 6;
+            fpsBox.SelectedIndex = 1;
+
 
             paletteImage = Image.FromFile("../Data/palette.png");
             pictureBoxPalette.Image = paletteImage;
@@ -42,6 +50,16 @@ namespace BaseCodeApp
             scrollImage = Image.FromFile("../Data/scroll.png");
             pictureBoxScroll.Image = scrollImage;
             scrollBitmap = new Bitmap(scrollImage.Width, scrollImage.Height);
+            g_scroll = Graphics.FromImage(scrollBitmap);
+            hslPaletteColor = new HSV(1.0, 1.0, 0.5);
+            RenderScroll(1.0, 1.0);
+            setLuminosity = false;
+
+            pictureBoxScroll.Left = pictureBoxPalette.Right + 10;
+            palettePanel.Left = pictureBoxScroll.Right + 10;
+            interfaceHeight = paletteImage.Height;
+
+            paletteIndex = -1;
         }
 
         private void openButton_Click(object sender, EventArgs e)
@@ -104,12 +122,24 @@ namespace BaseCodeApp
 
         private void saveButton_Click(object sender, EventArgs e)
         {
-            _DLL.SaveVideoFrames();
+            if (_bw.IsBusy) return;
+            _bw = new BackgroundWorker();
+            _bw.DoWork += delegate
+            {
+                _DLL.SaveVideoFrames();
+            };
+            _bw.RunWorkerAsync();
         }
 
         private void savePaletteImageButton_Click(object sender, EventArgs e)
         {
-            _DLL.SaveVideoPaletteImage();
+            if (_bw.IsBusy) return;
+            _bw = new BackgroundWorker();
+            _bw.DoWork += delegate
+            {
+                _DLL.SaveVideoPaletteImage();
+            };
+            _bw.RunWorkerAsync();
         }
 
         private void fpsBox_Changed(object sender, EventArgs e)
@@ -128,7 +158,23 @@ namespace BaseCodeApp
 
         private void timerVideoFrame_Tick(object sender, EventArgs e)
         {
-            videoBox.Image = (Image)_DLL.GetBitmap("videoFrame");
+            Image im = _DLL.GetBitmap("videoFrame");
+            videoBox.Image = im; //(Image)_DLL.GetBitmap("videoFrame");
+            if (im != null)
+            {
+                videoBox.Height = im.Height;
+                videoBox.Width = im.Width;
+                int top = videoBox.Bottom + 20;
+                openButton.Top = top;
+                resetButton.Top = openButton.Bottom + 10;
+                saveVideoButton.Top = resetButton.Bottom + 10;
+                pictureBoxPalette.Top = top;
+                pictureBoxScroll.Top = top;
+                palettePanel.Top = top;
+
+                this.Height = videoBox.Height + interfaceHeight + 90;
+                this.Width = videoBox.Width + 50;
+            }
         }
 
         private void UpdatePaletteDisplay(bool enableEvents = true)
@@ -145,12 +191,12 @@ namespace BaseCodeApp
                 Button element = new Button();
                 element.BackColor = rgb;
                 element.Width = 40;
-                element.Height = 150;
+                element.Height = interfaceHeight;
                 if (l < _paletteButtonWidth)
                     element.Left = element.Width * l + padding;
                 else
                 {
-                    element.Left = element.Width * (l-_paletteButtonWidth) + padding;
+                    element.Left = element.Width * (l - _paletteButtonWidth) + padding;
                     element.Top = element.Height + padding;
                 }
 
@@ -177,7 +223,9 @@ namespace BaseCodeApp
                             }
                             else
                             {
-                                //Open the color picker and recolor
+                                paletteIndex = index;
+                                _layerPreview[index] = false;
+                                /*Open the color picker and recolor
                                 colorPicker.Color = btn.BackColor;
                                 colorPicker.ShowDialog();
 
@@ -187,8 +235,7 @@ namespace BaseCodeApp
 
                                     _DLL.SetVideoPalette(index, colorPicker.Color.R, colorPicker.Color.G, colorPicker.Color.B);
                                     _layerPreview[index] = false;
-                                    /*pictureBox.Image = Recolor(layers, palette.Select(c => new DenseVector(new double[] { c.BackColor.R, c.BackColor.G, c.BackColor.B })).ToList<DenseVector>(), ColorSpace.RGB);*/
-                                }
+                                }*/
                             }
                         }
                     };
@@ -220,7 +267,77 @@ namespace BaseCodeApp
         private void pictureBoxPalette_MouseDown(object sender, MouseEventArgs e)
         {
             Color rgb = paletteBitmap.GetPixel(e.X, e.Y);
-            this.BackColor = Color.FromArgb(rgb.R, rgb.G, rgb.B);
+            //this.BackColor = Color.FromArgb(rgb.R, rgb.G, rgb.B);
+            double hue = (double)rgb.GetHue() / 360.0;
+            double saturation = (double)rgb.GetSaturation();
+
+            RenderScroll(hue, saturation);
+            hslPaletteColor = new HSV(hue, saturation, 0.5);
+            paletteColor = Util.HSLtoRGB(hslPaletteColor);
+
+            if (paletteIndex > 0 && paletteIndex < _paletteButtons.Count)
+            {
+                _paletteButtons[paletteIndex].BackColor = paletteColor;
+                _DLL.SetVideoPalette(paletteIndex, paletteColor.R, paletteColor.G, paletteColor.B);
+
+                //this.BackColor = paletteColor;
+            }
+        }
+
+        private void RenderScroll(double hue, double saturation)
+        {
+            int h = scrollBitmap.Height;
+            float increment = 1f / scrollBitmap.Height;
+            for (int r = 0; r < scrollBitmap.Height; r++)
+            {
+                for (int c = 0; c < scrollBitmap.Width; c++)
+                {
+                    HSV pcolor = new HSV(hue, saturation, increment * r);
+                    scrollBitmap.SetPixel(c, scrollBitmap.Height - r - 1, Util.HSLtoRGB(pcolor));
+                }
+            }
+            pictureBoxScroll.Image = scrollBitmap;
+        }
+
+        private void pictureBoxScroll_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBoxScroll_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Y >= 0 && e.Y < scrollBitmap.Height)
+            {
+                setLuminosity = true;
+                hslPaletteColor.V = 1d - (double)e.Y / scrollBitmap.Height;
+                paletteColor = Util.HSLtoRGB(hslPaletteColor);
+
+                //this.BackColor = paletteColor;
+            }
+        }
+
+        private void pictureBoxScroll_MouseUp(object sender, MouseEventArgs e)
+        {
+            setLuminosity = false;
+        }
+
+        private void pictureBoxScroll_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.X >= 0 && e.X < scrollBitmap.Width && e.Y >= 0 && e.Y < scrollBitmap.Height)
+            {
+                if (setLuminosity)
+                {
+                    hslPaletteColor.V = 1d - (double)e.Y / scrollBitmap.Height;
+                    paletteColor = Util.HSLtoRGB(hslPaletteColor);
+                    if (paletteIndex > 0 && paletteIndex < _paletteButtons.Count)
+                    {
+                        _paletteButtons[paletteIndex].BackColor = paletteColor;
+                        _DLL.SetVideoPalette(paletteIndex, paletteColor.R, paletteColor.G, paletteColor.B);
+
+                        //this.BackColor = paletteColor;
+                    }
+                }
+            }
         }
     }
 }

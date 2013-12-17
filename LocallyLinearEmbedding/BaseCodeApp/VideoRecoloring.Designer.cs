@@ -50,36 +50,36 @@
             // 
             // videoBox
             // 
-            this.videoBox.Location = new System.Drawing.Point(418, 19);
+            this.videoBox.Location = new System.Drawing.Point(12, 12);
             this.videoBox.Name = "videoBox";
-            this.videoBox.Size = new System.Drawing.Size(622, 456);
+            this.videoBox.Size = new System.Drawing.Size(1159, 456);
             this.videoBox.TabIndex = 1;
             this.videoBox.TabStop = false;
             // 
             // palettePanel
             // 
-            this.palettePanel.Location = new System.Drawing.Point(14, 19);
+            this.palettePanel.Location = new System.Drawing.Point(434, 481);
             this.palettePanel.Name = "palettePanel";
-            this.palettePanel.Size = new System.Drawing.Size(385, 330);
+            this.palettePanel.Size = new System.Drawing.Size(737, 200);
             this.palettePanel.TabIndex = 2;
             // 
             // openButton
             // 
             this.openButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.openButton.Location = new System.Drawing.Point(13, 368);
+            this.openButton.Location = new System.Drawing.Point(11, 481);
             this.openButton.Name = "openButton";
-            this.openButton.Size = new System.Drawing.Size(152, 42);
+            this.openButton.Size = new System.Drawing.Size(120, 40);
             this.openButton.TabIndex = 3;
-            this.openButton.Text = "Load Video";
+            this.openButton.Text = "Load";
             this.openButton.UseVisualStyleBackColor = true;
             this.openButton.Click += new System.EventHandler(this.openButton_Click);
             // 
             // resetButton
             // 
             this.resetButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.resetButton.Location = new System.Drawing.Point(13, 429);
+            this.resetButton.Location = new System.Drawing.Point(11, 529);
             this.resetButton.Name = "resetButton";
-            this.resetButton.Size = new System.Drawing.Size(152, 42);
+            this.resetButton.Size = new System.Drawing.Size(120, 40);
             this.resetButton.TabIndex = 4;
             this.resetButton.Text = "Reset";
             this.resetButton.UseVisualStyleBackColor = true;
@@ -97,40 +97,44 @@
             "12.5",
             "15",
             "24"});
-            this.fpsBox.Location = new System.Drawing.Point(212, 377);
+            this.fpsBox.Location = new System.Drawing.Point(846, 765);
             this.fpsBox.Name = "fpsBox";
             this.fpsBox.Size = new System.Drawing.Size(66, 27);
             this.fpsBox.TabIndex = 5;
+            this.fpsBox.Visible = false;
             this.fpsBox.SelectedIndexChanged += new System.EventHandler(this.fpsBox_Changed);
             // 
             // fpsLabel
             // 
             this.fpsLabel.AutoSize = true;
             this.fpsLabel.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.fpsLabel.Location = new System.Drawing.Point(173, 380);
+            this.fpsLabel.Location = new System.Drawing.Point(807, 768);
             this.fpsLabel.Name = "fpsLabel";
             this.fpsLabel.Size = new System.Drawing.Size(33, 19);
             this.fpsLabel.TabIndex = 6;
             this.fpsLabel.Text = "fps:";
+            this.fpsLabel.Visible = false;
             // 
             // KBox
             // 
             this.KBox.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.KBox.Location = new System.Drawing.Point(330, 377);
+            this.KBox.Location = new System.Drawing.Point(964, 765);
             this.KBox.Name = "KBox";
             this.KBox.Size = new System.Drawing.Size(69, 27);
             this.KBox.TabIndex = 8;
             this.KBox.Text = "5";
+            this.KBox.Visible = false;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(294, 381);
+            this.label1.Location = new System.Drawing.Point(928, 769);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(30, 19);
             this.label1.TabIndex = 7;
             this.label1.Text = "K =";
+            this.label1.Visible = false;
             // 
             // timerVideoFrame
             // 
@@ -140,30 +144,31 @@
             // saveVideoButton
             // 
             this.saveVideoButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.saveVideoButton.Location = new System.Drawing.Point(14, 491);
+            this.saveVideoButton.Location = new System.Drawing.Point(11, 577);
             this.saveVideoButton.Name = "saveVideoButton";
-            this.saveVideoButton.Size = new System.Drawing.Size(151, 42);
+            this.saveVideoButton.Size = new System.Drawing.Size(120, 40);
             this.saveVideoButton.TabIndex = 9;
-            this.saveVideoButton.Text = "Save Video";
+            this.saveVideoButton.Text = "Save";
             this.saveVideoButton.UseVisualStyleBackColor = true;
             this.saveVideoButton.Click += new System.EventHandler(this.saveButton_Click);
             // 
             // savePaletteImageButton
             // 
             this.savePaletteImageButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.savePaletteImageButton.Location = new System.Drawing.Point(14, 552);
+            this.savePaletteImageButton.Location = new System.Drawing.Point(846, 717);
             this.savePaletteImageButton.Name = "savePaletteImageButton";
             this.savePaletteImageButton.Size = new System.Drawing.Size(151, 42);
             this.savePaletteImageButton.TabIndex = 10;
             this.savePaletteImageButton.Text = "Save Palette Image";
             this.savePaletteImageButton.UseVisualStyleBackColor = true;
+            this.savePaletteImageButton.Visible = false;
             this.savePaletteImageButton.Click += new System.EventHandler(this.savePaletteImageButton_Click);
             // 
             // pictureBoxPalette
             // 
-            this.pictureBoxPalette.Location = new System.Drawing.Point(262, 564);
+            this.pictureBoxPalette.Location = new System.Drawing.Point(148, 481);
             this.pictureBoxPalette.Name = "pictureBoxPalette";
-            this.pictureBoxPalette.Size = new System.Drawing.Size(265, 254);
+            this.pictureBoxPalette.Size = new System.Drawing.Size(200, 200);
             this.pictureBoxPalette.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
             this.pictureBoxPalette.TabIndex = 11;
             this.pictureBoxPalette.TabStop = false;
@@ -172,17 +177,21 @@
             // 
             // pictureBoxScroll
             // 
-            this.pictureBoxScroll.Location = new System.Drawing.Point(536, 565);
+            this.pictureBoxScroll.Location = new System.Drawing.Point(364, 481);
             this.pictureBoxScroll.Name = "pictureBoxScroll";
-            this.pictureBoxScroll.Size = new System.Drawing.Size(30, 252);
+            this.pictureBoxScroll.Size = new System.Drawing.Size(20, 200);
             this.pictureBoxScroll.TabIndex = 12;
             this.pictureBoxScroll.TabStop = false;
+            this.pictureBoxScroll.Click += new System.EventHandler(this.pictureBoxScroll_Click);
+            this.pictureBoxScroll.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxScroll_MouseDown);
+            this.pictureBoxScroll.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxScroll_MouseMove);
+            this.pictureBoxScroll.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxScroll_MouseUp);
             // 
             // VideoRecoloring
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1061, 881);
+            this.ClientSize = new System.Drawing.Size(1183, 707);
             this.Controls.Add(this.pictureBoxScroll);
             this.Controls.Add(this.pictureBoxPalette);
             this.Controls.Add(this.savePaletteImageButton);
