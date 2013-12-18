@@ -53,3 +53,5 @@ BASECODEDLL_API byte          __stdcall BCGetOriginalVideoPalette(void* context,
 BASECODEDLL_API void		  __stdcall BCSaveVideoFrames(void* context);
 BASECODEDLL_API void		  __stdcall BCSaveVideoPaletteImage(void* context);
 BASECODEDLL_API void		  __stdcall BCSetVideoPreviewLayerIndex(void* context, int index);
+BASECODEDLL_API int           __stdcall BCGetVideoHeight(void *context);
+BASECODEDLL_API int           __stdcall BCGetVideoWidth(void *context);

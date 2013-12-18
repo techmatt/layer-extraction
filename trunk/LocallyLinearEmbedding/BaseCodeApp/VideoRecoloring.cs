@@ -18,7 +18,6 @@ namespace BaseCodeApp
         private String _currVideoFile = "";
         private float[] _FPS = { 5, 8, 9, 10, 12.5f, 15, 24 };
         private int _paletteSize = 5;
-        private int _paletteButtonWidth = 9;
         private PaletteCache _paletteCache = new PaletteCache("../VideoCache/");
         private List<Color> _currPalette = new List<Color>();
 
@@ -31,6 +30,9 @@ namespace BaseCodeApp
 
         private int paletteIndex; // index of palette for changing color
         private int interfaceHeight;
+        private int paletteWidth;
+        private const int buttonsPerRow = 10;
+        private int videoHeight, videoWidth;
 
         DLLInterface _DLL;
 
@@ -39,7 +41,7 @@ namespace BaseCodeApp
             _DLL = DLL;
             InitializeComponent();
             fpsBox.SelectedIndex = 1;
-
+            videoHeight = 0; videoWidth = 0;
 
             paletteImage = Image.FromFile("../Data/palette.png");
             pictureBoxPalette.Image = paletteImage;
@@ -58,6 +60,7 @@ namespace BaseCodeApp
             pictureBoxScroll.Left = pictureBoxPalette.Right + 10;
             palettePanel.Left = pictureBoxScroll.Right + 10;
             interfaceHeight = paletteImage.Height;
+            paletteWidth = videoBox.Right - palettePanel.Left;
 
             paletteIndex = -1;
         }
@@ -96,6 +99,21 @@ namespace BaseCodeApp
                 };
                 _bw.RunWorkerCompleted += delegate
                 {
+                    videoHeight = _DLL.GetVideoHeight();
+                    videoWidth = _DLL.GetVideoWidth();
+                    videoBox.Height = videoHeight;
+                    videoBox.Width = videoWidth;
+                    int top = videoHeight + 30;
+                    openButton.Top = top;
+                    resetButton.Top = openButton.Bottom + 10;
+                    saveVideoButton.Top = resetButton.Bottom + 10;
+                    pictureBoxPalette.Top = top;
+                    pictureBoxScroll.Top = top;
+                    palettePanel.Top = top;
+                    paletteWidth = videoWidth + 10 - palettePanel.Left;
+                    this.Height = videoHeight + interfaceHeight + 100;
+                    this.Width = videoWidth + 60;
+
                     for (int k = 0; k < _paletteSize; k++)
                     {
                         _currPalette.Add(Color.FromArgb(_DLL.GetVideoPalette(k, 0), _DLL.GetVideoPalette(k, 1), _DLL.GetVideoPalette(k, 2)));
@@ -160,8 +178,11 @@ namespace BaseCodeApp
         {
             Image im = _DLL.GetBitmap("videoFrame");
             videoBox.Image = im; //(Image)_DLL.GetBitmap("videoFrame");
+            /*videoBox.AutoSize = false;
             if (im != null)
             {
+                videoHeight = im.Height;
+                videoWidth = im.Width;
                 videoBox.Height = im.Height;
                 videoBox.Width = im.Width;
                 int top = videoBox.Bottom + 20;
@@ -171,10 +192,10 @@ namespace BaseCodeApp
                 pictureBoxPalette.Top = top;
                 pictureBoxScroll.Top = top;
                 palettePanel.Top = top;
-
+                paletteWidth = videoBox.Right - palettePanel.Left;
                 this.Height = videoBox.Height + interfaceHeight + 90;
                 this.Width = videoBox.Width + 50;
-            }
+            }*/
         }
 
         private void UpdatePaletteDisplay(bool enableEvents = true)
@@ -182,23 +203,25 @@ namespace BaseCodeApp
             palettePanel.Controls.Clear();
             _paletteButtons.Clear();
 
-            int padding = 10;
-
+            int padding = 0;
+            paletteWidth = videoBox.Right - palettePanel.Left;
+            Console.WriteLine(palettePanel.Left + " | " + pictureBoxScroll.Right + " || " + videoBox.Right + " | " + videoBox.Width);
+            
             for (int l = 0; l < _currPalette.Count; l++)
             {
                 Color rgb = _currPalette[l];
 
                 Button element = new Button();
                 element.BackColor = rgb;
-                element.Width = 40;
-                element.Height = interfaceHeight;
-                if (l < _paletteButtonWidth)
-                    element.Left = element.Width * l + padding;
-                else
-                {
-                    element.Left = element.Width * (l - _paletteButtonWidth) + padding;
-                    element.Top = element.Height + padding;
-                }
+                element.Width = paletteWidth / buttonsPerRow;
+                int Rows = (int)Math.Ceiling((float)_currPalette.Count / (float)buttonsPerRow);
+                if (Rows > 1 && element.Width > 60) element.Width = 50;
+                element.Height = interfaceHeight / Rows;
+                element.Left = element.Width * (l % buttonsPerRow) + padding;
+                element.Top = (element.Height + padding) * (l / buttonsPerRow);
+
+                Console.WriteLine("[ " + l + " ] " + "left: " + element.Left + ", top: " + element.Top + ", height: " + element.Height);
+                Console.WriteLine("     palettewidth: " + paletteWidth + " | paletteCount: " + _currPalette.Count + " | total height: " + interfaceHeight + " | Rows: " + Rows + " buttons/row: " + buttonsPerRow);
 
                 element.FlatStyle = FlatStyle.Flat;
 
@@ -272,7 +295,8 @@ namespace BaseCodeApp
             double saturation = (double)rgb.GetSaturation();
 
             RenderScroll(hue, saturation);
-            hslPaletteColor = new HSV(hue, saturation, 0.5);
+            double lum = hslPaletteColor.V;
+            hslPaletteColor = new HSV(hue, saturation, lum);
             paletteColor = Util.HSLtoRGB(hslPaletteColor);
 
             if (paletteIndex > 0 && paletteIndex < _paletteButtons.Count)
