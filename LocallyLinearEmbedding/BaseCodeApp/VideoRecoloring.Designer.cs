@@ -43,16 +43,18 @@
             this.savePaletteImageButton = new System.Windows.Forms.Button();
             this.pictureBoxPalette = new System.Windows.Forms.PictureBox();
             this.pictureBoxScroll = new System.Windows.Forms.PictureBox();
+            this.pictureBoxColor = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.videoBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPalette)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxScroll)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxColor)).BeginInit();
             this.SuspendLayout();
             // 
             // videoBox
             // 
             this.videoBox.Location = new System.Drawing.Point(12, 12);
             this.videoBox.Name = "videoBox";
-            this.videoBox.Size = new System.Drawing.Size(10, 10);
+            this.videoBox.Size = new System.Drawing.Size(1159, 463);
             this.videoBox.TabIndex = 1;
             this.videoBox.TabStop = false;
             // 
@@ -66,7 +68,7 @@
             // openButton
             // 
             this.openButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.openButton.Location = new System.Drawing.Point(11, 481);
+            this.openButton.Location = new System.Drawing.Point(11, 537);
             this.openButton.Name = "openButton";
             this.openButton.Size = new System.Drawing.Size(120, 40);
             this.openButton.TabIndex = 3;
@@ -77,7 +79,7 @@
             // resetButton
             // 
             this.resetButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.resetButton.Location = new System.Drawing.Point(11, 529);
+            this.resetButton.Location = new System.Drawing.Point(11, 585);
             this.resetButton.Name = "resetButton";
             this.resetButton.Size = new System.Drawing.Size(120, 40);
             this.resetButton.TabIndex = 4;
@@ -144,7 +146,7 @@
             // saveVideoButton
             // 
             this.saveVideoButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.saveVideoButton.Location = new System.Drawing.Point(11, 577);
+            this.saveVideoButton.Location = new System.Drawing.Point(11, 633);
             this.saveVideoButton.Name = "saveVideoButton";
             this.saveVideoButton.Size = new System.Drawing.Size(120, 40);
             this.saveVideoButton.TabIndex = 9;
@@ -187,11 +189,20 @@
             this.pictureBoxScroll.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxScroll_MouseMove);
             this.pictureBoxScroll.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxScroll_MouseUp);
             // 
+            // pictureBoxColor
+            // 
+            this.pictureBoxColor.Location = new System.Drawing.Point(11, 481);
+            this.pictureBoxColor.Name = "pictureBoxColor";
+            this.pictureBoxColor.Size = new System.Drawing.Size(120, 50);
+            this.pictureBoxColor.TabIndex = 14;
+            this.pictureBoxColor.TabStop = false;
+            // 
             // VideoRecoloring
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1183, 707);
+            this.Controls.Add(this.pictureBoxColor);
             this.Controls.Add(this.pictureBoxScroll);
             this.Controls.Add(this.pictureBoxPalette);
             this.Controls.Add(this.savePaletteImageButton);
@@ -210,6 +221,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.videoBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPalette)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxScroll)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxColor)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -231,5 +243,6 @@
         private System.Windows.Forms.Button savePaletteImageButton;
         private System.Windows.Forms.PictureBox pictureBoxPalette;
         private System.Windows.Forms.PictureBox pictureBoxScroll;
+        private System.Windows.Forms.PictureBox pictureBoxColor;
     }
 }
