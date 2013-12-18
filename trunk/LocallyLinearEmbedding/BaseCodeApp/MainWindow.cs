@@ -1491,6 +1491,15 @@ namespace BaseCodeApp
 
         private void getRecoloringsButton_Click(object sender, EventArgs e)
         {
+            String basename = new FileInfo(currImageFile).Name;
+
+            //cache info
+            String cache = "../TexSynCache/";
+            List<String> outLines = new List<String>();
+            String dirName = Util.ConvertFileName(basename, "", ""); //image subdirectory
+            Directory.CreateDirectory(cache);
+            Directory.CreateDirectory(Path.Combine(cache, dirName));
+
             //first extract layers
             int method = paletteMethodBox.SelectedIndex;
             int layerMethod = layerMethodBox.SelectedIndex;
@@ -1514,7 +1523,7 @@ namespace BaseCodeApp
             info.FileName = "\"C:/Program Files (x86)/scala/bin/scala.bat\"";
             info.WorkingDirectory = exeDir;
 
-            info.Arguments = dependencies+" "+classPath+" "+jar+" suggest mesh.txt all 10";
+            info.Arguments = dependencies+" "+classPath+" "+jar+" suggest mesh.txt all 10 -lightness";
             info.UseShellExecute = false;
             info.RedirectStandardOutput = true;
             info.RedirectStandardError = true;
@@ -1528,7 +1537,6 @@ namespace BaseCodeApp
             process.StartInfo = info;
             process.Start();
 
-            String basename = new FileInfo(currImageFile).Name;
             int count = 0;
             while (!process.StandardError.EndOfStream)
             {
@@ -1537,6 +1545,7 @@ namespace BaseCodeApp
             }
 
             bool start = false;
+   
             while (!process.StandardOutput.EndOfStream)
             {
                 string line = process.StandardOutput.ReadLine();
@@ -1561,10 +1570,18 @@ namespace BaseCodeApp
                 Bitmap recoloring = Recolor(this.layers, colors, ColorSpace.RGB);
 
                 recoloring.Save(Path.Combine("../ColorSuggestions/", Util.ConvertFileName(basename, "_"+count)));
+
+                // Save the recoloring data files to the cache
+
+                String imageFile = "image_" + count+".png"; 
+                recoloring.Save(Path.Combine(cache, dirName, imageFile));
+                outLines.Add(imageFile + "|" + String.Join(",", hexCodes));
+
                 count++;
             }
             Bitmap orig = new Bitmap(currImageFile);
             orig.Save(Path.Combine("../ColorSuggestions/", basename));
+            File.WriteAllLines(Path.Combine(cache, dirName, "info.txt"), outLines.ToArray<String>());
 
             Console.WriteLine("Done");
         }
