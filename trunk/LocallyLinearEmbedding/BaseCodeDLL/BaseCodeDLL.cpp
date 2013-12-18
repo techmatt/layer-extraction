@@ -94,6 +94,14 @@ BASECODEDLL_API void BCOutputMesh(void* context, BCBitmapInfo bitmap, const doub
 
 }
 
+BASECODEDLL_API void BCGetWords(void* context, const char* filename)
+{
+	if (context == NULL) return;
+	App  *app = (App*)context;
+
+	app->GetWords(filename);
+}
+
 BASECODEDLL_API void BCLoadVideo(void* context, const char* filename, int paletteSize)
 {
 	if (context == NULL) return;

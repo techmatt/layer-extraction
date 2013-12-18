@@ -22,7 +22,10 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 	_blurredLayers = blurredLayers;
 	_layers = layers;
 
+	BagOfWords bow(AppParameters(), Vector<PixelLayerSet>(), 100, true);
+
 	// compute features for each layer
+	double maxSize = -10000;
 	for (UINT layerIndex=0; layerIndex < layers.Length(); layerIndex++)
 	{		
 		const PixelLayer &currLayer = layers[layerIndex];
@@ -51,10 +54,18 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 		Vector<double> centerDistVec; centerDistVec.PushEnd(centerDist);
 		segment.features.Add("RadialDistance", centerDistVec);
 
+		Console::WriteLine("BoW");
+		VecNf bowNf = bow.Wordify(currLayer);
+		Vector<double> bowVec;
+		for (int i=0; i<bowNf.Dimension(); i++)
+			bowVec.PushEnd((double)bowNf[i]);
+		segment.features.Add("BoW", bowVec);
+
 		Console::WriteLine("Weight");
 		// average weight
 		double avgWeight = currLayer.WeightMean();
 		segment.features.Add("RelativeSize", Vector<double>(1,avgWeight));
+		maxSize = max(maxSize, avgWeight);
 
 		Console::WriteLine("Overlap");
 		// overlap with other layers (after blurring)
@@ -124,20 +135,25 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 				}
 				pixelIndex++;
 			}
-			int x = pixelIndex%layerWidth;
-			int y = pixelIndex/layerWidth;
+
+			if (inrange)
+			{
+				int x = pixelIndex%layerWidth;
+				int y = pixelIndex/layerWidth;
 			
 			
-			double* sample = new double[2];
-			sample[0] = (double)x;
-			sample[1] = (double)y;
+				double* sample = new double[2];
+				sample[0] = (double)x;
+				sample[1] = (double)y;
 
-			samples.PushEnd(sample);
+				samples.PushEnd(sample);
 
-			sampleViz.pixelWeights(y,x) += 1;
-			samplesCount++;
+				sampleViz.pixelWeights(y,x) += 1;
+				samplesCount++;
+			}
 			start += step;
 		}
+		Console::WriteLine("Done with samples");
 		sampleViz.SavePNG("../ColorSuggestions/Samples_"+String(layerIndex)+".png");
 
 		pca.InitFromDensePoints(samples, 2);
@@ -175,7 +191,15 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 
 		// Future: bag of words features?
 		segments.PushEnd(segment);
+		Console::WriteLine("DoneSegment");
 	}
+
+	//add relative size over max term
+	/*for (UINT layerIndex=0; layerIndex<layers.Length(); layerIndex++)
+	{
+		double size = segments[layerIndex].features["RelativeSize"][0];
+		segments[layerIndex].features.Add("RelativeSizeOverMax", Vector<double>(size/maxSize));
+	}*/
 
 	//initialize the groups, one segment per group
 	for (UINT groupIndex=0; groupIndex < layers.Length(); groupIndex++)
@@ -221,16 +245,20 @@ void LayerMesh::VisualizeContrast()
 
 Vector<String> LayerMesh::StringRepresentation()
 {
+	Console::WriteLine("Mesh string representation");
 	Vector<String> lines;
 	//write all segments
 	for (UINT segmentIndex=0; segmentIndex < segments.Length(); segmentIndex++)
 	{
+		Console::WriteLine("Segment "+ String(segmentIndex));
 		lines.PushEnd("SegmentBegin");
 		Segment &segment = segments[segmentIndex];
 		Vector<String> &featureNames = segment.features.Keys();
 		for (String f : featureNames)
+		{
+			Console::WriteLine(f + " " +String(segment.features[f].Length()));
 			lines.PushEnd(f+" "+ StringJoin(segment.features[f], " "));
-		
+		}
 		Vector<int> adjIds = segment.adjacencies.Keys();
 		Vector<String> adjacencyStrings;
 		for (int nid:adjIds)
@@ -240,7 +268,6 @@ Vector<String> LayerMesh::StringRepresentation()
 		lines.PushEnd("SegmentEnd");
 	}
 	lines.PushEnd("");
-
 	//write all groups
 	for (SegmentGroup &group: groups)
 	{

@@ -31,8 +31,10 @@
     <ClInclude Include="..\..\FelzenszwalbSegmentation\segment-image.h" />
     <ClInclude Include="App.h" />
     <ClInclude Include="AppParameters.h" />
+    <ClInclude Include="BagOfWords.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="Descriptors.h" />
     <ClInclude Include="Dictionary.h" />
     <ClInclude Include="DistanceTransform.h" />
     <ClInclude Include="EigenSolver.h" />
@@ -63,6 +65,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="BagOfWords.cpp" />
+    <ClCompile Include="Descriptors.cpp" />
     <ClCompile Include="DistanceTransform.cpp" />
     <ClCompile Include="DLLMain.cpp" />
     <ClCompile Include="EigenSolver.cpp" />
@@ -215,7 +219,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>BaseCodeDLL.def</ModuleDefinitionFile>
-      <AdditionalDependencies>ann64.lib;zlib64.lib;libpng64.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ann64.lib;zlib64.lib;libpng64.lib;winmm.lib;opencv_nonfree247d.lib;opencv_core247d.lib;opencv_features2d247d.lib;opencv_flann247d.lib;opencv_highgui247d.lib;opencv_imgproc247d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\bin\BaseCode.dll</OutputFile>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -267,7 +271,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>zlib64.lib;ann64.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zlib64.lib;ann64.lib;winmm.lib;opencv_nonfree247.lib;opencv_core247.lib;opencv_features2d247.lib;opencv_flann247.lib;opencv_highgui247.lib;opencv_imgproc247.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>BaseCodeDLL.def</ModuleDefinitionFile>
       <IgnoreSpecificDefaultLibraries>libcp</IgnoreSpecificDefaultLibraries>
       <OutputFile>..\bin\BaseCode.dll</OutputFile>

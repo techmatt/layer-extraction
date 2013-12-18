@@ -183,17 +183,22 @@ PixelLayerSet App::ExtractLayers(const Bitmap &bmp, const Vector<Vec3f> &palette
 		Console::WriteLine("Done correcting");
 	}
 
-	for(UINT negativeSuppressionIndex = 0; negativeSuppressionIndex < 4; negativeSuppressionIndex++)
+	UINT suppressionTrials = 4;
+	for(UINT negativeSuppressionIndex = 0; negativeSuppressionIndex < suppressionTrials; negativeSuppressionIndex++)
 	{
 		_extractor.ExtractLayers(_parameters, bmp, layers);
 		_extractor.AddNegativeConstraints(_parameters, bmp, layers);
+		if (_parameters.useMatlab)
+			break;
 	}
+
 
 	layers.Dump("../Results/Layers.txt", _extractor.SuperpixelColors());
 
 	_layers = layers;
 
-	Vector<PixelLayer> pixellayers = _extractor.GetPixelLayers(_image, _layers);	
+	Vector<PixelLayer> pixellayers = _extractor.GetPixelLayers(_image, _layers);
+
 	return pixellayers;
 }
 
@@ -1234,6 +1239,44 @@ const char* App::QueryStringByName(const String &s)
 	return _queryString.CString();
 }
 
+void App::GetWords(const String& paletteFile)
+{
+	//file input is a list of image filename| palette rgb
+	Vector<String> lines = Utility::GetFileLines(paletteFile);
+	Vector<PixelLayerSet> images;
+
+	int sample = Math::Min((int)lines.Length(), 500); //200 out of 1000
+
+	//pick a random subset of the lines to get bag of words
+	lines.Randomize();
+
+	Console::WriteLine("Getting visual words...Extracting layers");
+	for (int i=0; i<sample; i++)
+	{
+		const String& line = lines[i];
+		Vector<String> fields = line.Partition("|");
+		Vector<String> colors = fields[1].Partition(" ");
+		String filename = fields[0];
+		Console::WriteLine("File " + filename + " " + String(i)+"/"+String(sample));
+
+		Bitmap bmp;
+		bmp.LoadPNG(filename);
+
+		Vector<Vec3f> palette;
+
+		for (String& color:colors)
+		{
+			Vector<String> rgb = color.Partition(",");
+			palette.PushEnd(Vec3f(rgb[0].ConvertToFloat()/255.0, rgb[1].ConvertToFloat()/255.0, rgb[2].ConvertToFloat()/255.0));
+		}
+		PixelLayerSet layers = ExtractLayers(bmp, palette, "", false);
+		images.PushEnd(layers);
+		bmp.FreeMemory();
+	}
+	Console::WriteLine("Extracting words");
+	BagOfWords bow(_parameters, images, 100, true);
+}
+
 void App::OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename)
 {	
 	Console::WriteLine("Extracting mesh to "+filename);
@@ -1260,6 +1303,7 @@ void App::OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, co
 	LayerMesh mesh(layers);
 	Console::WriteLine("Saving mesh");
 	mesh.SaveToFile(filename);
+	bmp.FreeMemory();
 }
 
 void App::LoadVideo(const String &filename, int paletteSize)

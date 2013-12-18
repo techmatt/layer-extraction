@@ -103,6 +103,12 @@
     <ClInclude Include="VideoController.h">
       <Filter>App</Filter>
     </ClInclude>
+    <ClInclude Include="BagOfWords.h">
+      <Filter>LayerMesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Descriptors.h">
+      <Filter>LayerMesh</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -164,6 +170,12 @@
     </ClCompile>
     <ClCompile Include="VideoController.cpp">
       <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="BagOfWords.cpp">
+      <Filter>LayerMesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Descriptors.cpp">
+      <Filter>LayerMesh</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

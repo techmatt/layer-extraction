@@ -270,7 +270,7 @@
             // 
             // layerSynthesisButton
             // 
-            this.layerSynthesisButton.Location = new System.Drawing.Point(29, 756);
+            this.layerSynthesisButton.Location = new System.Drawing.Point(634, 608);
             this.layerSynthesisButton.Name = "layerSynthesisButton";
             this.layerSynthesisButton.Size = new System.Drawing.Size(159, 38);
             this.layerSynthesisButton.TabIndex = 19;
@@ -331,7 +331,7 @@
             // 
             // outputMeshes
             // 
-            this.outputMeshes.Location = new System.Drawing.Point(194, 756);
+            this.outputMeshes.Location = new System.Drawing.Point(555, 526);
             this.outputMeshes.Name = "outputMeshes";
             this.outputMeshes.Size = new System.Drawing.Size(231, 37);
             this.outputMeshes.TabIndex = 26;
@@ -341,7 +341,7 @@
             // 
             // trainModelButton
             // 
-            this.trainModelButton.Location = new System.Drawing.Point(431, 755);
+            this.trainModelButton.Location = new System.Drawing.Point(555, 568);
             this.trainModelButton.Name = "trainModelButton";
             this.trainModelButton.Size = new System.Drawing.Size(126, 38);
             this.trainModelButton.TabIndex = 27;
@@ -375,7 +375,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1328, 800);
+            this.ClientSize = new System.Drawing.Size(1276, 774);
             this.Controls.Add(this.videoWindowButton);
             this.Controls.Add(this.trainModelButton);
             this.Controls.Add(this.outputMeshes);

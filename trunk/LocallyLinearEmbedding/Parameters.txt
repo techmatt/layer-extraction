@@ -6,7 +6,8 @@ maskFile=angelSkyMaskB.png
 # Superpixel terms
 #
 superpixelIterations=5
-superpixelCount=5000
+#superpixelCount=5000
+superpixelCount=4000
 
 #
 # Locally-linear embedding constants
@@ -24,7 +25,7 @@ useKMeansPalette=true
 KMeansPaletteSize=7
 manifoldWeight=1
 #manifoldWeight=0
-pixelConstraintWeight=0.01
+pixelConstraintWeight=0.1
 #pixelConstraintWeight=0
 sumToOneWeight=0.1
 reconstructionWeight=0.5
@@ -36,6 +37,7 @@ negativeSupressionWeight=0.01
 #negativeSupressionWeight=0
 #preferenceWeight = 0.1
 preferenceWeight = 0
+useMatlab=false
 
 #
 # These terms are only used for recolorizing (have no effect on LayerExtractor)
@@ -77,20 +79,59 @@ periodicBasisCount=3
 #neighborRange=5
 #pyramidDepth=3
 
+#allTargetLayers=witch_0.txt, witch_1.txt, witch_2.txt, witch_3.txt, witch_4.txt
+#targetLayers=witch_3.txt, witch_1.txt
+#refLayers=fireworks_1.txt, fireworks_2.txt
+#updateSchedule=1.0,0.2
+#targetImageFile=witch.png
+#targetMaskFile=witch_mask2.png
+#reducedDimension=32
+#neighborhoodSize=2
+#coherenceParameter=0
+#useMajorityVote=true
+#neighborRange=5
+#pyramidDepth=3
 
 
-allTargetLayers=targetCloud_0.txt, targetCloud_1.txt
-targetLayers=targetCloud_0.txt, targetCloud_1.txt
-refLayers=refCloud_0.txt, refCloud_1.txt
-updateSchedule=1.0,0.1
-targetImageFile=targetCloud.png
-targetMaskFile=targetCloud_mask.png
+#allTargetLayers=fire_target_small_0.txt, fire_target_small_1.txt, fire_target_small_2.txt, fire_target_small_3.txt, fire_target_small_4.txt
+#targetLayers=fire_target_small_2.txt, fire_target_small_3.txt, fire_target_small_4.txt, fire_target_small_1.txt
+#refLayers=fire_ref_small_1.txt, fire_ref_small_4.txt, fire_ref_small_2.txt, fire_ref_small_3.txt
+#updateSchedule=1.0,0.2,0.2,0.2
+#targetImageFile=fire_target_small.png
+#targetMaskFile=fire_target_small_mask.png
+#reducedDimension=32
+#neighborhoodSize=2
+#coherenceParameter=0
+#useMajorityVote=true
+#neighborRange=5
+#pyramidDepth=3
+
+allTargetLayers=lip_0.txt, lip_1.txt, lip_2.txt, lip_3.txt, lip_4.txt
+targetLayers=lip_0.txt, lip_4.txt, lip_3.txt
+refLayers=lips_ref_2.txt, lips_ref_0.txt, lips_ref_3.txt
+updateSchedule=1.0,0.2,0.2
+targetImageFile=lip.png
+targetMaskFile=lip_mask.png
 reducedDimension=32
 neighborhoodSize=2
 coherenceParameter=0
 useMajorityVote=true
 neighborRange=5
 pyramidDepth=3
+
+
+#allTargetLayers=targetCloud_0.txt, targetCloud_1.txt
+#targetLayers=targetCloud_0.txt, targetCloud_1.txt
+#refLayers=refCloud_0.txt, refCloud_1.txt
+#updateSchedule=1.0,0.1
+#targetImageFile=targetCloud.png
+#targetMaskFile=targetCloud_mask.png
+#reducedDimension=32
+#neighborhoodSize=2
+#coherenceParameter=0
+#useMajorityVote=true
+#neighborRange=5
+#pyramidDepth=3
 
 
 

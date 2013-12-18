@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace Engine
 {
@@ -113,6 +114,7 @@ namespace Engine
     {
         public SortedSet<Features> included;
         public CIELAB[,] imageLAB;
+        public Color[,] imageRGB;
         public double[,] map;
         public double[] colorToSaliency;
         public int[] colorToCounts;
@@ -649,6 +651,7 @@ namespace Engine
             int height = image.Height;
 
             CIELAB[,] imageLAB = Util.Map(Util.BitmapToArray(image), c => Util.RGBtoLAB(c));
+            Color[,] imageRGB = Util.BitmapToArray(image);
 
 
             double[,] pixelToDists = new double[width * height, scount];
@@ -873,6 +876,7 @@ namespace Engine
 
             options.included = included;
             options.imageLAB = imageLAB;
+            options.imageRGB = imageRGB;
             options.map = mapData;
             options.colorToSaliency = colorToSaliency;
             options.colorToCounts = colorToCounts;
@@ -1867,6 +1871,271 @@ namespace Engine
 
             return weights;
         }
+
+        private double HullError(List<DenseVector> palette, List<DenseVector> imageColors)
+        {
+            //check color space
+            int numPoints = imageColors.Count;
+            double error = 0;
+
+            var hull = Util.GetConvexHull(palette);
+            foreach (DenseVector point in imageColors)
+               error += Util.HullError(point, hull);
+
+            Console.WriteLine("Error " + error);
+            return error / imageColors.Count;
+        }
+
+
+        //Taking into account convex hull error (in RGB space)
+        //
+        public PaletteData HillClimbPaletteConvexPatch(String key, String saliencyPattern, bool debug = false, int paletteSize = 5, int trials = 5, bool rgbSpace=true)
+        {
+            PaletteScoreCache cache = new PaletteScoreCache(1000000);
+
+            PaletteData swatches = GetPaletteSwatches(key);
+            Dictionary<CIELAB, Color> conversionCache = new Dictionary<CIELAB, Color>();
+
+            List<CIELAB> shuffled = new List<CIELAB>();
+            foreach (CIELAB c in swatches.lab)
+            {
+                shuffled.Add(c);
+                conversionCache.Add(c, Util.LABtoRGB(c));
+            }
+
+            List<DenseVector> testPoint = new List<DenseVector>();
+            List<DenseVector> hullPoints = new List<DenseVector>();
+            hullPoints.Add(new DenseVector(new double[] { 0, 0, 0 }));
+            hullPoints.Add(new DenseVector(new double[]{1,0,0}));
+            hullPoints.Add(new DenseVector(new double[]{0,1,0}));
+            hullPoints.Add(new DenseVector(new double[]{0,0,1}));
+            testPoint.Add(new DenseVector(new double[]{0.5, 0.5, 0.5}));
+            testPoint.Add(new DenseVector(new double[]{1,1,1}));
+            HullError(hullPoints, new List<DenseVector>(new DenseVector[]{testPoint[0]}));
+            HullError(hullPoints, new List<DenseVector>(new DenseVector[]{testPoint[1]}));
+                     
+            Random random = new Random();
+
+            //weights
+            Dictionary<Features, double> weights = new Dictionary<Features, double>();
+
+            weights = LoadWeights(Path.Combine(weightsDir, "weights.csv"), Path.Combine(weightsDir, "featurenames.txt"));
+            double weightsSum = 1;// weights.Sum(kvp => Math.Abs(kvp.Value));
+            double ratio = 0.8;
+
+            PaletteData best = new PaletteData();
+            double bestScore = Double.NegativeInfinity;
+
+            SortedSet<Features> included = new SortedSet<Features>(weights.Keys);
+
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+
+            FeatureParams fparams = SetupFeatureParams(included, key, saliencyPattern, debug);
+
+            List<DenseVector> imageColors = new List<DenseVector>();
+            if (rgbSpace)
+            {
+                Console.WriteLine(fparams.imageRGB.GetLength(0)+","+ fparams.imageRGB.GetLength(1));
+                for (int x=0; x<fparams.imageRGB.GetLength(0); x++)
+                    for (int y=0; y<fparams.imageRGB.GetLength(1); y++)
+                        imageColors.Add(Util.ToDenseVector(fparams.imageRGB[x,y]));
+            }
+            else
+            {
+                for (int x=0; x<fparams.imageLAB.GetLength(0); x++)
+                    for (int y=0; y<fparams.imageLAB.GetLength(1); y++)
+                        imageColors.Add(Util.ToDenseVector(fparams.imageLAB[x,y]));
+            }
+
+            Log(Path.Combine(dir, "out", "convergelog.txt"), "Setup feature params " + watch.ElapsedMilliseconds);
+
+            //Generate all the random starts first
+            List<PaletteData> starts = new List<PaletteData>();
+            PaletteData[] allOptions = new PaletteData[trials];
+            double[] allScores = new double[trials];
+
+            for (int t = 0; t < trials; t++)
+            {
+                //setup
+                PaletteData option = new PaletteData();
+
+                //pick k random colors. First shuffle the colors and pick the top k
+                for (int j = shuffled.Count() - 1; j >= 0; j--)
+                {
+                    int idx = random.Next(j + 1);
+                    CIELAB temp = shuffled[j];
+                    shuffled[j] = shuffled[idx];
+                    shuffled[idx] = temp;
+                }
+
+                for (int i = 0; i < paletteSize; i++)
+                {
+                    option.lab.Add(shuffled[i]);
+                    option.colors.Add(Util.LABtoRGB(shuffled[i]));
+                }
+                starts.Add(option);
+                allOptions[t] = new PaletteData(option);
+                double optionScore = 0;// ScorePalette(weights, CalculateFeatures(option, fparams));
+
+
+                //compute the convex hull error
+                if (paletteSize > 3)
+                {
+                    List<DenseVector> transformed;
+                    if (rgbSpace)
+                    {
+                        Console.WriteLine("RGB hull");
+                        transformed = option.colors.Select<Color, DenseVector>(c => Util.ToDenseVector(c)).ToList<DenseVector>();
+                    }
+                    else
+                        transformed = option.lab.Select<CIELAB, DenseVector>(c => Util.ToDenseVector(c)).ToList<DenseVector>();
+
+                    double hullError = -1*HullError(transformed, imageColors);
+                    optionScore += weightsSum * hullError;
+                }
+
+                allScores[t] = optionScore;
+
+                cache.SetScore(option.lab, optionScore);
+            }
+
+            watch.Restart();
+
+            for (int t = 0; t < trials; t++)
+            {
+                //setup
+                PaletteData option = new PaletteData(starts[t]);
+
+                double optionScore = allScores[t];
+
+
+                //Now hill climb, for each swatch, consider replacing it with a better swatch
+                //Pick the best replacement, and continue until we reach the top of a hill
+                int changes = 1;
+                int iters = 0;
+                int reuse = 0;
+
+                watch.Restart();
+
+                while (changes > 0)
+                {
+                    changes = 0;
+
+                    for (int i = 0; i < option.lab.Count(); i++)
+                    {
+                        //find the best swatch replacement for this color
+                        double bestTempScore = optionScore;
+                        CIELAB bestRep = option.lab[i];
+                        Color bestRGB = option.colors[i];
+
+
+                        double[] scores = new double[swatches.lab.Count()];
+
+                        for (int s = 0; s < swatches.lab.Count(); s++)
+                        {
+                            CIELAB r = swatches.lab[s];
+
+                            PaletteData temp = new PaletteData(option);
+                            if (!temp.lab.Contains(r))
+                            {
+
+                                temp.lab[i] = r;
+                                temp.colors[i] = swatches.colors[s];
+
+                                if (!cache.ContainsKey(temp.lab))
+                                {
+                                    double tempScore = 0;// ScorePalette(weights, CalculateFeatures(temp, fparams));
+                                    //compute the convex hull error
+                                    if (paletteSize > 3)
+                                    {
+                                        List<DenseVector> transformed;
+                                        if (rgbSpace)
+                                            transformed = temp.colors.Select<Color, DenseVector>(c => Util.ToDenseVector(c)).ToList<DenseVector>();
+                                        else
+                                            transformed = temp.lab.Select<CIELAB, DenseVector>(c => Util.ToDenseVector(c)).ToList<DenseVector>();
+
+                                        double hullError = -1*HullError(transformed, imageColors);
+                                        tempScore += weightsSum * hullError;
+                                    }
+                                    
+                                    scores[s] = tempScore;
+                                    cache.SetScore(temp.lab, tempScore);
+                                }
+                                else
+                                {
+                                    scores[s] = cache.GetScore(temp.lab);
+                                    reuse++;
+                                }
+                            }
+                            else
+                            {
+                                scores[s] = Double.NegativeInfinity;
+                            }
+                        }
+
+                        //aggregate results
+                        for (int s = 0; s < scores.Count(); s++)
+                        {
+                            if (scores[s] > bestTempScore)
+                            {
+                                bestTempScore = scores[s];
+                                bestRep = swatches.lab[s];
+                                bestRGB = swatches.colors[s];
+                            }
+                        }
+
+
+                        if (!option.lab[i].Equals(bestRep))
+                        {
+                            option.lab[i] = bestRep;
+                            option.colors[i] = bestRGB;
+                            optionScore = bestTempScore;
+                            changes++;
+                        }
+                    }
+
+                    iters++;
+                }
+
+
+                if (optionScore > allScores[t])
+                {
+                    allOptions[t] = option;
+                    allScores[t] = optionScore;
+                }
+                Log(Path.Combine(dir, "out", "convergelog.txt"), "Trial " + t + " Key " + key + " BestScore: " + allScores[t] + " Steps: " + iters + " Time: " + watch.ElapsedMilliseconds);
+                Console.WriteLine("Trial " + t + " Key " + key + " BestScore: " + allScores[t] + " Steps: " + iters + " Time: " + watch.ElapsedMilliseconds);
+                Log(Path.Combine(dir, "out", "convergelog.txt"), "Reused " + reuse);
+
+            }
+
+            //aggregate scores
+            for (int i = 0; i < allScores.Count(); i++)
+            {
+                if (allScores[i] > bestScore)
+                {
+                    bestScore = allScores[i];
+                    best = allOptions[i];
+                }
+            }
+
+            //check things
+            for (int i = 0; i < best.colors.Count; i++)
+            {
+                Console.WriteLine(best.colors[i]);
+                Console.WriteLine(Util.LABtoRGB(best.lab[i]));
+            }
+
+
+            //convert best lab to rgb
+           /* best.colors = new List<Color>();
+            foreach (CIELAB l in best.lab)
+                best.colors.Add(Util.LABtoRGB(l));*/
+
+            return best;
+        }
+
 
         /**
          * Extract a palette by hill climbing on the given image 

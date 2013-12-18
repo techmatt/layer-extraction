@@ -482,6 +482,16 @@ namespace Engine
             }
             return minError;
         }
+
+        public static DenseVector ToDenseVector(Color color)
+        {
+            return new DenseVector(new double[] { color.R, color.G, color.B });
+        }
+
+        public static DenseVector ToDenseVector(CIELAB lab)
+        {
+            return new DenseVector(new double[] { lab.L, lab.A, lab.B });
+        }
     }
 }
 

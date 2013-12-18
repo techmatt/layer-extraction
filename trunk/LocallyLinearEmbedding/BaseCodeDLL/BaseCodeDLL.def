@@ -19,4 +19,5 @@ EXPORTS
 	BCSaveVideoPaletteImage
 	BCSetVideoPreviewLayerIndex
 	BCGetVideoHeight
+	BCGetWords
 	BCGetVideoWidth
