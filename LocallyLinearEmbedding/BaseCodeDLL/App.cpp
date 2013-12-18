@@ -1301,3 +1301,12 @@ void App::saveVideoPaletteImage( void )
 {
 	_videocontroller.SavePaletteImage("../VideoResults/");
 }
+
+int App::GetVideoHeight(void)
+{
+	return _videocontroller.Height();
+}
+int App::GetVideoWidth(void)
+{
+	return _videocontroller.Width();
+}

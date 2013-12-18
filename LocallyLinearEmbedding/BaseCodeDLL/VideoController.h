@@ -47,6 +47,8 @@ public:
 	void SaveFrames(const String& resultdirectory);
 	void SavePaletteImage(const String& resultdirectory);
 	void SetPreviewLayerIndex(int index);
+	int Height(void) const { return (int)_videoHeight; }
+	int Width(void) const { return (int)_videoWidth; }
 
 	//const Bitmap* GetNextFrameOriginal(void);
 	//const Bitmap* GetCurrentFrameOriginal(void);

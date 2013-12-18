@@ -52,7 +52,7 @@
             // 
             this.videoBox.Location = new System.Drawing.Point(12, 12);
             this.videoBox.Name = "videoBox";
-            this.videoBox.Size = new System.Drawing.Size(1159, 456);
+            this.videoBox.Size = new System.Drawing.Size(10, 10);
             this.videoBox.TabIndex = 1;
             this.videoBox.TabStop = false;
             // 

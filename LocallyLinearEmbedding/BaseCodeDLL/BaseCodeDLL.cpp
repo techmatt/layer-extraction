@@ -157,3 +157,16 @@ BASECODEDLL_API void BCSaveVideoPaletteImage(void* context)
 
 	app->saveVideoPaletteImage();
 }
+
+BASECODEDLL_API int __stdcall BCGetVideoHeight(void *context)
+{
+    if(context == NULL) return 0;
+    App &app = *(App*)context;
+	return app.GetVideoHeight();
+}
+BASECODEDLL_API int __stdcall BCGetVideoWidth(void *context)
+{
+    if(context == NULL) return 0;
+    App &app = *(App*)context;
+	return app.GetVideoWidth();
+}
