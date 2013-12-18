@@ -34,6 +34,8 @@ namespace BaseCodeApp
         private const int buttonsPerRow = 10;
         private int videoHeight, videoWidth;
 
+        private bool useMouseOverPreview = true;
+
         DLLInterface _DLL;
 
         public VideoRecoloring(DLLInterface DLL)
@@ -208,7 +210,7 @@ namespace BaseCodeApp
 
             int padding = 0;
             paletteWidth = videoBox.Right - palettePanel.Left;
-            
+
             for (int l = 0; l < _currPalette.Count; l++)
             {
                 Color rgb = _currPalette[l];
@@ -231,10 +233,9 @@ namespace BaseCodeApp
                         Button btn = ((Button)sender);
                         int index = _paletteButtons.IndexOf(btn);
 
-
                         if (e.Button == MouseButtons.Left)
                         {
-                            if (Control.ModifierKeys == Keys.Shift)
+                            if (!useMouseOverPreview && Control.ModifierKeys == Keys.Shift)
                             {
                                 // layer preview
                                 if (!_layerPreview[index])
@@ -262,7 +263,22 @@ namespace BaseCodeApp
                             }
                         }
                     };
-
+                    element.MouseHover += delegate(Object sender, EventArgs e)
+                    {
+                        if (useMouseOverPreview)
+                        {
+                            Button btn = (Button)sender;
+                            int index = _paletteButtons.IndexOf(btn);
+                            _DLL.SetVideoPreviewLayerIndex(index);
+                        }
+                    };
+                    element.MouseLeave += delegate(Object sender, EventArgs e)
+                    {
+                        if (useMouseOverPreview)
+                        {
+                            _DLL.SetVideoPreviewLayerIndex(-1);
+                        }
+                    };
                 }
 
                 _paletteButtons.Add(element);
