@@ -213,8 +213,12 @@ void LayerSynthesis::SynthesizeStepInPlace(const AppParameters &parameters, cons
 	UINT dimension = generator.Dimension();
 
 	double coherenceParam = parameters.coherenceParameter;
+	int progressStep = pixels.Length()/10;
 	for (UINT pixelIndex=0; pixelIndex < pixels.Length(); pixelIndex++)
 	{
+		if (pixelIndex % progressStep == 0)
+			Console::WriteLine("Done with "+String(pixelIndex) + " out of " + String(pixels.Length()));
+
 		int x = pixels[pixelIndex].x;
 		int y = pixels[pixelIndex].y;
 

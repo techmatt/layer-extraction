@@ -71,6 +71,8 @@ struct AppParameters
 		texsyn_klayers = file.GetInteger("texsyn_klayers");
 		texsyn_initrandsize = file.GetInteger("texsyn_initrandsize");
 
+		useMatlab = file.GetBoolean("useMatlab");
+
     }
 
     String imageFile;
@@ -80,6 +82,7 @@ struct AppParameters
     int KMeansPaletteSize;
 
 	bool useTextureFeatures;
+	bool useMatlab;
 
     int periodicBasisCount;
     int superpixelIterations;

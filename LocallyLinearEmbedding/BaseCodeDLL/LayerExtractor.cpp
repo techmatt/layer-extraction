@@ -30,11 +30,11 @@ void LayerSet::Dump(const String &filename, const Vector<ColorCoordinate> &super
 
 void LayerExtractor::Init(const AppParameters &parameters, const Bitmap &bmp)
 {
-	ComputeSuperpixels(parameters, bmp);
-	VisualizeSuperpixels(parameters, bmp, NULL, "superpixels");
+    ComputeSuperpixels(parameters, bmp);
+    //VisualizeSuperpixels(parameters, bmp, NULL, "superpixels");
 
-	ComputeNearestNeighbors(parameters, bmp);
-	VisualizeNearestNeighbors(parameters, bmp);
+    ComputeNearestNeighbors(parameters, bmp);
+    //VisualizeNearestNeighbors(parameters, bmp);
 
 	ComputeNeighborWeights(parameters, bmp);
 	//TestNeighborWeights(parameters, bmp);
@@ -552,18 +552,60 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
 
 	Vector<double> b = Crhs + STranspose * Srhs + RTranspose * Rrhs;
 
-	EigenSolver solver;
-	Vector<double> x = solver.Solve(Q, b, EigenSolver::ConjugateGradient_Diag);
-
-	for(UINT layerIndex = 0; layerIndex < layerCount; layerIndex++)
+	//dump the Q and b matrices to a text file (for MATLAB)
+	//if this is the first pass (no negative constraints yet)
+	if (pass == 0 && parameters.useMatlab)
 	{
-		Layer &curLayer = layers.layers[layerIndex];
-		curLayer.superpixelWeights.Allocate(superpixelCount);
-		for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+		Console::WriteLine("Dumping Matlab matrix files...");
+		ofstream QFile("../Matlab/Q.txt");
+		PersistentAssert(!QFile.fail(), "Failed to open file");
+
+		for (int r=0; r<Q.RowCount(); r++)
+			for (int c=0; c<Q.ColCount(); c++)
+			{
+				double val = Q.GetElement(r,c);
+				if (val != 0)
+					QFile << String(r+1) << " " << String(c+1) << " " << String(val) << endl;
+			}
+		QFile.close();
+
+		ofstream bFile("../Matlab/b.txt");
+		PersistentAssert(!bFile.fail(), "Failed to open file");
+		for (int r=0; r<b.Length(); r++)
+			bFile << String(b[r]) << endl;
+		bFile.close();
+		Console::WriteLine("Done dumping matrix files");
+		Console::WriteLine("Waiting for Matlab...Press num pad 0 when done");
+		while(GetAsyncKeyState(VK_NUMPAD0) == 0)
 		{
-			curLayer.superpixelWeights[superpixelIndex] = x[superpixelIndex + layerIndex * superpixelCount];
+			Sleep(1000);
 		}
 	}
+
+	//Solve using EigenSolver
+	Vector<double> x;
+	if (!parameters.useMatlab)
+	{
+		EigenSolver solver;
+		x = solver.Solve(Q, b, EigenSolver::ConjugateGradient_Diag);
+	} else
+	{
+		Console::WriteLine("Reading solution file");
+		//read the solution file produced by Matlab
+		Vector<String> xLines = Utility::GetFileLines("../Matlab/x.txt");
+		for (String line:xLines)
+			x.PushEnd(line.ConvertToDouble());
+	}
+
+    for(UINT layerIndex = 0; layerIndex < layerCount; layerIndex++)
+    {
+        Layer &curLayer = layers.layers[layerIndex];
+        curLayer.superpixelWeights.Allocate(superpixelCount);
+        for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+        {
+            curLayer.superpixelWeights[superpixelIndex] = x[superpixelIndex + layerIndex * superpixelCount];
+        }
+    }
 
 	if(Constants::dumpLayerImages)
 	{
@@ -712,7 +754,9 @@ void LayerExtractor::ComputeNearestNeighbors(const AppParameters &parameters, co
 			b.indices.PopEnd();
 		}
 	}
+	Console::WriteLine("Done");
 }
+
 
 void LayerExtractor::TestLayerRecoloring(const Bitmap &bmp, const LayerSet &layers) const
 {

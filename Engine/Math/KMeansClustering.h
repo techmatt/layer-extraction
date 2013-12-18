@@ -183,7 +183,7 @@ public:
     }
     __forceinline const T& QuantizeToNearestClusterCenter(const T &Element)
     {
-        return _Clusters[QuantizeToNearestClusterCenter(Element)].Center();
+        return _Clusters[QuantizeToNearestClusterIndex(Element)].Center();
     }
     __forceinline UINT QuantizeToNearestClusterIndex(const T &Element)
     {

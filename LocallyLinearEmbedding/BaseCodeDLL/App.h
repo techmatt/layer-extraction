@@ -22,11 +22,11 @@ public:
 	int GetVideoHeight(void);
 	int GetVideoWidth(void);
 
+	void GetWords(const String &paletteFile);
 	void OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename);
 
 private:
-    void Recolorize();
-	//BCLayers* SynthesizeLayers();
+	void Recolorize();
 	void SynthesizeTexture(const String &parameterFilename);
 	void SynthesizeTextureByLayers(const String &parameterFilename);
 	void DeleteLayer(const String &parameterFilename);

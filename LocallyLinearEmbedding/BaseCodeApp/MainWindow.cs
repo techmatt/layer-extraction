@@ -41,7 +41,7 @@ namespace BaseCodeApp
         private BackgroundWorker bw = new BackgroundWorker();
         private List<Button> palette = new List<Button>();
         private String currImageFile = "";
-        private int CHITrials = 5;
+        private int CHITrials = 8;
         private PaletteCache paletteCache = new PaletteCache("../PaletteCache");
         private PaletteData currPalette = new PaletteData();
 
@@ -299,6 +299,24 @@ namespace BaseCodeApp
             else if (pmethod == 3)
             {
                 //encourage convex hull
+                if (!paletteCache.Exists("chipatch", k, currImageFile))
+                {
+                    FileInfo info = new FileInfo(currImageFile);
+                    String dir = info.DirectoryName;
+                    String key = info.Name;
+
+                    SaveSaliencyMap(dir, key);
+                    SaveSegmentation(dir, key);
+                    Bitmap resized = Util.GetImage(Path.Combine(dir, key), true);
+                    resized.Save(key);
+
+                    PaletteExtractor extractor = new PaletteExtractor(dir, "../Weights", "../Weights/c3_data.json");
+                    data = extractor.HillClimbPaletteConvexPatch(key, "_Judd", true, k, CHITrials);
+                    paletteCache.SavePalette("chipatch", k, currImageFile, data);
+
+                } else {
+                    data = paletteCache.GetPalette("chipatch", k, currImageFile);
+                }
    
             }
             else
@@ -520,7 +538,7 @@ namespace BaseCodeApp
             double negPixels = 0;
             double negCount = 0;
             Bitmap image = new Bitmap(currImageFile);
-            var hull = Util.GetConvexHull(currPalette.colors.Select<Color, DenseVector>(c => new DenseVector(new double[] { c.R, c.G, c.B })).ToList<DenseVector>());
+            /*var hull = Util.GetConvexHull(currPalette.colors.Select<Color, DenseVector>(c => new DenseVector(new double[] { c.R, c.G, c.B })).ToList<DenseVector>());
             for (int i = 0; i < layers.width; i++)
             {
                 for (int j = 0; j < layers.height; j++)
@@ -547,9 +565,12 @@ namespace BaseCodeApp
                     }
                 }
             }
-            Console.WriteLine("Negative pixels within convex hull: " + negCount / negPixels);
-               
+            Console.WriteLine("Negative pixels within convex hull: " + negCount / negPixels);*/
 
+            DenseVector white = new DenseVector(new double[] { 255, 255, 255 });
+            DenseVector green = new DenseVector(new double[] { 0, 255, 0 });
+
+            double negSum = 0;
             //now visualize the first layer
             for (int l = 0; l < layers.layers.Count; l++)
             {
@@ -562,10 +583,21 @@ namespace BaseCodeApp
                         if (weight < 0)
                         {
                             result.SetPixel(x, y, Color.FromArgb((int)Clamp(Math.Abs(weight) * 255), 0, 0));
+                            negSum += weight;
                         }
-                        else if (weight > 1.01)
+                        else if (weight > 1)
                         {
-                            result.SetPixel(x, y, Color.FromArgb(0, 255, 0));
+                            //interpolate between white and green
+                            double diff = Math.Min(weight-1,1);
+                            DenseVector valColor = white * (1 - diff) + green * diff;
+                            try
+                            {
+                                result.SetPixel(x, y, Color.FromArgb((int)valColor[0], (int)valColor[1], (int)valColor[2]));
+                            }
+                            catch (Exception ha)
+                            {
+                                Console.WriteLine("Problem weight " + weight + " diff " + diff);
+                            }
                         }
                         else
                         {
@@ -587,6 +619,7 @@ namespace BaseCodeApp
                 layers.previews.Add(result);
                 result.Save("test" + l + ".png");
             }
+            Console.WriteLine("Sum of negative weights " + negSum);
         }
 
         private void UpdatePaletteDisplay(bool enableEvents=true)
@@ -618,6 +651,7 @@ namespace BaseCodeApp
 
                         if (layers.colors.Count == 0)
                         {
+                            Console.WriteLine("No layers");
                             UpdateConstraintVisualization();
                         }
                         else
@@ -936,7 +970,7 @@ namespace BaseCodeApp
                 var hull = Util.GetConvexHull(hullPoints);
                 foreach (DenseVector point in points)
                     error += Util.HullError(point, hull);
-                 Console.WriteLine("Palette convex hull size: "+ hull.Points.Count());
+                 Console.WriteLine("LAB Palette convex hull size: "+ hull.Points.Count());
 
             }
             else
@@ -947,7 +981,7 @@ namespace BaseCodeApp
                 foreach (DenseVector point in points)
                     error += Util.HullError(point, hull);
 
-                Console.WriteLine("Palette convex hull size: " + hull.Points.Count());
+                Console.WriteLine("RGB Palette convex hull size: " + hull.Points.Count());
                        
             }
            
@@ -1133,6 +1167,9 @@ namespace BaseCodeApp
                 g.DrawEllipse(p, r);
                 g.FillEllipse(b, r);
             }
+            Console.WriteLine(activeImage.Width + " " + activeImage.Height);
+            Console.WriteLine(pictureBox.Image.Width + " " + pictureBox.Image.Height);
+            Console.WriteLine(pictureBoxBitmap.Width + " " + pictureBoxBitmap.Height);
             pictureBox.Image = pictureBoxBitmap;
         }
 
@@ -1330,6 +1367,7 @@ namespace BaseCodeApp
             DLLInterface.BCOutputMesh(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, filename);
             Marshal.FreeHGlobal(bmpInfo.colorData);
             Marshal.FreeHGlobal(palettePtr);
+            bmp.Dispose();
 
         }
 
@@ -1343,6 +1381,36 @@ namespace BaseCodeApp
             Dictionary<String, PaletteData> palettes = LoadFilePalettes(paletteFile);
 
             String[] subdirs = Directory.GetDirectories(directory);
+
+            //write the palette file - filename|r,g,b r,g,b r,g,b
+            Console.WriteLine("Outputting palettes");
+            List<String> lines = new List<String>();
+            foreach (String dir in subdirs)
+            {
+                String[] files = Directory.GetFiles(dir);
+                foreach (String file in files)
+                {
+                    try
+                    {
+                        Bitmap bmp = new Bitmap(file);
+                        if (bmp.Width < 100 || bmp.Height < 100)
+                            continue;
+
+                        String baseName = new FileInfo(file).Name;
+                        PaletteData data = palettes[baseName];
+                        lines.Add(file + "|" + String.Join(" ", data.colors.Select<Color, String>(c => c.R + "," + c.G + "," + c.B)));
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+            }
+            File.WriteAllLines("../Training/paletteFile.txt", lines.ToArray<String>());
+            Console.WriteLine("Done writing palettes file");
+
+           // DLLInterface.BCGetWords(DLL.baseCodeDLLContext, "../Training/paletteFile.txt");
+
             foreach (String dir in subdirs)
             {
                 String outSubDir = Path.Combine(outDir, new DirectoryInfo(dir).Name);
@@ -1358,6 +1426,8 @@ namespace BaseCodeApp
 
                         //read and process the file
                         Bitmap bmp = new Bitmap(file);
+                        if (bmp.Width < 100 || bmp.Height < 100)
+                            continue;
                         List<Color> bmpData = Util.BitmapTo1DArray(bmp).ToList<Color>();
 
                         PaletteData data = palettes[baseName];
@@ -1386,6 +1456,7 @@ namespace BaseCodeApp
                         bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
                         bmpInfo.width = bmp.Width;
                         bmpInfo.height = bmp.Height;
+                        
 
                         try
                         {
@@ -1405,6 +1476,7 @@ namespace BaseCodeApp
                         Console.WriteLine("Freeing");
                         Marshal.FreeHGlobal(bmpInfo.colorData);
                         Marshal.FreeHGlobal(palettePtr);
+                        bmp.Dispose();
                     }
                     catch (Exception ex)
                     {
@@ -1442,7 +1514,7 @@ namespace BaseCodeApp
             info.FileName = "\"C:/Program Files (x86)/scala/bin/scala.bat\"";
             info.WorkingDirectory = exeDir;
 
-            info.Arguments = dependencies+" "+classPath+" "+jar+" suggest mesh.txt AlineDam 10 -lightness";
+            info.Arguments = dependencies+" "+classPath+" "+jar+" suggest mesh.txt all 10";
             info.UseShellExecute = false;
             info.RedirectStandardOutput = true;
             info.RedirectStandardError = true;
@@ -1512,7 +1584,7 @@ namespace BaseCodeApp
             info.FileName = "\"C:/Program Files (x86)/scala/bin/scala.bat\"";
             info.WorkingDirectory = exeDir;
 
-            info.Arguments = dependencies + " " + classPath + " " + jar + " train ../CLmeshes/AlineDam AlineDam";
+            info.Arguments = dependencies + " " + classPath + " " + jar + " train ../CLmeshes/all all";
             info.UseShellExecute = false;
             info.RedirectStandardOutput = true;
             info.RedirectStandardError = true;

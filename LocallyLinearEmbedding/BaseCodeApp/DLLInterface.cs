@@ -91,6 +91,8 @@ namespace BaseCodeApp
         [DllImport(BaseCodeDLL)]
         public static extern IntPtr BCSetVideoPreviewLayerIndex(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int index);
         [DllImport(BaseCodeDLL)]
+        public static extern IntPtr BCGetWords(IntPtr context, String filename);
+        [DllImport(BaseCodeDLL)]
         public static extern Int32 BCGetVideoHeight(IntPtr context);
         [DllImport(BaseCodeDLL)]
         public static extern Int32 BCGetVideoWidth(IntPtr context);

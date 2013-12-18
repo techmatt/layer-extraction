@@ -1,6 +1,9 @@
 #include "Main.h"
 #include "NeighborhoodGenerator.h"
 
+NeighborhoodGenerator::NeighborhoodGenerator()
+{
+}
 
 NeighborhoodGenerator::NeighborhoodGenerator(UINT neighborhoodSize, UINT numLayers, UINT depth)
 {
@@ -11,6 +14,12 @@ NeighborhoodGenerator::NeighborhoodGenerator(UINT neighborhoodSize, UINT numLaye
 
 NeighborhoodGenerator::~NeighborhoodGenerator(void)
 {
+}
+
+void NeighborhoodGenerator::Init(UINT neighborhoodSize, UINT numLayers, UINT depth)
+{
+	_neighborhoodSize = neighborhoodSize;
+	_dimension = Math::Square(neighborhoodSize*2+1)*numLayers*depth;
 }
 
 /*bool NeighborhoodGenerator::Generate(const PixelLayerSet &layers, int xCenter, int yCenter, double* result) const
@@ -39,6 +48,36 @@ result[dimensionIndex++] = layers[layerIndex].pixelWeights(y,x);
 }
 return inBounds;
 }*/
+
+double NeighborhoodGenerator::NeighborhoodSqDistance(double* A, double* B)
+{
+	double dist = 0;
+	for (int i=0; i<_dimension; i++)
+		dist += fabs(A[i]-B[i]);
+	return dist;
+}
+
+bool NeighborhoodGenerator::Generate(const PixelLayer &layer, int xCenter, int yCenter, double* result) const
+{
+	UINT dimensionIndex = 0;
+	bool inBounds = true;
+	Vec2i centerPt(xCenter, yCenter);
+
+	for(int y = centerPt.y - _neighborhoodSize; y <= centerPt.y + _neighborhoodSize; y++)
+	{
+		for(int x = centerPt.x - _neighborhoodSize; x <= centerPt.x + _neighborhoodSize; x++)
+		{
+			if(!layer.pixelWeights.ValidCoordinates(y, x))
+			{
+				inBounds = false;
+				result[dimensionIndex++] = 0;
+			} else
+				result[dimensionIndex++] = layer.pixelWeights(y,x);
+		}
+	}
+	return inBounds;
+
+}
 
 bool NeighborhoodGenerator::Generate(const GaussianPyramid &pyramid, int xCenter, int yCenter, double* result) const
 {
