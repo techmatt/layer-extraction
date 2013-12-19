@@ -1494,7 +1494,7 @@ namespace BaseCodeApp
             String basename = new FileInfo(currImageFile).Name;
 
             //cache info
-            String cache = "../TexSynCache/";
+            String cache = "../VideoCache/";
             List<String> outLines = new List<String>();
             String dirName = Util.ConvertFileName(basename, "", ""); //image subdirectory
             Directory.CreateDirectory(cache);
