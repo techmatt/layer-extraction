@@ -21,6 +21,9 @@ public:
 	void SetVideoPreviewLayerIndex(int index);
 	int GetVideoHeight(void);
 	int GetVideoWidth(void);
+	int LoadSuggestions(int width, int height);
+	void LoadSuggestion(int index);
+	byte GetSuggestPalette(int index, int paletteindex, int channel);
 
 	void GetWords(const String &paletteFile);
 	void OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename);

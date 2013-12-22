@@ -21,3 +21,6 @@ EXPORTS
 	BCGetVideoHeight
 	BCGetWords
 	BCGetVideoWidth
+	BCLoadSuggestedRecolorings
+	BCLoadSuggestion
+	BCGetSuggestPalette

@@ -38,6 +38,32 @@ RGBColor::RGBColor(BYTE _r, BYTE _g, BYTE _b, BYTE _a)
     a = _a;
 }
 
+RGBColor::RGBColor(const String &hex)
+{
+	Assert(hex.Length() >= 6, "bad rgb hex code");
+	UINT offset = hex.Length() - 6;
+	const char* carray = hex.CString();
+	char channel[3];
+	Vector<byte> color(3);
+
+	RGBColor test(255, 255, 255);
+
+	for (UINT c = 0; c < 3; c++) {
+		channel[0] = carray[offset++];
+		channel[1] = carray[offset++];
+		channel[2] = '\0';
+
+		char first = channel[0];
+		char second = channel[1];
+
+		long int a = strtol(channel, NULL, 16);
+		color[c] = (byte) strtol(channel, NULL, 16);
+	}
+	r = color[0];
+	g = color[1];
+	b = color[2];
+}
+
 RGBColor::RGBColor(const Vec3f &V)
 {
     r = Utility::BoundToByte(V.x * 255.0f);

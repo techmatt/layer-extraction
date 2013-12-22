@@ -101,7 +101,9 @@
     <Compile Include="PriorityQueue.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Util.cs" />
+    <Compile Include="Util.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="VideoRecoloring.cs">
       <SubType>Form</SubType>
     </Compile>
