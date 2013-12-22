@@ -7,11 +7,18 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
+using System.Windows.Forms;
 using MIConvexHull;
 using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace Engine
 {
+    class ChoicePictureBox : PictureBox
+    {
+        public ChoicePictureBox(int _choice) { choice = _choice; }
+        public int choice;
+    }
+
     public class Util
     {
 
@@ -244,7 +251,7 @@ namespace Engine
                 m = luminosity + luminosity - v;
                 sv = (v - m) / v;
                 hue *= 6.0;
-                sextant = (int) hue;
+                sextant = (int)hue;
                 fract = hue - sextant;
                 vsf = v * sv * fract;
                 mid1 = m + vsf;

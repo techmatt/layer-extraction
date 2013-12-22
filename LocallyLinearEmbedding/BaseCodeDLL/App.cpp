@@ -1163,6 +1163,11 @@ BCBitmapInfo* App::QueryBitmapByName(const String &s)
 			resultPtr = frame;
 		}
 	}
+	else if (s.StartsWith("suggestFrame"))
+	{
+		int index = s.RemovePrefix("suggestFrame").ConvertToInteger();
+		resultPtr = _videocontroller.GetSuggestionImage(index);
+	}
 
 	if(resultPtr == NULL) return NULL;
 
@@ -1267,7 +1272,7 @@ void App::GetWords(const String& paletteFile)
 		for (String& color:colors)
 		{
 			Vector<String> rgb = color.Partition(",");
-			palette.PushEnd(Vec3f(rgb[0].ConvertToFloat()/255.0, rgb[1].ConvertToFloat()/255.0, rgb[2].ConvertToFloat()/255.0));
+			palette.PushEnd(Vec3f(rgb[0].ConvertToFloat()/255.f, rgb[1].ConvertToFloat()/255.f, rgb[2].ConvertToFloat()/255.f));
 		}
 		PixelLayerSet layers = ExtractLayers(bmp, palette, "", false);
 		images.PushEnd(layers);
@@ -1353,4 +1358,19 @@ int App::GetVideoHeight(void)
 int App::GetVideoWidth(void)
 {
 	return _videocontroller.Width();
+}
+
+int App::LoadSuggestions(int width, int height)
+{
+	return _videocontroller.LoadSuggestions(width, height);
+}
+
+void App::LoadSuggestion(int index)
+{
+	_videocontroller.LoadSuggestion(index);
+}
+
+byte App::GetSuggestPalette(int index, int paletteindex, int channel)
+{
+	return _videocontroller.GetSuggestPalette(index, paletteindex, channel);
 }

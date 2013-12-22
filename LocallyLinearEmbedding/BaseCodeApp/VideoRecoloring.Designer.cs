@@ -39,11 +39,12 @@
             this.label1 = new System.Windows.Forms.Label();
             this.timerVideoFrame = new System.Windows.Forms.Timer(this.components);
             this.colorPicker = new System.Windows.Forms.ColorDialog();
-            this.saveVideoButton = new System.Windows.Forms.Button();
+            this.suggestButton = new System.Windows.Forms.Button();
             this.savePaletteImageButton = new System.Windows.Forms.Button();
             this.pictureBoxPalette = new System.Windows.Forms.PictureBox();
             this.pictureBoxScroll = new System.Windows.Forms.PictureBox();
             this.pictureBoxColor = new System.Windows.Forms.PictureBox();
+            this.panelDecision = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.videoBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPalette)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxScroll)).BeginInit();
@@ -143,16 +144,16 @@
             this.timerVideoFrame.Enabled = true;
             this.timerVideoFrame.Tick += new System.EventHandler(this.timerVideoFrame_Tick);
             // 
-            // saveVideoButton
+            // suggestButton
             // 
-            this.saveVideoButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.saveVideoButton.Location = new System.Drawing.Point(11, 633);
-            this.saveVideoButton.Name = "saveVideoButton";
-            this.saveVideoButton.Size = new System.Drawing.Size(120, 40);
-            this.saveVideoButton.TabIndex = 9;
-            this.saveVideoButton.Text = "Save";
-            this.saveVideoButton.UseVisualStyleBackColor = true;
-            this.saveVideoButton.Click += new System.EventHandler(this.saveButton_Click);
+            this.suggestButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.suggestButton.Location = new System.Drawing.Point(11, 633);
+            this.suggestButton.Name = "suggestButton";
+            this.suggestButton.Size = new System.Drawing.Size(120, 40);
+            this.suggestButton.TabIndex = 9;
+            this.suggestButton.Text = "Suggest";
+            this.suggestButton.UseVisualStyleBackColor = true;
+            this.suggestButton.Click += new System.EventHandler(this.suggestButton_Click);
             // 
             // savePaletteImageButton
             // 
@@ -197,16 +198,24 @@
             this.pictureBoxColor.TabIndex = 14;
             this.pictureBoxColor.TabStop = false;
             // 
+            // panelDecision
+            // 
+            this.panelDecision.Location = new System.Drawing.Point(12, 12);
+            this.panelDecision.Name = "panelDecision";
+            this.panelDecision.Size = new System.Drawing.Size(1159, 463);
+            this.panelDecision.TabIndex = 15;
+            // 
             // VideoRecoloring
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1183, 707);
+            this.Controls.Add(this.panelDecision);
             this.Controls.Add(this.pictureBoxColor);
             this.Controls.Add(this.pictureBoxScroll);
             this.Controls.Add(this.pictureBoxPalette);
             this.Controls.Add(this.savePaletteImageButton);
-            this.Controls.Add(this.saveVideoButton);
+            this.Controls.Add(this.suggestButton);
             this.Controls.Add(this.KBox);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.fpsLabel);
@@ -239,10 +248,11 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Timer timerVideoFrame;
         private System.Windows.Forms.ColorDialog colorPicker;
-        private System.Windows.Forms.Button saveVideoButton;
+        private System.Windows.Forms.Button suggestButton;
         private System.Windows.Forms.Button savePaletteImageButton;
         private System.Windows.Forms.PictureBox pictureBoxPalette;
         private System.Windows.Forms.PictureBox pictureBoxScroll;
         private System.Windows.Forms.PictureBox pictureBoxColor;
+        private System.Windows.Forms.Panel panelDecision;
     }
 }

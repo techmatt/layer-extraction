@@ -50,6 +50,12 @@ public:
 	int Height(void) const { return (int)_videoHeight; }
 	int Width(void) const { return (int)_videoWidth; }
 
+	// suggestions
+	int LoadSuggestions(int width, int height);
+	Bitmap* GetSuggestionImage(int index);
+	void LoadSuggestion(int index);
+	byte GetSuggestPalette(int index, int paletteindex, int channel);
+
 	//const Bitmap* GetNextFrameOriginal(void);
 	//const Bitmap* GetCurrentFrameOriginal(void);
 
@@ -66,12 +72,15 @@ private:
 	AppParameters _parameters;
 	VideoParameters _vidparams;
 
-	//Video _video;
+	// original
 	UINT _videoWidth, _videoHeight, _frameCount;
 	Vector<Vec3f> _palette;
-	//LayerSet _layers;
 	Vector<PixelLayerSet> _players;
 	LayerExtractorVideo _videoExtractor;
+
+	// suggestions
+	Vector< Vector<Vec3f> > _suggestPalettes;
+	Vector<Bitmap*> _suggestImages;
 
 	int _currFrameIndex, _previewLayerIndex;
 	Bitmap *_frameA, *_frameB;

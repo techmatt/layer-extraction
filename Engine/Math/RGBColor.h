@@ -10,6 +10,7 @@ struct RGBColor
     RGBColor();
     RGBColor(BYTE _r, BYTE _g, BYTE _b);
     RGBColor(BYTE _r, BYTE _g, BYTE _b, BYTE _a);
+	RGBColor(const String &hex);
     explicit RGBColor(const Vec3f &V);
     explicit RGBColor(const Vec4f &V);
 

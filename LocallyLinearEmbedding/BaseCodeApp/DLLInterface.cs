@@ -96,6 +96,12 @@ namespace BaseCodeApp
         public static extern Int32 BCGetVideoHeight(IntPtr context);
         [DllImport(BaseCodeDLL)]
         public static extern Int32 BCGetVideoWidth(IntPtr context);
+        [DllImport(BaseCodeDLL)]
+        public static extern Int32 BCLoadSuggestedRecolorings(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int width, [In, MarshalAs(UnmanagedType.I4)]int height);
+        [DllImport(BaseCodeDLL)]
+        public static extern IntPtr BCLoadSuggestion(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int index);
+        [DllImport(BaseCodeDLL)]
+        public static extern Byte BCGetSuggestPalette(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int index, [In, MarshalAs(UnmanagedType.I4)]int paletteindex, [In, MarshalAs(UnmanagedType.I4)]int channel);
 
         public IntPtr baseCodeDLLContext = (IntPtr)0;
 
@@ -182,6 +188,21 @@ namespace BaseCodeApp
         public int GetVideoWidth()
         {
             return BCGetVideoWidth(baseCodeDLLContext);
+        }
+
+        public int LoadSuggestedRecolorings(int width, int height)
+        {
+            return BCLoadSuggestedRecolorings(baseCodeDLLContext, width, height);
+        }
+
+        public void LoadSuggestion(int index)
+        {
+            BCLoadSuggestion(baseCodeDLLContext, index);
+        }
+
+        public Byte GetSuggestPalette(int index, int paletteindex, int channel)
+        {
+            return BCGetSuggestPalette(baseCodeDLLContext, index, paletteindex, channel);
         }
     }
 }

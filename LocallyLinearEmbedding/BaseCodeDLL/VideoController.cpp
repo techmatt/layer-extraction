@@ -17,6 +17,7 @@ VideoController::~VideoController(void)
 {
 	if (_frameA) delete _frameA;
 	if (_frameB) delete _frameB;
+	if (_suggestImages.Length() > 0) _suggestImages.DeleteMemory();
 }
 
 void VideoController::LoadVideo(const String& filename, int paletteSize)
@@ -300,3 +301,69 @@ void VideoController::SetPreviewLayerIndex( int index )
 		_previewLayerIndex = index;
 }
 
+/* suggestions */
+int VideoController::LoadSuggestions(int width, int height)
+{
+	String dir = "../VideoCache/" + _vidparams.videoName + "/";
+	String infofilename = dir + "info.txt";
+
+	Vector<String> lines = Utility::GetFileLines(infofilename);
+	int nsuggestions = (int) lines.Length();
+	
+	Console::WriteLine("loading " + String(nsuggestions) + " suggested recolorings...");
+
+	_suggestImages.Allocate(nsuggestions);
+	_suggestPalettes.Allocate(nsuggestions);
+	for (int i = 0; i < nsuggestions; i++) {
+		Vector<String> parts = lines[i].Partition("|");
+		Assert(parts.Length() == 2, "corrupted suggestion cache file");
+		Bitmap *bmp = new Bitmap(width, height);
+		Bitmap orig;
+		orig.LoadPNG(dir + parts[0]);
+		orig.StretchBltTo(*bmp, 0, 0, width, height, 0, 0, orig.Width(), orig.Height(), Bitmap::SamplingLinear);
+		_suggestImages[i] = bmp;
+		_suggestPalettes[i].Allocate(_palette.Length());
+		parts = parts[1].Partition(",");
+		for (unsigned int k = 0; k < _palette.Length(); k++) {
+			_suggestPalettes[i][k] = Vec3f(RGBColor(parts[k]));
+		}
+	}
+	/*InputDataStream stream;
+	stream.LoadFromFile(infofilename);
+	stream >> nsuggestions;
+	_suggestImages.Allocate(nsuggestions);
+	_suggestPalettes.Allocate(nsuggestions);
+	for (int i = 0; i < nsuggestions; i++) {
+		String imagename;
+		stream >> imagename;
+		_suggestImages[i].LoadPNG(imagename);
+		_suggestPalettes[i].Allocate(_palette.Length());
+		for (unsigned int k = 0; k < _palette.Length(); k++)
+			stream.ReadData(_suggestPalettes[i][k]);
+	}*/
+
+	return nsuggestions;
+}
+
+Bitmap* VideoController::GetSuggestionImage(int index)
+{
+	Assert(index >= 0 && index < (int)_suggestPalettes.Length(), "suggestion index out of bounds");
+	return _suggestImages[index];
+}
+
+void VideoController::LoadSuggestion(int index)
+{
+	Assert(index >= 0 && index < (int)_suggestPalettes.Length(), "suggestion index out of bounds");
+	for (unsigned int k = 0; k < _palette.Length(); k++)
+		_palette[k] = _suggestPalettes[index][k];
+	_suggestImages.DeleteMemory();
+	_suggestPalettes.FreeMemory();
+}
+	
+byte VideoController::GetSuggestPalette(int index, int paletteindex, int channel)
+{
+	Assert(index >= 0 && index < (int)_suggestPalettes.Length() && 
+		paletteindex >= 0 && paletteindex < _suggestPalettes[index].Length() &&
+		channel >= 0 && channel < 3, "suggestion palette query out of bounds");
+	return Utility::BoundToByte(_suggestPalettes[index][paletteindex][channel] * 255.0f);
+}

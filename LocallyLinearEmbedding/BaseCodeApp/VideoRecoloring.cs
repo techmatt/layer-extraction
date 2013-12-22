@@ -8,8 +8,10 @@ using System.Text;
 using System.Windows.Forms;
 using Engine;
 
+
 namespace BaseCodeApp
 {
+
     public partial class VideoRecoloring : Form
     {
         private BackgroundWorker _bw = new BackgroundWorker();
@@ -34,6 +36,10 @@ namespace BaseCodeApp
         private const int buttonsPerRow = 10;
         private int videoHeight, videoWidth;
 
+        // recoloring suggestions
+        private List<ChoicePictureBox> suggestPicturesList = new List<ChoicePictureBox>();
+        private List<Color> suggestPalette = new List<Color>();
+
         private bool useMouseOverPreview = true;
 
         DLLInterface _DLL;
@@ -44,6 +50,7 @@ namespace BaseCodeApp
             InitializeComponent();
             fpsBox.SelectedIndex = 1;
             videoHeight = 0; videoWidth = 0;
+            panelDecision.Visible = false;
 
             paletteImage = Image.FromFile("../Data/palette.png");
             pictureBoxPalette.Image = paletteImage;
@@ -60,7 +67,7 @@ namespace BaseCodeApp
             RenderScroll(1.0, 1.0);
             setLuminosity = false;
 
-            pictureBoxColor.Height = pictureBoxPalette.Bottom - videoBox.Bottom - openButton.Height - resetButton.Height - saveVideoButton.Height - 35;
+            pictureBoxColor.Height = pictureBoxPalette.Bottom - videoBox.Bottom - openButton.Height - resetButton.Height - suggestButton.Height - 35;
             previewColorBitmap = new Bitmap(pictureBoxColor.Width, pictureBoxColor.Height);
             UpdatePreviewColor();
 
@@ -108,13 +115,14 @@ namespace BaseCodeApp
                 {
                     videoHeight = _DLL.GetVideoHeight();
                     videoWidth = _DLL.GetVideoWidth();
+
                     videoBox.Height = videoHeight;
                     videoBox.Width = videoWidth;
                     int top = videoHeight + 30;
                     pictureBoxColor.Top = top;
                     openButton.Top = pictureBoxColor.Bottom + 10;
                     resetButton.Top = openButton.Bottom + 10;
-                    saveVideoButton.Top = resetButton.Bottom + 10;
+                    suggestButton.Top = resetButton.Bottom + 10;
                     pictureBoxColor.Width = openButton.Width;
                     pictureBoxPalette.Top = top;
                     pictureBoxScroll.Top = top;
@@ -128,7 +136,7 @@ namespace BaseCodeApp
                         _currPalette.Add(Color.FromArgb(_DLL.GetVideoPalette(k, 0), _DLL.GetVideoPalette(k, 1), _DLL.GetVideoPalette(k, 2)));
                         _layerPreview.Add(false);
                     }
-                    UpdatePaletteDisplay(true);
+                    UpdatePaletteDisplay(true, true);
                     this.Cursor = System.Windows.Forms.Cursors.Default;
                 };
                 _bw.RunWorkerAsync();
@@ -144,18 +152,12 @@ namespace BaseCodeApp
                 _DLL.SetVideoPalette(i, _currPalette[i].R, _currPalette[i].G, _currPalette[i].B);
                 _layerPreview[i] = false;
             }
-            UpdatePaletteDisplay(true);
+            UpdatePaletteDisplay(true, true);
         }
 
         private void saveButton_Click(object sender, EventArgs e)
         {
-            if (_bw.IsBusy) return;
-            _bw = new BackgroundWorker();
-            _bw.DoWork += delegate
-            {
-                _DLL.SaveVideoFrames();
-            };
-            _bw.RunWorkerAsync();
+
         }
 
         private void savePaletteImageButton_Click(object sender, EventArgs e)
@@ -203,25 +205,29 @@ namespace BaseCodeApp
             }
         }
 
-        private void UpdatePaletteDisplay(bool enableEvents = true)
+        private void UpdatePaletteDisplay(bool enableEvents = true, bool showOriginalPalette = true)
         {
             palettePanel.Controls.Clear();
             _paletteButtons.Clear();
 
+            List<Color> showPalette;
+            if (showOriginalPalette) showPalette = _currPalette;
+            else showPalette = suggestPalette;
+
             int padding = 0;
             paletteWidth = videoBox.Right - palettePanel.Left;
 
-            for (int l = 0; l < _currPalette.Count; l++)
+            for (int l = 0; l < showPalette.Count; l++)
             {
-                Color rgb = _currPalette[l];
+                Color rgb = showPalette[l];
 
                 Button element = new Button();
                 element.BackColor = rgb;
                 element.Width = paletteWidth / buttonsPerRow;
-                int Rows = (int)Math.Ceiling((float)_currPalette.Count / (float)buttonsPerRow);
+                int Rows = (int)Math.Ceiling((float)showPalette.Count / (float)buttonsPerRow);
                 if (Rows > 1 && element.Width > 60) element.Width = 50;
                 element.Height = interfaceHeight / Rows;
-                element.Left = element.Width * (l % buttonsPerRow) + padding;
+                element.Left = (element.Width + padding) * (l % buttonsPerRow);
                 element.Top = (element.Height + padding) * (l / buttonsPerRow);
 
                 element.FlatStyle = FlatStyle.Flat;
@@ -382,6 +388,20 @@ namespace BaseCodeApp
 
         private void pictureBoxScroll_MouseUp(object sender, MouseEventArgs e)
         {
+            if (e.X >= 0 && e.X < scrollBitmap.Width && e.Y >= 0 && e.Y < scrollBitmap.Height)
+            {
+                if (setLuminosity)
+                {
+                    hslPaletteColor.V = 1d - (double)e.Y / scrollBitmap.Height;
+                    paletteColor = Util.HSLtoRGB(hslPaletteColor);
+                    UpdatePreviewColor();
+                    if (paletteIndex >= 0 && paletteIndex < _paletteButtons.Count)
+                    {
+                        _paletteButtons[paletteIndex].BackColor = paletteColor;
+                        _DLL.SetVideoPalette(paletteIndex, paletteColor.R, paletteColor.G, paletteColor.B);
+                    }
+                }
+            }
             setLuminosity = false;
         }
 
@@ -400,6 +420,76 @@ namespace BaseCodeApp
                         _DLL.SetVideoPalette(paletteIndex, paletteColor.R, paletteColor.G, paletteColor.B);
                     }
                 }
+            }
+        }
+
+        private void suggestButton_Click(object sender, EventArgs e)
+        {
+            const int nrows = 3;
+            const int ncols = 4;
+            const int padding = 10;
+
+            // look for cached files
+            int imwidth = videoWidth / ncols - padding;
+            int imheight = videoHeight / nrows - padding;
+
+            int n = _DLL.LoadSuggestedRecolorings(imwidth, imheight);
+            if (n <= 0) return;
+            // display grid
+            panelDecision.Visible = true;
+            panelDecision.Left = videoBox.Left;
+            panelDecision.Top = videoBox.Top;
+            panelDecision.Height = (imheight + padding) * nrows;
+            panelDecision.Width = (imwidth + padding) * ncols;
+            // load
+            panelDecision.Controls.Clear();
+            suggestPicturesList.Clear();
+            for (int i = 0; i < n; i++)
+            {
+                ChoicePictureBox p = new ChoicePictureBox(i); // (i / nrows, i % nrows) = (row, col)
+                p.MouseUp += delegate(Object psender, System.Windows.Forms.MouseEventArgs pe)
+                {
+                    //ChoicePictureBox pic = ((ChoicePictureBox)sender);
+                    //int index = suggestPicturesList.IndexOf(pic);
+                    // load suggestion
+                    _DLL.LoadSuggestion(p.choice);
+                    _currPalette.Clear();
+                    for (int k = 0; k < _paletteSize; k++)
+                    {
+                        _currPalette.Add(Color.FromArgb(_DLL.GetVideoPalette(k, 0), _DLL.GetVideoPalette(k, 1), _DLL.GetVideoPalette(k, 2)));
+                    }
+                    UpdatePaletteDisplay(true, true);
+                    // return to display
+                    panelDecision.Visible = false;
+                    panelDecision.Controls.Clear();
+                    suggestPicturesList.Clear();
+                    suggestPalette.Clear();
+                };
+                p.MouseHover += delegate(Object psender, EventArgs pe)
+                {
+                    //ChoicePictureBox pic = ((ChoicePictureBox)sender);
+                    //int index = suggestPicturesList.IndexOf(pic);
+                    // show suggested palette
+                    suggestPalette.Clear();
+                    for (int k = 0; k < _paletteSize; k++)
+                    {
+                        suggestPalette.Add(Color.FromArgb(_DLL.GetSuggestPalette(p.choice, k, 0), _DLL.GetSuggestPalette(p.choice, k, 1), _DLL.GetSuggestPalette(p.choice, k, 2)));
+                    }
+                    UpdatePaletteDisplay(true, false);
+                };
+                p.MouseLeave += delegate(Object psender, EventArgs pe)
+                {
+                    UpdatePaletteDisplay(true, true); // show original palette
+                };
+                // layout
+                p.Left = (i % ncols) * (imwidth + padding);
+                p.Top = (i / ncols) * (imheight + padding);
+                p.Height = imheight;
+                p.Width = imwidth;
+
+                p.Image = (Image)_DLL.GetBitmap("suggestFrame" + i);
+                panelDecision.Controls.Add(p);
+                suggestPicturesList.Add(p);
             }
         }
     }
