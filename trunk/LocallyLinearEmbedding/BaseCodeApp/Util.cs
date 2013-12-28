@@ -479,13 +479,21 @@ namespace Engine
                 return 0;
 
             double minError = Double.PositiveInfinity;
+
             foreach (var face in hull.Faces)
             {
                 DenseVector normal = new DenseVector(face.Normal);
                 DenseVector vertex = new DenseVector(face.Vertices.First().Position);
-                double dist = Math.Abs(normal * (vertex - point));
-                if (dist < minError)
-                    minError = dist;
+
+                //find faces that are pointing in the same direction of the point
+                double magnitude = normal.DotProduct(point - vertex);
+
+                if (magnitude > 0)
+                {
+                    double dist = Math.Abs(normal * (vertex - point));
+                    if (dist < minError)
+                        minError = dist;
+                }
             }
             return minError;
         }

@@ -1882,14 +1882,13 @@ namespace Engine
             foreach (DenseVector point in imageColors)
                error += Util.HullError(point, hull);
 
-            Console.WriteLine("Error " + error);
             return error / imageColors.Count;
         }
 
 
         //Taking into account convex hull error (in RGB space)
         //
-        public PaletteData HillClimbPaletteConvexPatch(String key, String saliencyPattern, bool debug = false, int paletteSize = 5, int trials = 5, bool rgbSpace=true)
+        public PaletteData HillClimbPaletteConvexPatch(String key, String saliencyPattern, bool debug = false, int paletteSize = 5, int trials = 5, bool rgbSpace=true, double ratio=0.01)
         {
             PaletteScoreCache cache = new PaletteScoreCache(1000000);
 
@@ -1903,25 +1902,27 @@ namespace Engine
                 conversionCache.Add(c, Util.LABtoRGB(c));
             }
 
-            List<DenseVector> testPoint = new List<DenseVector>();
+            /*List<DenseVector> testPoint = new List<DenseVector>();
             List<DenseVector> hullPoints = new List<DenseVector>();
             hullPoints.Add(new DenseVector(new double[] { 0, 0, 0 }));
             hullPoints.Add(new DenseVector(new double[]{1,0,0}));
             hullPoints.Add(new DenseVector(new double[]{0,1,0}));
             hullPoints.Add(new DenseVector(new double[]{0,0,1}));
-            testPoint.Add(new DenseVector(new double[]{0.5, 0.5, 0.5}));
+            testPoint.Add(new DenseVector(new double[]{1, 0, 0}));
             testPoint.Add(new DenseVector(new double[]{1,1,1}));
             HullError(hullPoints, new List<DenseVector>(new DenseVector[]{testPoint[0]}));
             HullError(hullPoints, new List<DenseVector>(new DenseVector[]{testPoint[1]}));
-                     
+
+            return new PaletteData();*/
             Random random = new Random();
 
             //weights
             Dictionary<Features, double> weights = new Dictionary<Features, double>();
 
             weights = LoadWeights(Path.Combine(weightsDir, "weights.csv"), Path.Combine(weightsDir, "featurenames.txt"));
-            double weightsSum = 1;// weights.Sum(kvp => Math.Abs(kvp.Value));
-            double ratio = 0.8;
+            double weightsSum = weights.Sum(kvp => Math.Abs(kvp.Value));
+            //double ratio = 0.01;
+            weightsSum *= ratio;
 
             PaletteData best = new PaletteData();
             double bestScore = Double.NegativeInfinity;
@@ -1976,7 +1977,7 @@ namespace Engine
                 }
                 starts.Add(option);
                 allOptions[t] = new PaletteData(option);
-                double optionScore = 0;// ScorePalette(weights, CalculateFeatures(option, fparams));
+                double optionScore = ScorePalette(weights, CalculateFeatures(option, fparams));
 
 
                 //compute the convex hull error
@@ -2045,7 +2046,7 @@ namespace Engine
 
                                 if (!cache.ContainsKey(temp.lab))
                                 {
-                                    double tempScore = 0;// ScorePalette(weights, CalculateFeatures(temp, fparams));
+                                    double tempScore = ScorePalette(weights, CalculateFeatures(temp, fparams));
                                     //compute the convex hull error
                                     if (paletteSize > 3)
                                     {
@@ -2236,6 +2237,7 @@ namespace Engine
                         //find the best swatch replacement for this color
                         double bestTempScore = optionScore;
                         CIELAB bestRep = option.lab[i];
+                        Color bestRGB = option.colors[i];
 
 
                         double[] scores = new double[swatches.lab.Count()];
@@ -2276,6 +2278,7 @@ namespace Engine
                             {
                                 bestTempScore = scores[s];
                                 bestRep = swatches.lab[s];
+                                bestRGB = swatches.colors[s]; 
                             }
                         }
 
@@ -2283,6 +2286,7 @@ namespace Engine
                         if (!option.lab[i].Equals(bestRep))
                         {
                             option.lab[i] = bestRep;
+                            option.colors[i] = bestRGB;
                             optionScore = bestTempScore;
                             changes++;
                         }

@@ -99,7 +99,7 @@ namespace BaseCodeApp
             }
 
             //UpdateImages();
-            paletteMethodBox.SelectedIndex = 1;
+            paletteMethodBox.SelectedIndex = 3;
             layerMethodBox.SelectedIndex = 0;
             colorSpaceBox.SelectedIndex = 0;
 
@@ -245,7 +245,60 @@ namespace BaseCodeApp
 
         }
 
-        private void ExtractPalette(int pmethod)
+        private void SavePaletteToImage(String imageFile, String filename, PaletteData data)
+        {
+            int colorSize = 100;
+            int numColors = data.colors.Count();
+            int gridWidth = 10;
+            int padding = 0;
+
+            int imageSize = 500;
+
+            Bitmap image = new Bitmap(imageFile);
+
+            int imageWidth = imageSize;
+            int imageHeight = imageSize;
+
+            if (image.Width > image.Height)
+                imageHeight = (int)Math.Round(imageSize / (double)image.Width * image.Height);
+            else
+                imageWidth = (int)Math.Round(imageSize / (double)image.Height * image.Width);
+
+            int width = Math.Max(colorSize * Math.Min(gridWidth, numColors), imageSize) + 2 * padding;
+            int height = imageHeight + 3 * padding + colorSize * (int)(Math.Ceiling(numColors / (double)gridWidth));
+
+            Bitmap bitmap = new Bitmap(width, height);
+            Graphics g = Graphics.FromImage(bitmap);
+
+
+            //fill with black
+            g.FillRectangle(new SolidBrush(Color.Black), 0, 0, bitmap.Width, bitmap.Height);
+
+
+            //draw image
+            g.DrawImage(image, padding, padding, imageWidth, imageHeight);
+
+            //draw out the clusters
+            for (int i = 0; i < numColors; i++)
+            {
+                int row = (int)Math.Floor(i / (double)gridWidth);
+                int col = i - row * gridWidth;
+                Pen pen = new Pen(data.colors[i]);
+                g.FillRectangle(pen.Brush, col * colorSize + padding, imageHeight + 2 * padding + row * colorSize, colorSize - padding, colorSize - padding);
+
+                double brightness = pen.Color.GetBrightness();
+                Brush brush = new SolidBrush(Color.White);
+                if (brightness > 0.5)
+                    brush = new SolidBrush(Color.Black);
+
+            }
+
+            bitmap.Save(filename);
+
+        }
+
+
+        private void ExtractPalette(int pmethod, ColorSpace space)
         {
             Bitmap bmp = new Bitmap(currImageFile);//new Bitmap("../Data/bird.png");
             List<CIELAB> bmpData = Util.BitmapTo1DArray(bmp).Select(i => Util.RGBtoLAB(i)).ToList<CIELAB>();
@@ -294,12 +347,16 @@ namespace BaseCodeApp
             }
             else if (pmethod == 2)
             {
-                data = ExtractConvexMergedPalette(k);
+                data = ExtractConvexMergedPalette(k, space);
             }
             else if (pmethod == 3)
             {
+
+                bool rgb = space == ColorSpace.RGB;
+                String spaceString = rgb ? "rgb" : "lab";
+
                 //encourage convex hull
-                if (!paletteCache.Exists("chipatch", k, currImageFile))
+                if (!paletteCache.Exists("chipatch"+spaceString, k, currImageFile))
                 {
                     FileInfo info = new FileInfo(currImageFile);
                     String dir = info.DirectoryName;
@@ -310,12 +367,14 @@ namespace BaseCodeApp
                     Bitmap resized = Util.GetImage(Path.Combine(dir, key), true);
                     resized.Save(key);
 
+
                     PaletteExtractor extractor = new PaletteExtractor(dir, "../Weights", "../Weights/c3_data.json");
-                    data = extractor.HillClimbPaletteConvexPatch(key, "_Judd", true, k, CHITrials);
-                    paletteCache.SavePalette("chipatch", k, currImageFile, data);
+                    data = extractor.HillClimbPaletteConvexPatch(key, "_Judd", true, k, CHITrials, rgb, 0.01);
+
+                    paletteCache.SavePalette("chipatch"+spaceString, k, currImageFile, data);
 
                 } else {
-                    data = paletteCache.GetPalette("chipatch", k, currImageFile);
+                    data = paletteCache.GetPalette("chipatch"+spaceString, k, currImageFile);
                 }
    
             }
@@ -343,7 +402,7 @@ namespace BaseCodeApp
             PaletteData data;
             if (currPalette.colors.Count() == 0)
             {
-                ExtractPalette(pmethod);
+                ExtractPalette(pmethod, space);
                 data = currPalette;
             }
             else
@@ -941,10 +1000,13 @@ namespace BaseCodeApp
             ClearPalette();
             resetImageButton_Click(sender, e);
 
+
+            ColorSpace space = (colorSpaceBox.SelectedIndex == 0) ? ColorSpace.RGB : ColorSpace.LAB;
+
             bw = new BackgroundWorker();
             bw.DoWork += delegate
             {
-                ExtractPalette(method);
+                ExtractPalette(method, space);
             };
             bw.RunWorkerCompleted += delegate
             {
@@ -988,7 +1050,7 @@ namespace BaseCodeApp
             return error / imageColors.Length ;
         }
 
-        private PaletteData ExtractConvexMergedPalette(int k)
+        private PaletteData ExtractConvexMergedPalette(int k, ColorSpace cspace)
         {
             //and in the meantime, output intermediate results
             Color[] imageColors = Util.BitmapTo1DArray(Util.GetImage(currImageFile, true));
@@ -996,7 +1058,7 @@ namespace BaseCodeApp
             List<DenseVector> points = new List<DenseVector> { };
             String space = "rgb";
 
-            if (layers.space == ColorSpace.LAB)
+            if (cspace == ColorSpace.LAB)
             {
                 points = imageColors.Select(c => { CIELAB l = Util.RGBtoLAB(c); return new DenseVector(new double[] { l.L, l.A, l.B }); }).ToList<DenseVector>();
                 space = "lab";
@@ -1313,9 +1375,12 @@ namespace BaseCodeApp
             PaletteData data;
             int pmethod = paletteMethodBox.SelectedIndex;
 
+
+            ColorSpace space = (colorSpaceBox.SelectedIndex == 0) ? ColorSpace.RGB : ColorSpace.LAB;
+
             if (currPalette.colors.Count() == 0)
             {
-                ExtractPalette(pmethod);
+                ExtractPalette(pmethod, space);
                 data = currPalette;
             }
             else
