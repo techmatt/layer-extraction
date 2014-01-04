@@ -228,6 +228,33 @@ namespace Engine
                 return Color.FromArgb(255, v, p, q);
         }
 
+        public static HSV RGBtoHSL(Color c)
+        {
+            float r = c.R / 255f;
+            float g = c.G / 255f;
+            float b = c.B / 255f;
+            float max = Math.Max(Math.Max(r, g), b);
+            float min = Math.Min(Math.Min(r, g), b);
+
+            HSV hsl = new HSV((max + min) / 2, (max + min) / 2, (max + min) / 2);
+
+            if (max == min) { // achromatic
+                hsl.H = 0;
+                hsl.S = 0;
+            } else {
+                float d = max - min;
+                hsl.S = hsl.V > 0.5 ? d / (2 - max - min) : d / (max + min);
+                if (Math.Abs(r - max) < Single.Epsilon)
+                    hsl.H = (g - b) / d + (g < b ? 6 : 0);
+                else if (Math.Abs(g - max) < Single.Epsilon)
+                    hsl.H = (b - r) / d + 2;
+                else
+                    hsl.H = (r - g) / d + 4;
+                hsl.H /= 6;
+            }
+            return hsl;
+        }
+
         public static Color HSLtoRGB(HSV hsl)
         {
             double hue = hsl.H;

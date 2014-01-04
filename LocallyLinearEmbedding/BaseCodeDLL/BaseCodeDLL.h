@@ -55,6 +55,6 @@ BASECODEDLL_API void		  __stdcall BCSaveVideoPaletteImage(void* context);
 BASECODEDLL_API void		  __stdcall BCSetVideoPreviewLayerIndex(void* context, int index);
 BASECODEDLL_API int           __stdcall BCGetVideoHeight(void *context);
 BASECODEDLL_API int           __stdcall BCGetVideoWidth(void *context);
-BASECODEDLL_API int           __stdcall BCLoadSuggestedRecolorings(void *context, int width, int height);
+BASECODEDLL_API int           __stdcall BCLoadSuggestedRecolorings(void *context);
 BASECODEDLL_API void          __stdcall BCLoadSuggestion(void *context, int index);
 BASECODEDLL_API byte          __stdcall BCGetSuggestPalette(void *context, int index, int paletteindex, int channel);

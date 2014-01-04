@@ -22,16 +22,20 @@ VideoController::~VideoController(void)
 
 void VideoController::LoadVideo(const String& filename, int paletteSize)
 {
+	_hasVideo = false;
 	_parameters.Init("../Parameters.txt"); 
 	_vidparams.Init(filename);
 
 	// clear
 	_palette.FreeMemory();
 	_players.FreeMemory();
+	_suggestPalettes.FreeMemory();
+	_suggestImages.DeleteMemory();
+	if (_frameA) delete _frameA;
+	if (_frameB) delete _frameB;
 	_frameA = NULL; _frameB = NULL;
 	_frameCount = 0; _videoWidth = 0; _videoHeight = 0;
 	_previewLayerIndex = -1; _currFrameIndex = -1;
-	_hasVideo = false;
 
 	// read in video
 	Video video;
@@ -54,12 +58,13 @@ void VideoController::SetPalette(int paletteindex, byte r, byte g, byte b)
 Bitmap* VideoController::GetNextFrame(void)
 {
 	if (!_hasVideo) return NULL;
+	if (_players.Length() == 0 || _palette.Length() == 0) return NULL;
 
 	if (!_frameA || !_frameB) {
 		if (_frameA) delete _frameA;
 		if (_frameB) delete _frameB;
-		_frameA = new Bitmap(_videoWidth, _videoHeight);
-		_frameB = new Bitmap(_videoWidth, _videoHeight);
+		_frameA = new Bitmap(_players[0][0].Width(), _players[0][0].Height());
+		_frameB = new Bitmap(_players[0][0].Width(), _players[0][0].Height());
 		_usingframeA = false;
 	}
 	Bitmap *currframe = _frameA;
@@ -69,8 +74,8 @@ Bitmap* VideoController::GetNextFrame(void)
 	Assert(_currFrameIndex >= 0 && _currFrameIndex < (int)_frameCount, "frame index out of bounds!");
 
 	if (_previewLayerIndex < 0) { // full colour
-		for (UINT y = 0; y < _videoHeight; y++)
-			for (UINT x = 0; x < _videoWidth; x++)
+		for (int y = 0; y < _players[0][0].Height(); y++)
+			for (int x = 0; x < _players[0][0].Width(); x++)
 				(*currframe)[y][x] = GetColor(_currFrameIndex, x, y);
 	}
 	else {
@@ -85,21 +90,22 @@ Bitmap* VideoController::GetNextFrame(void)
 Bitmap* VideoController::GetCurrentFrame(void)
 {
 	if (!_hasVideo) return NULL;
+	if (_players.Length() == 0 || _palette.Length() == 0) return NULL;
 	if (_currFrameIndex < 0) _currFrameIndex = 0;
 
 	if (!_frameA || !_frameB) {
 		if (_frameA) delete _frameA;
 		if (_frameB) delete _frameB;
-		_frameA = new Bitmap(_videoWidth, _videoHeight);
-		_frameB = new Bitmap(_videoWidth, _videoHeight);
+		_frameA = new Bitmap(_players[0][0].Width(), _players[0][0].Height());
+		_frameB = new Bitmap(_players[0][0].Width(), _players[0][0].Height());
 		_usingframeA = true;
 	}
 	Bitmap *currframe = _frameA;
 	if (_usingframeA) currframe = _frameB;
 
 	if (_previewLayerIndex < 0) { // full colour
-		for (UINT y = 0; y < _videoHeight; y++)
-			for (UINT x = 0; x < _videoWidth; x++)
+		for (int y = 0; y < _players[0][0].Height(); y++)
+			for (int x = 0; x < _players[0][0].Width(); x++)
 				(*currframe)[y][x] = GetColor(_currFrameIndex, x, y);
 	}
 	else {
@@ -114,7 +120,7 @@ RGBColor VideoController::GetColor(UINT frameIndex, int x, int y)
 	if (_players.Length() > 0) {
 		Vec3f v(0,0,0);
 		for (UINT layerIndex = 0; layerIndex < _palette.Length(); layerIndex++) 
-			v += _palette[layerIndex] * _players[frameIndex][layerIndex].pixelWeights(y,x);
+			v += _palette[layerIndex] * (float)_players[frameIndex][layerIndex].pixelWeights(y,x);
 		return RGBColor(v);
 	}
 	return RGBColor(0,0,0);
@@ -264,10 +270,10 @@ void VideoController::SaveFrames( const String& resultdirectory )
 	Utility::MakeDirectory(saveDirectory);
 	String saveLocation = saveDirectory + _vidparams.videoSaveName;
 
-	Bitmap currFrame(_videoWidth, _videoHeight);
+	Bitmap currFrame(_players[0][0].Width(), _players[0][0].Height());
 	for (UINT f = 0; f < _frameCount; f++) {
-		for (UINT y = 0; y < _videoHeight; y++)
-			for (UINT x = 0; x < _videoWidth; x++)
+		for (int y = 0; y < _players[0][0].Height(); y++)
+			for (int x = 0; x < _players[0][0].Width(); x++)
 				currFrame[y][x] = GetColor(f, x, y);
 
 		currFrame.SavePNG(saveLocation + "_" + String::ZeroPad(f, _vidparams.zeropad) + ".png");
@@ -302,30 +308,38 @@ void VideoController::SetPreviewLayerIndex( int index )
 }
 
 /* suggestions */
-int VideoController::LoadSuggestions(int width, int height)
+int VideoController::LoadSuggestions(void)
 {
 	String dir = "../VideoCache/" + _vidparams.videoName + "/";
 	String infofilename = dir + "info.txt";
 
 	Vector<String> lines = Utility::GetFileLines(infofilename);
 	int nsuggestions = (int) lines.Length();
-	
+
 	Console::WriteLine("loading " + String(nsuggestions) + " suggested recolorings...");
 
-	_suggestImages.Allocate(nsuggestions);
-	_suggestPalettes.Allocate(nsuggestions);
+	_suggestImages.Allocate(nsuggestions + 1); // +1 for original
+	_suggestPalettes.Allocate(nsuggestions + 1);
+
+	// original
+	_suggestImages[0] = new Bitmap(_players[0][0].Width(), _players[0][0].Height());
+	for (int y = 0; y < _players[0][0].Height(); y++)
+		for (int x = 0; x < _players[0][0].Width(); x++)
+			(*(_suggestImages[0]))[y][x] = GetColor(0, x, y);
+	_suggestPalettes[0].Allocate(_palette.Length());
+	for (unsigned int k = 0; k < _palette.Length(); k++) {
+		_suggestPalettes[0][k] = _palette[k];
+	}
+	// suggestions
 	for (int i = 0; i < nsuggestions; i++) {
 		Vector<String> parts = lines[i].Partition("|");
 		Assert(parts.Length() == 2, "corrupted suggestion cache file");
-		Bitmap *bmp = new Bitmap(width, height);
-		Bitmap orig;
-		orig.LoadPNG(dir + parts[0]);
-		orig.StretchBltTo(*bmp, 0, 0, width, height, 0, 0, orig.Width(), orig.Height(), Bitmap::SamplingLinear);
-		_suggestImages[i] = bmp;
-		_suggestPalettes[i].Allocate(_palette.Length());
+		_suggestImages[i+1] = new Bitmap();
+		_suggestImages[i+1]->LoadPNG(dir + parts[0]);
+		_suggestPalettes[i+1].Allocate(_palette.Length());
 		parts = parts[1].Partition(",");
 		for (unsigned int k = 0; k < _palette.Length(); k++) {
-			_suggestPalettes[i][k] = Vec3f(RGBColor(parts[k]));
+			_suggestPalettes[i+1][k] = Vec3f(RGBColor(parts[k]));
 		}
 	}
 	/*InputDataStream stream;
@@ -334,12 +348,12 @@ int VideoController::LoadSuggestions(int width, int height)
 	_suggestImages.Allocate(nsuggestions);
 	_suggestPalettes.Allocate(nsuggestions);
 	for (int i = 0; i < nsuggestions; i++) {
-		String imagename;
-		stream >> imagename;
-		_suggestImages[i].LoadPNG(imagename);
-		_suggestPalettes[i].Allocate(_palette.Length());
-		for (unsigned int k = 0; k < _palette.Length(); k++)
-			stream.ReadData(_suggestPalettes[i][k]);
+	String imagename;
+	stream >> imagename;
+	_suggestImages[i].LoadPNG(imagename);
+	_suggestPalettes[i].Allocate(_palette.Length());
+	for (unsigned int k = 0; k < _palette.Length(); k++)
+	stream.ReadData(_suggestPalettes[i][k]);
 	}*/
 
 	return nsuggestions;
@@ -359,11 +373,11 @@ void VideoController::LoadSuggestion(int index)
 	_suggestImages.DeleteMemory();
 	_suggestPalettes.FreeMemory();
 }
-	
+
 byte VideoController::GetSuggestPalette(int index, int paletteindex, int channel)
 {
 	Assert(index >= 0 && index < (int)_suggestPalettes.Length() && 
-		paletteindex >= 0 && paletteindex < _suggestPalettes[index].Length() &&
+		paletteindex >= 0 && paletteindex < (int)_suggestPalettes[index].Length() &&
 		channel >= 0 && channel < 3, "suggestion palette query out of bounds");
 	return Utility::BoundToByte(_suggestPalettes[index][paletteindex][channel] * 255.0f);
 }

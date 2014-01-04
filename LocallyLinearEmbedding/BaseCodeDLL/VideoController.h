@@ -51,7 +51,7 @@ public:
 	int Width(void) const { return (int)_videoWidth; }
 
 	// suggestions
-	int LoadSuggestions(int width, int height);
+	int LoadSuggestions(void);
 	Bitmap* GetSuggestionImage(int index);
 	void LoadSuggestion(int index);
 	byte GetSuggestPalette(int index, int paletteindex, int channel);

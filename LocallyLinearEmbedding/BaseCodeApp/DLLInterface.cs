@@ -97,7 +97,7 @@ namespace BaseCodeApp
         [DllImport(BaseCodeDLL)]
         public static extern Int32 BCGetVideoWidth(IntPtr context);
         [DllImport(BaseCodeDLL)]
-        public static extern Int32 BCLoadSuggestedRecolorings(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int width, [In, MarshalAs(UnmanagedType.I4)]int height);
+        public static extern Int32 BCLoadSuggestedRecolorings(IntPtr context);
         [DllImport(BaseCodeDLL)]
         public static extern IntPtr BCLoadSuggestion(IntPtr context, [In, MarshalAs(UnmanagedType.I4)]int index);
         [DllImport(BaseCodeDLL)]
@@ -124,6 +124,7 @@ namespace BaseCodeApp
             if (bitmapInfoUnmanaged == (IntPtr)0) return null;
 
             BCBitmapInfo bitmapInfo = (BCBitmapInfo)Marshal.PtrToStructure(bitmapInfoUnmanaged, typeof(BCBitmapInfo));
+            if (bitmapInfo.width == 0 || bitmapInfo.height == 0 || bitmapInfo.colorData == null) return null;
 
             return new Bitmap(bitmapInfo.width, bitmapInfo.height, bitmapInfo.width * 4, System.Drawing.Imaging.PixelFormat.Format32bppRgb, bitmapInfo.colorData);
         }
@@ -190,9 +191,9 @@ namespace BaseCodeApp
             return BCGetVideoWidth(baseCodeDLLContext);
         }
 
-        public int LoadSuggestedRecolorings(int width, int height)
+        public int LoadSuggestedRecolorings()
         {
-            return BCLoadSuggestedRecolorings(baseCodeDLLContext, width, height);
+            return BCLoadSuggestedRecolorings(baseCodeDLLContext);
         }
 
         public void LoadSuggestion(int index)
