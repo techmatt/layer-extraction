@@ -1360,9 +1360,9 @@ int App::GetVideoWidth(void)
 	return _videocontroller.Width();
 }
 
-int App::LoadSuggestions(int width, int height)
+int App::LoadSuggestions(void)
 {
-	return _videocontroller.LoadSuggestions(width, height);
+	return _videocontroller.LoadSuggestions();
 }
 
 void App::LoadSuggestion(int index)

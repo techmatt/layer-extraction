@@ -33,7 +33,7 @@ namespace BaseCodeApp
         private int paletteIndex; // index of palette for changing color
         private int interfaceHeight;
         private int paletteWidth;
-        private const int buttonsPerRow = 10;
+        private const int buttonWidth = 40;
         private int videoHeight, videoWidth;
 
         // recoloring suggestions
@@ -187,7 +187,17 @@ namespace BaseCodeApp
 
         private void timerVideoFrame_Tick(object sender, EventArgs e)
         {
-            videoBox.Image = (Image)_DLL.GetBitmap("videoFrame");
+            Image frame = (Image)_DLL.GetBitmap("videoFrame");
+
+            if (frame != null && (frame.Height != videoHeight || frame.Width != videoWidth))
+            {
+                videoBox.Image = (Image)(new Bitmap(frame, new Size(videoWidth, videoHeight)));
+            }
+            else
+            {
+                videoBox.Image = frame;
+            }
+            //videoBox.Image = (Image)_DLL.GetBitmap("videoFrame");
         }
 
         private void UpdateButtonSelection(int index) // highlight selected palette color
@@ -196,12 +206,22 @@ namespace BaseCodeApp
             {
                 if (i != index)
                 {
-                    _paletteButtons[i].FlatAppearance.BorderSize = 1; // reset
+                    _paletteButtons[i].FlatAppearance.BorderColor = Color.Black; // reset
+                    _paletteButtons[i].FlatAppearance.BorderSize = 1;
                 }
                 else
                 {
-                    _paletteButtons[i].FlatAppearance.BorderSize = 3;
+                    _paletteButtons[i].FlatAppearance.BorderColor = Color.Red;
+                    _paletteButtons[i].FlatAppearance.BorderSize = 5;
                 }
+            }
+            if (index > 0)
+            {
+                // update preview color
+                paletteColor = _paletteButtons[index].BackColor;
+                hslPaletteColor = Util.RGBtoHSL(paletteColor);
+                UpdatePreviewColor();
+                RenderScroll(hslPaletteColor.H, hslPaletteColor.S);
             }
         }
 
@@ -216,6 +236,7 @@ namespace BaseCodeApp
 
             int padding = 0;
             paletteWidth = videoBox.Right - palettePanel.Left;
+            int buttonsPerRow = (int)(paletteWidth / buttonWidth);
 
             for (int l = 0; l < showPalette.Count; l++)
             {
@@ -223,9 +244,8 @@ namespace BaseCodeApp
 
                 Button element = new Button();
                 element.BackColor = rgb;
-                element.Width = paletteWidth / buttonsPerRow;
+                element.Width = buttonWidth;
                 int Rows = (int)Math.Ceiling((float)showPalette.Count / (float)buttonsPerRow);
-                if (Rows > 1 && element.Width > 60) element.Width = 50;
                 element.Height = interfaceHeight / Rows;
                 element.Left = (element.Width + padding) * (l % buttonsPerRow);
                 element.Top = (element.Height + padding) * (l / buttonsPerRow);
@@ -433,8 +453,9 @@ namespace BaseCodeApp
             int imwidth = videoWidth / ncols - padding;
             int imheight = videoHeight / nrows - padding;
 
-            int n = _DLL.LoadSuggestedRecolorings(imwidth, imheight);
+            int n = _DLL.LoadSuggestedRecolorings();
             if (n <= 0) return;
+            n++; // include original image
             // display grid
             panelDecision.Visible = true;
             panelDecision.Left = videoBox.Left;
@@ -444,6 +465,7 @@ namespace BaseCodeApp
             // load
             panelDecision.Controls.Clear();
             suggestPicturesList.Clear();
+            UpdateButtonSelection(-1);
             for (int i = 0; i < n; i++)
             {
                 ChoicePictureBox p = new ChoicePictureBox(i); // (i / nrows, i % nrows) = (row, col)
@@ -487,7 +509,13 @@ namespace BaseCodeApp
                 p.Height = imheight;
                 p.Width = imwidth;
 
-                p.Image = (Image)_DLL.GetBitmap("suggestFrame" + i);
+                Image suggestion = (Image)_DLL.GetBitmap("suggestFrame" + i);
+                if (suggestion.Height != imheight || suggestion.Width != imwidth)
+                {
+                    suggestion = (Image)(new Bitmap(suggestion, new Size(imwidth, imheight)));
+                }
+                p.Image = suggestion;
+                //p.Image = (Image)_DLL.GetBitmap("suggestFrame" + i);
                 panelDecision.Controls.Add(p);
                 suggestPicturesList.Add(p);
             }

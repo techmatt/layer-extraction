@@ -21,7 +21,7 @@ public:
 	void SetVideoPreviewLayerIndex(int index);
 	int GetVideoHeight(void);
 	int GetVideoWidth(void);
-	int LoadSuggestions(int width, int height);
+	int LoadSuggestions(void);
 	void LoadSuggestion(int index);
 	byte GetSuggestPalette(int index, int paletteindex, int channel);
 

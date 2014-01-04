@@ -179,11 +179,11 @@ BASECODEDLL_API int __stdcall BCGetVideoWidth(void *context)
 	return app.GetVideoWidth();
 }
 
-BASECODEDLL_API int __stdcall BCLoadSuggestedRecolorings(void *context, int width, int height)
+BASECODEDLL_API int __stdcall BCLoadSuggestedRecolorings(void *context)
 {
 	if(context == NULL) return 0;
     App &app = *(App*)context;
-	return app.LoadSuggestions(width, height);
+	return app.LoadSuggestions();
 }
 
 BASECODEDLL_API void __stdcall BCLoadSuggestion(void *context, int index)
