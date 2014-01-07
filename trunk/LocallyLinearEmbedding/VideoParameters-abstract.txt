@@ -1,10 +1,10 @@
 
 videoFramesDirectory=../Data/
-videoName=fireflower
+videoName=abstract
 zeropad=0
 frameCount=1
 fps=24
 
 videoPaletteFile=0
 
-videoSaveName=fireflower
+videoSaveName=abstract

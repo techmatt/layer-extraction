@@ -1,0 +1,10 @@
+
+videoFramesDirectory=../Data/
+videoName=painting-crop
+zeropad=0
+frameCount=1
+fps=24
+
+videoPaletteFile=0
+
+videoSaveName=painting-crop
