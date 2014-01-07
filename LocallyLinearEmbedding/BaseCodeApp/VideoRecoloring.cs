@@ -28,7 +28,7 @@ namespace BaseCodeApp
         //private Graphics g_scroll;
         private HSV hslPaletteColor;
         private Color paletteColor;
-        private bool setLuminosity;
+        private bool setLuminosity, setHS;
 
         private int paletteIndex; // index of palette for changing color
         private int interfaceHeight;
@@ -66,6 +66,7 @@ namespace BaseCodeApp
             paletteColor = Util.HSLtoRGB(hslPaletteColor);
             RenderScroll(1.0, 1.0);
             setLuminosity = false;
+            setHS = false;
 
             pictureBoxColor.Height = pictureBoxPalette.Bottom - videoBox.Bottom - openButton.Height - resetButton.Height - suggestButton.Height - 35;
             previewColorBitmap = new Bitmap(pictureBoxColor.Width, pictureBoxColor.Height);
@@ -311,12 +312,6 @@ namespace BaseCodeApp
                 palettePanel.Controls.Add(element);
             }
 
-            /*count convex hull
-            if (currPalette.colors.Count > 3)
-            {
-                statusBox.Text = "Convex hull error: " + WithinConvexHull(space);
-            }*/
-
         }
 
         private void VideoRecoloring_Load(object sender, EventArgs e)
@@ -331,21 +326,25 @@ namespace BaseCodeApp
 
         private void pictureBoxPalette_MouseDown(object sender, MouseEventArgs e)
         {
-            Color rgb = paletteBitmap.GetPixel(e.X, e.Y);
-            //this.BackColor = Color.FromArgb(rgb.R, rgb.G, rgb.B);
-            double hue = (double)rgb.GetHue() / 360.0;
-            double saturation = (double)rgb.GetSaturation();
-
-            RenderScroll(hue, saturation);
-            double lum = hslPaletteColor.V;
-            hslPaletteColor = new HSV(hue, saturation, lum);
-            paletteColor = Util.HSLtoRGB(hslPaletteColor);
-            UpdatePreviewColor();
-
-            if (paletteIndex >= 0 && paletteIndex < _paletteButtons.Count)
+            if (e.X >= 0 && e.X < paletteBitmap.Width && e.Y >= 0 && e.Y < paletteBitmap.Height)
             {
-                _paletteButtons[paletteIndex].BackColor = paletteColor;
-                _DLL.SetVideoPalette(paletteIndex, paletteColor.R, paletteColor.G, paletteColor.B);
+                Color rgb = paletteBitmap.GetPixel(e.X, e.Y);
+                //this.BackColor = Color.FromArgb(rgb.R, rgb.G, rgb.B);
+                double hue = (double)rgb.GetHue() / 360.0;
+                double saturation = (double)rgb.GetSaturation();
+                setHS = true;
+
+                RenderScroll(hue, saturation);
+                double lum = hslPaletteColor.V;
+                hslPaletteColor = new HSV(hue, saturation, lum);
+                paletteColor = Util.HSLtoRGB(hslPaletteColor);
+                UpdatePreviewColor();
+
+                if (paletteIndex >= 0 && paletteIndex < _paletteButtons.Count)
+                {
+                    _paletteButtons[paletteIndex].BackColor = paletteColor;
+                    _DLL.SetVideoPalette(paletteIndex, paletteColor.R, paletteColor.G, paletteColor.B);
+                }
             }
         }
 
@@ -518,6 +517,59 @@ namespace BaseCodeApp
                 //p.Image = (Image)_DLL.GetBitmap("suggestFrame" + i);
                 panelDecision.Controls.Add(p);
                 suggestPicturesList.Add(p);
+            }
+        }
+
+        private void pictureBoxPalette_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.X >= 0 && e.X < paletteBitmap.Width && e.Y >= 0 && e.Y < paletteBitmap.Height)
+            {
+                if (setHS)
+                {
+                    Color rgb = paletteBitmap.GetPixel(e.X, e.Y);
+                    //this.BackColor = Color.FromArgb(rgb.R, rgb.G, rgb.B);
+                    double hue = (double)rgb.GetHue() / 360.0;
+                    double saturation = (double)rgb.GetSaturation();
+
+                    RenderScroll(hue, saturation);
+                    double lum = hslPaletteColor.V;
+                    hslPaletteColor = new HSV(hue, saturation, lum);
+                    paletteColor = Util.HSLtoRGB(hslPaletteColor);
+                    UpdatePreviewColor();
+
+                    if (paletteIndex >= 0 && paletteIndex < _paletteButtons.Count)
+                    {
+                        _paletteButtons[paletteIndex].BackColor = paletteColor;
+                        _DLL.SetVideoPalette(paletteIndex, paletteColor.R, paletteColor.G, paletteColor.B);
+                    }
+                }
+            }
+            setHS = false;
+        }
+
+        private void pictureBoxPalette_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.X >= 0 && e.X < paletteBitmap.Width && e.Y >= 0 && e.Y < paletteBitmap.Height)
+            {
+                if (setHS)
+                {
+                    Color rgb = paletteBitmap.GetPixel(e.X, e.Y);
+                    //this.BackColor = Color.FromArgb(rgb.R, rgb.G, rgb.B);
+                    double hue = (double)rgb.GetHue() / 360.0;
+                    double saturation = (double)rgb.GetSaturation();
+
+                    RenderScroll(hue, saturation);
+                    double lum = hslPaletteColor.V;
+                    hslPaletteColor = new HSV(hue, saturation, lum);
+                    paletteColor = Util.HSLtoRGB(hslPaletteColor);
+                    UpdatePreviewColor();
+
+                    if (paletteIndex >= 0 && paletteIndex < _paletteButtons.Count)
+                    {
+                        _paletteButtons[paletteIndex].BackColor = paletteColor;
+                        _DLL.SetVideoPalette(paletteIndex, paletteColor.R, paletteColor.G, paletteColor.B);
+                    }
+                }
             }
         }
     }
