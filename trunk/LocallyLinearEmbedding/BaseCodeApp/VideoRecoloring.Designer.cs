@@ -177,6 +177,8 @@
             this.pictureBoxPalette.TabStop = false;
             this.pictureBoxPalette.Click += new System.EventHandler(this.pictureBoxPalette_Click);
             this.pictureBoxPalette.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxPalette_MouseDown);
+            this.pictureBoxPalette.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxPalette_MouseMove);
+            this.pictureBoxPalette.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxPalette_MouseUp);
             // 
             // pictureBoxScroll
             // 
