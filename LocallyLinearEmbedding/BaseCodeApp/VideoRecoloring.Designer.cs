@@ -45,6 +45,7 @@
             this.pictureBoxScroll = new System.Windows.Forms.PictureBox();
             this.pictureBoxColor = new System.Windows.Forms.PictureBox();
             this.panelDecision = new System.Windows.Forms.Panel();
+            this.saveButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.videoBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPalette)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxScroll)).BeginInit();
@@ -69,9 +70,9 @@
             // openButton
             // 
             this.openButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.openButton.Location = new System.Drawing.Point(11, 537);
+            this.openButton.Location = new System.Drawing.Point(11, 525);
             this.openButton.Name = "openButton";
-            this.openButton.Size = new System.Drawing.Size(120, 40);
+            this.openButton.Size = new System.Drawing.Size(120, 37);
             this.openButton.TabIndex = 3;
             this.openButton.Text = "Load";
             this.openButton.UseVisualStyleBackColor = true;
@@ -80,9 +81,9 @@
             // resetButton
             // 
             this.resetButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.resetButton.Location = new System.Drawing.Point(11, 585);
+            this.resetButton.Location = new System.Drawing.Point(11, 565);
             this.resetButton.Name = "resetButton";
-            this.resetButton.Size = new System.Drawing.Size(120, 40);
+            this.resetButton.Size = new System.Drawing.Size(120, 37);
             this.resetButton.TabIndex = 4;
             this.resetButton.Text = "Reset";
             this.resetButton.UseVisualStyleBackColor = true;
@@ -147,9 +148,9 @@
             // suggestButton
             // 
             this.suggestButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.suggestButton.Location = new System.Drawing.Point(11, 633);
+            this.suggestButton.Location = new System.Drawing.Point(11, 605);
             this.suggestButton.Name = "suggestButton";
-            this.suggestButton.Size = new System.Drawing.Size(120, 40);
+            this.suggestButton.Size = new System.Drawing.Size(120, 37);
             this.suggestButton.TabIndex = 9;
             this.suggestButton.Text = "Suggest";
             this.suggestButton.UseVisualStyleBackColor = true;
@@ -196,7 +197,7 @@
             // 
             this.pictureBoxColor.Location = new System.Drawing.Point(11, 481);
             this.pictureBoxColor.Name = "pictureBoxColor";
-            this.pictureBoxColor.Size = new System.Drawing.Size(120, 50);
+            this.pictureBoxColor.Size = new System.Drawing.Size(120, 40);
             this.pictureBoxColor.TabIndex = 14;
             this.pictureBoxColor.TabStop = false;
             // 
@@ -207,11 +208,23 @@
             this.panelDecision.Size = new System.Drawing.Size(1159, 463);
             this.panelDecision.TabIndex = 15;
             // 
+            // saveButton
+            // 
+            this.saveButton.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.saveButton.Location = new System.Drawing.Point(11, 645);
+            this.saveButton.Name = "saveButton";
+            this.saveButton.Size = new System.Drawing.Size(120, 37);
+            this.saveButton.TabIndex = 16;
+            this.saveButton.Text = "Save";
+            this.saveButton.UseVisualStyleBackColor = true;
+            this.saveButton.Click += new System.EventHandler(this.saveButton_Click);
+            // 
             // VideoRecoloring
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1183, 707);
+            this.Controls.Add(this.saveButton);
             this.Controls.Add(this.panelDecision);
             this.Controls.Add(this.pictureBoxColor);
             this.Controls.Add(this.pictureBoxScroll);
@@ -256,5 +269,6 @@
         private System.Windows.Forms.PictureBox pictureBoxScroll;
         private System.Windows.Forms.PictureBox pictureBoxColor;
         private System.Windows.Forms.Panel panelDecision;
+        private System.Windows.Forms.Button saveButton;
     }
 }

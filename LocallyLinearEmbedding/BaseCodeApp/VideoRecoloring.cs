@@ -68,7 +68,7 @@ namespace BaseCodeApp
             setLuminosity = false;
             setHS = false;
 
-            pictureBoxColor.Height = pictureBoxPalette.Bottom - videoBox.Bottom - openButton.Height - resetButton.Height - suggestButton.Height - 35;
+            pictureBoxColor.Height = pictureBoxPalette.Bottom - videoBox.Bottom - openButton.Height - resetButton.Height - suggestButton.Height - saveButton.Height - 16;
             previewColorBitmap = new Bitmap(pictureBoxColor.Width, pictureBoxColor.Height);
             UpdatePreviewColor();
 
@@ -121,9 +121,10 @@ namespace BaseCodeApp
                     videoBox.Width = videoWidth;
                     int top = videoHeight + 30;
                     pictureBoxColor.Top = top;
-                    openButton.Top = pictureBoxColor.Bottom + 10;
-                    resetButton.Top = openButton.Bottom + 10;
-                    suggestButton.Top = resetButton.Bottom + 10;
+                    openButton.Top = pictureBoxColor.Bottom + 3;
+                    resetButton.Top = openButton.Bottom + 3;
+                    suggestButton.Top = resetButton.Bottom + 3;
+                    saveButton.Top = suggestButton.Bottom + 3;
                     pictureBoxColor.Width = openButton.Width;
                     pictureBoxPalette.Top = top;
                     pictureBoxScroll.Top = top;
@@ -158,7 +159,7 @@ namespace BaseCodeApp
 
         private void saveButton_Click(object sender, EventArgs e)
         {
-
+            _DLL.SaveVideoFrames();
         }
 
         private void savePaletteImageButton_Click(object sender, EventArgs e)
