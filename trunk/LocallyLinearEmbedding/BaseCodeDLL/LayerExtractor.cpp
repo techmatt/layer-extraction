@@ -613,6 +613,19 @@ void LayerExtractor::ExtractLayers(const AppParameters &parameters, const Bitmap
 		VisualizeReconstruction(parameters, bmp, layers);
 		VisualizeLayerGrid(parameters, bmp, layers);
 	}
+
+	//output the sum of each superpixel if not to one
+	for (UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+	{
+		double total = 0;
+		for (UINT layerIndex = 0; layerIndex < layerCount; layerIndex++)
+		{
+			Layer &curLayer = layers.layers[layerIndex];
+			total += curLayer.superpixelWeights[superpixelIndex];
+		}
+		if (total > 1.1 || total < 0.9)
+			Console::WriteLine(String(total) + " " + String(superpixelIndex));
+	}
 }
 
 Bitmap LayerExtractor::RecolorSuperpixels(const Bitmap &bmp, const Vector<Vec3f> &newSuperpixelColors) const
@@ -1013,11 +1026,11 @@ void LayerExtractor::VisualizeLayerConstraints(const AppParameters &parameters, 
 	String key = "initial";
 
 	const UINT paletteHeight = 40;
-	Bitmap result(bmp.Width(), bmp.Height() + paletteHeight);
+	Bitmap result(bmp.Width(), bmp.Height());
 
 	result.Clear(RGBColor::Black);
 
-	for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) result[y][x] = RGBColor(Vec3f(bmp[y][x]) * 0.2f);
+	/*for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) result[y][x] = RGBColor(Vec3f(bmp[y][x]) * 0.2f);
 
 	AliasRender render;
 	const Vector<SuperpixelLayerConstraint>& constraints = layers.constraints[key];
@@ -1042,6 +1055,23 @@ void LayerExtractor::VisualizeLayerConstraints(const AppParameters &parameters, 
 			{
 				if(result.ValidCoordinates(x, y)) result[y][x] = RGBColor(layers.layers[layerIndex].color);
 			}
+		}
+	}
+
+	result.SavePNG("../Results/LayerConstraints.png");*/
+
+	for(UINT y = 0; y < bmp.Height(); y++) for(UINT x = 0; x < bmp.Width(); x++) result[y][x] = RGBColor(Vec3f(bmp[y][x]));
+
+	AliasRender render;
+	const Vector<SuperpixelLayerConstraint>& constraints = layers.constraints[key];
+	for(const auto &constraint : constraints)
+	{
+		if(constraint.target > 0.0)
+		{
+			RGBColor color = RGBColor::Magenta;
+			RGBColor borderColor = RGBColor::Magenta;
+
+			render.DrawRect(result, Rectangle2i::ConstructFromCenterVariance(superpixelColors[constraint.index].coord, Vec2i(2, 2)), color, borderColor);
 		}
 	}
 

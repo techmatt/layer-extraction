@@ -72,24 +72,12 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AutoRecolorWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AutoRecolorWindow.Designer.cs">
-      <DependentUpon>AutoRecolorWindow.cs</DependentUpon>
-    </Compile>
     <Compile Include="Clustering.cs" />
     <Compile Include="Color.cs" />
     <Compile Include="ColorNames.cs" />
     <Compile Include="DLLInterface.cs" />
     <Compile Include="HungarianAlgorithm.cs" />
     <Compile Include="LayerExtract.cs" />
-    <Compile Include="LayerSynthesisWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="LayerSynthesisWindow.Designer.cs">
-      <DependentUpon>LayerSynthesisWindow.cs</DependentUpon>
-    </Compile>
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -110,12 +98,6 @@
     <Compile Include="VideoRecoloring.Designer.cs">
       <DependentUpon>VideoRecoloring.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="AutoRecolorWindow.resx">
-      <DependentUpon>AutoRecolorWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="LayerSynthesisWindow.resx">
-      <DependentUpon>LayerSynthesisWindow.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>

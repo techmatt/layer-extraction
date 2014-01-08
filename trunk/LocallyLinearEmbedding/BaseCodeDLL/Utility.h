@@ -10,11 +10,11 @@ namespace Utility
                 {
                     if(mask[y][x] == RGBColor::Magenta)
                     {
-                        constraints.PushEnd(PixelConstraint(Vec2i(x, y), Vec3f(bmp[y][x])));
+                        constraints.PushEnd(PixelConstraint(Vec2i(x, y), Vec3f(bmp[y][x]), false));
                     }
                     else
                     {
-                        constraints.PushEnd(PixelConstraint(Vec2i(x, y), Vec3f(mask[y][x])));
+                        constraints.PushEnd(PixelConstraint(Vec2i(x, y), Vec3f(mask[y][x]), true));
                     }
                 }
             }

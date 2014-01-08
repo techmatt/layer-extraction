@@ -60,6 +60,7 @@
             this.trainModelButton = new System.Windows.Forms.Button();
             this.buttonVideo = new System.Windows.Forms.Button();
             this.videoWindowButton = new System.Windows.Forms.Button();
+            this.massColorButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -371,11 +372,22 @@
             this.videoWindowButton.UseVisualStyleBackColor = true;
             this.videoWindowButton.Click += new System.EventHandler(this.deleteLayerButton_Click);
             // 
+            // massColorButton
+            // 
+            this.massColorButton.Location = new System.Drawing.Point(546, 612);
+            this.massColorButton.Name = "massColorButton";
+            this.massColorButton.Size = new System.Drawing.Size(82, 29);
+            this.massColorButton.TabIndex = 29;
+            this.massColorButton.Text = "massColor";
+            this.massColorButton.UseVisualStyleBackColor = true;
+            this.massColorButton.Click += new System.EventHandler(this.massColorButton_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1276, 774);
+            this.Controls.Add(this.massColorButton);
             this.Controls.Add(this.videoWindowButton);
             this.Controls.Add(this.trainModelButton);
             this.Controls.Add(this.outputMeshes);
@@ -455,6 +467,7 @@
         private System.Windows.Forms.Button trainModelButton;
         private System.Windows.Forms.Button buttonVideo;
         private System.Windows.Forms.Button videoWindowButton;
+        private System.Windows.Forms.Button massColorButton;
     }
 }
 

@@ -39,6 +39,8 @@ private:
 	void FilterLayers(const String &parameterFilename);
 	bool ReadLayersFromCache(const String& cache, PixelLayerSet &layers, Vector<Vec3f>& palette, const Vector<PixelConstraint>& constraints);
 	void ComputeLayers(const String& cache, const Bitmap& image, PixelLayerSet &layers, Vector<Vec3f>& palette, const Vector<PixelConstraint>& constraints);
+
+	void RBFVideoRecolor();
     
     AppParameters _parameters;
 

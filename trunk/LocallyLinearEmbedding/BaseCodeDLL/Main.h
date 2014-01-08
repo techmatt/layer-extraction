@@ -26,6 +26,8 @@ Main.h is included by all source files and includes every header file in the cor
 #include "Eigen3_2/Sparse"
 #include "EigenSolver.h"
 
+
+
 #include "Descriptors.h"
 #include "Dictionary.h"
 #include "SuperpixelExtractor.h"
@@ -38,6 +40,10 @@ Main.h is included by all source files and includes every header file in the cor
 #include "GaussianPyramid.h"
 #include "NeighborhoodGenerator.h"
 #include "BagOfWords.h"
+
+#include "NNLeastSquares/nnls.h"
+#include "NNLeastSquaresSolver.h"
+#include "RBFPropagation.h"
 
 #include "VideoController.h"
 

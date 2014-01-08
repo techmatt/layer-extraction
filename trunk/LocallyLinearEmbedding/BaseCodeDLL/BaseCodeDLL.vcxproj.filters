@@ -109,6 +109,15 @@
     <ClInclude Include="Descriptors.h">
       <Filter>LayerMesh</Filter>
     </ClInclude>
+    <ClInclude Include="NNLeastSquares\nnls.h">
+      <Filter>RBFProp</Filter>
+    </ClInclude>
+    <ClInclude Include="NNLeastSquaresSolver.h">
+      <Filter>RBFProp</Filter>
+    </ClInclude>
+    <ClInclude Include="RBFPropagation.h">
+      <Filter>RBFProp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -177,6 +186,15 @@
     <ClCompile Include="Descriptors.cpp">
       <Filter>LayerMesh</Filter>
     </ClCompile>
+    <ClCompile Include="NNLeastSquares\nnls.cpp">
+      <Filter>RBFProp</Filter>
+    </ClCompile>
+    <ClCompile Include="NNLeastSquaresSolver.cpp">
+      <Filter>RBFProp</Filter>
+    </ClCompile>
+    <ClCompile Include="RBFPropagation.cpp">
+      <Filter>RBFProp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Base">
@@ -202,6 +220,9 @@
     </Filter>
     <Filter Include="LayerMesh">
       <UniqueIdentifier>{fc85f3dd-9f91-4e8f-8eb5-0a5fc38151fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RBFProp">
+      <UniqueIdentifier>{894c2715-f0d8-474e-840b-f3da14de7ff8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
