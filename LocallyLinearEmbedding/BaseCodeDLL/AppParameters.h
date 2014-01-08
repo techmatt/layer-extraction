@@ -73,6 +73,11 @@ struct AppParameters
 
 		useMatlab = file.GetBoolean("useMatlab");
 
+		rbf_colorScale = file.GetDouble("rbf_colorScale");
+		rbf_timeScale = file.GetDouble("rbf_timeScale");
+		rbf_spatialScale = file.GetDouble("rbf_spatialScale");
+		rbf_basisRatio = file.GetDouble("rbf_basisRatio");
+
     }
 
     String imageFile;
@@ -141,4 +146,11 @@ struct AppParameters
 	bool texsyn_usergbdistance;
 	int texsyn_klayers;
 	int texsyn_initrandsize;
+
+	//RBF propagation
+	double rbf_colorScale;
+	double rbf_timeScale;
+	double rbf_spatialScale;
+	double rbf_basisRatio;
+	
 };

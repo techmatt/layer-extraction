@@ -1130,6 +1130,59 @@ void App::SynthesizeTexture(const String &parameterFilename)
 	synthesizer.Synthesize(rgbpyr, pyramid, _parameters, generator);
 }
 
+
+
+//Li et al Instant Propagation Video Recoloring
+void App::RBFVideoRecolor()
+{
+_parameters.Init("../Parameters.txt");
+
+	Video video;
+
+	const UINT frameCount = 124;
+	for (UINT frameIndex = 0; frameIndex < frameCount; frameIndex++)
+	{
+		Bitmap bmp;
+		//bmp.LoadPNG("../Data/softboy/softboy_intro_1" + String::ZeroPad(frameIndex, 3) + ".png");
+		bmp.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_" + String::ZeroPad(frameIndex, 4) + ".png");
+		//bmp.LoadPNG("../Data/sintel-5/sintel-5_" + String::ZeroPad(frameIndex, 2) + ".png");
+		//bmp.LoadPNG("../Data/flowersBlur.png");
+		video.frames.PushEnd(bmp);
+	}
+
+	
+	Vector<PixelConstraint> constraints;
+	Bitmap original;
+	//original.LoadPNG("../Data/flowersBlur.png");
+	original.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_0000.png");
+
+	Bitmap mask;
+	//mask.LoadPNG("../Data/flowersBlur_denseMask.png");
+	mask.LoadPNG("../Data/bigbuckbunny_mask.png");
+
+	Utility::AddMaskConstraints(original, mask, constraints);
+
+	Console::WriteLine("Recoloring...");
+
+	RBFPropagation recolorer;
+	Video result = recolorer.Recolor(_parameters, video, constraints);
+
+	Console::WriteLine("Rendering frames");
+
+	Utility::MakeDirectory("../Results/RBFResults/");
+
+	String videoDirectory = "../Results/RBFResults/bigbuckbunny";
+	Utility::MakeDirectory(videoDirectory);
+
+	for(UINT frameIndex = 0; frameIndex < video.frames.Length(); frameIndex++)
+	{
+		result.frames[frameIndex].SavePNG(videoDirectory + "/f" + String::ZeroPad(frameIndex, 4) + ".png");
+	}
+
+	Console::WriteLine("Done recoloring video");
+
+}
+
 UINT32 App::ProcessCommand(const String &command)
 {
 	Vector<String> words = command.Partition(" ");
@@ -1148,9 +1201,14 @@ UINT32 App::ProcessCommand(const String &command)
 	else if (words[0] == "ExtractVideoLayers") {
 		ExtractVideoLayers();
 	}
+	else if (words[0] == "RBFVideoRecolor") {
+		RBFVideoRecolor();
+	}
+	
 
 	return 0;
 }
+
 
 BCBitmapInfo* App::QueryBitmapByName(const String &s)
 {

@@ -49,6 +49,9 @@
     <ClInclude Include="Main.h" />
     <ClInclude Include="BaseCodeDLL.h" />
     <ClInclude Include="NeighborhoodGenerator.h" />
+    <ClInclude Include="NNLeastSquaresSolver.h" />
+    <ClInclude Include="NNLeastSquares\nnls.h" />
+    <ClInclude Include="RBFPropagation.h" />
     <ClInclude Include="Recolorizer.h" />
     <ClInclude Include="SuperpixelExtractor.h" />
     <ClInclude Include="SuperpixelExtractorVideo.h" />
@@ -85,6 +88,9 @@
     </ClCompile>
     <ClCompile Include="BaseCodeDLL.cpp" />
     <ClCompile Include="NeighborhoodGenerator.cpp" />
+    <ClCompile Include="NNLeastSquaresSolver.cpp" />
+    <ClCompile Include="NNLeastSquares\nnls.cpp" />
+    <ClCompile Include="RBFPropagation.cpp" />
     <ClCompile Include="Recolorizer.cpp" />
     <ClCompile Include="SuperpixelExtractor.cpp" />
     <ClCompile Include="SuperpixelExtractorVideo.cpp" />

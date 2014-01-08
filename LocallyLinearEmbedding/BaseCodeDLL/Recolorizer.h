@@ -37,13 +37,19 @@ struct PixelConstraint
     {
 
     }
-    PixelConstraint(const Vec2i &_coord, const Vec3f &_targetColor)
+
+	PixelConstraint(const Vec2i &_coord, const Vec3f &_targetColor, bool _change=true)
     {
         coord = _coord;
         targetColor = _targetColor;
+		frame = 0;
+		change = _change;
     }
+
     Vec2i coord;
     Vec3f targetColor;
+	int frame;
+	bool change;
 };
 
 struct SuperpixelConstraint

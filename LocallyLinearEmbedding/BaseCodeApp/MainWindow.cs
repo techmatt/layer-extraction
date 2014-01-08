@@ -388,6 +388,12 @@ namespace BaseCodeApp
 
             }
             currPalette = data;
+
+            //sort by lightness
+            currPalette.lab = currPalette.lab.OrderBy(lab => lab.L).ToList<CIELAB>();
+            currPalette.colors.Clear();
+            foreach (CIELAB lab in currPalette.lab)
+                currPalette.colors.Add(Util.LABtoRGB(lab));
         }
 
         private void ExtractLayers(int pmethod, int lmethod, ColorSpace space)
@@ -402,6 +408,7 @@ namespace BaseCodeApp
             PaletteData data;
             if (currPalette.colors.Count() == 0)
             {
+                Console.WriteLine("Extracting palette");
                 ExtractPalette(pmethod, space);
                 data = currPalette;
             }
@@ -934,7 +941,8 @@ namespace BaseCodeApp
         }
         private void deleteLayerButton_Click(object sender, EventArgs e)
         {
-            DLL.ProcessCommand("DeleteLayer");
+            //DLL.ProcessCommand("DeleteLayer");
+            DLL.ProcessCommand("RBFVideoRecolor");
         }
 
         private void extractLayersButton_Click(object sender, EventArgs e)
@@ -1190,7 +1198,7 @@ namespace BaseCodeApp
 
         private void buttonSaveConstraints_Click(object sender, EventArgs e)
         {
-
+           
         }
 
         private void pictureBox_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -1242,9 +1250,6 @@ namespace BaseCodeApp
             Layers synth = ProcessLayers(layersUnmanaged, ColorSpace.RGB);
             Bitmap result = Recolor(synth, synth.colors, ColorSpace.RGB);
             result.Save("synthesized.png");
-
-            LayerSynthesisWindow window = new LayerSynthesisWindow();
-            window.ShowDialog();
         }
 
         private void videoWindowButton_Click(object sender, EventArgs e)
@@ -1256,17 +1261,27 @@ namespace BaseCodeApp
         private void saveLayersButton_Click(object sender, EventArgs e)
         {
             Directory.CreateDirectory("../Layers");
+            String subDir = Path.Combine("../Layers","K" + layers.layers.Count);
+            Directory.CreateDirectory(subDir);
+            
             String basename = new FileInfo(currImageFile).Name;
 
             //save the layers as pngs
+            //output lightness
             int layerIndex = 0;
+
+            List<int> indices = new List<int>();
+            for (int i = 0; i < layers.previews.Count; i++)
+                indices.Add(i);
+            indices = indices.OrderBy(i => currPalette.lab[i].L).ToList<int>();
+
             foreach (Bitmap layer in layers.previews)
             {
                 Bitmap result = new Bitmap(layer);
                 Graphics g = Graphics.FromImage(result);
                 g.FillRectangle(new SolidBrush(currPalette.colors[layerIndex]), 0, 0, 20, layer.Height);
     
-
+                
                 List<String> lines = new List<String>();
                 lines.Add(layers.height + "\t" + layers.width);
                 lines.Add(String.Join("\t", layers.colors[layerIndex].Select(d => d/255.0).ToArray<double>()));
@@ -1281,15 +1296,15 @@ namespace BaseCodeApp
                     lines.Add(String.Join("\t", fields));
 
                 }
-                File.AppendAllLines(Path.Combine("../Layers", Util.ConvertFileName(basename, "_" + layerIndex, ".txt")), lines.ToArray<String>());   
-                            
-                result.Save(Path.Combine("../Layers", Util.ConvertFileName(basename, "_"+layerIndex)));
+                File.AppendAllLines(Path.Combine(subDir, Util.ConvertFileName(basename, "_" + indices.IndexOf(layerIndex), ".txt")), lines.ToArray<String>());
+
+                result.Save(Path.Combine(subDir, Util.ConvertFileName(basename, "_" + indices.IndexOf(layerIndex))));
                 result.Dispose();
                 layerIndex++;
             }
 
             Bitmap reconstructed = Recolor(layers, layers.colors, layers.space);
-            reconstructed.Save(Path.Combine("../Layers", Util.ConvertFileName(basename, "_r")));
+            reconstructed.Save(Path.Combine(subDir, Util.ConvertFileName(basename, "_r")));
 
         }
 
@@ -1699,6 +1714,47 @@ namespace BaseCodeApp
         private void buttonVideo_Click(object sender, EventArgs e)
         {
             DLL.ProcessCommand("ExtractVideoLayers");
+        }
+
+        private void massColorButton_Click(object sender, EventArgs e)
+        {
+            //mass recolor
+            String[] images = {"../Data/CreativeCommons/DevArt_Busangane_03.png",
+                              "../Data/CreativeCommons/DevArt_Busangane.png",
+                              "../Data/CreativeCommons/BrainCloud.png",
+                              "../Data/CreativeCommons/Thom.png"};
+            /*double[]hues = {37.0, 78.0, 144.0, 232.0};
+            foreach (String image in images)
+            {
+                currImageFile = image;
+            }*/
+
+            //mass layer extraction first to find potential
+           
+            foreach (String image in images)
+            {
+                Console.WriteLine("Processing " + image);
+                currImageFile = image;
+                activeImage = Image.FromFile(currImageFile);
+                pictureBox.Image = activeImage;
+                pictureBoxBitmap = new Bitmap(pictureBox.Image.Width, pictureBox.Image.Height);
+                g = Graphics.FromImage(pictureBoxBitmap);
+
+                for (int k = 5; k <= 9; k += 2)
+                {
+                    Console.WriteLine("K " + k);
+                    KBox.Text = "" + k;
+                   
+                    ExtractLayers(3, 0, ColorSpace.RGB);
+                    Console.WriteLine("Done extracting");
+                    Console.WriteLine("Saving Layers");
+                    saveLayersButton_Click(sender, e);
+                    Console.WriteLine("Done Saving");
+                    ClearPalette();
+                }
+            }
+
+
         }
 
     }

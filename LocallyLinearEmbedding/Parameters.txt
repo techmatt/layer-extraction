@@ -28,6 +28,7 @@ manifoldWeight=1
 pixelConstraintWeight=0.1
 #pixelConstraintWeight=0
 sumToOneWeight=0.1
+#sumToOneWeight=0
 reconstructionWeight=0.5
 #reconstructionWeight=0
 #midpointWeight=0.0000001;
@@ -164,3 +165,11 @@ texsyn_uselayers=false
 texsyn_usedistancetransform=false
 texsyn_klayers=4
 texsyn_initrandsize=8
+
+
+### Li et al 2010 RBF
+
+rbf_colorScale = 0.3;
+rbf_timeScale = 1.0
+rbf_spatialScale = 1.0;
+rbf_basisRatio = 0.2;
