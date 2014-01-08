@@ -255,7 +255,10 @@ void Bitmap::LoadPNG(const String &filename)
 
     UINT error = lodepng::decode(image, width, height, filename.CString());
 
-    PersistentAssert(!error, lodepng_error_text(error));
+    if(error)
+    {
+        SignalError(String(lodepng_error_text(error)) + ": " + filename);
+    }
 
     Allocate(width, height);
     memcpy(_Data, &image[0], 4 * width * height);
