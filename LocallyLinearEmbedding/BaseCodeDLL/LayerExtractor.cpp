@@ -704,7 +704,11 @@ void LayerExtractor::ComputeSuperpixels(const AppParameters &parameters, const B
 
 	//SuperpixelExtractorPeriodic extractor;
 	SuperpixelExtractorSuperpixel extractor;
-	superpixelColors = extractor.Extract(parameters, bmp);
+	//superpixelColors = extractor.Extract(parameters, bmp);
+	superpixelColors = extractor.Extract(parameters, bmp, pixelAssignments);
+
+	Bitmap overlay = Utility::MakeSuperpixelOverlay(pixelAssignments);
+	Utility::OverlayBitmap(bmp, overlay, RGBColor::Black).SavePNG("../Results/Superpixels.png");
 }
 
 void LayerExtractor::ComputeWeightMatrix(const AppParameters &parameters)
@@ -1153,7 +1157,7 @@ void LayerExtractor::VisualizeLayers(const AppParameters &parameters, const Bitm
 		Bitmap discreteBmp = smoothBmp;
 		discreteBmp.Clear(RGBColor::Black);
 
-		for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+		/*for(UINT superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
 		{
 			float weight = (float)curLayer.superpixelWeights[superpixelIndex];
 			Vec3f c = Vec3f(RGBColor::Interpolate(RGBColor::Black, RGBColor::White, weight));
@@ -1161,9 +1165,19 @@ void LayerExtractor::VisualizeLayers(const AppParameters &parameters, const Bitm
 			if(weight > 1.02) c = Vec3f(RGBColor::Red);
 			if(weight < -0.02) c = Vec3f(RGBColor::Blue);
 			render.DrawRect(discreteBmp, Rectangle2i::ConstructFromCenterVariance(superpixelColors[superpixelIndex].coord, Vec2i(2, 2)), RGBColor(c), RGBColor(c));//RGBColor(0, 128, 0));
-		}
+		}*/
 
-		for(UINT y = 0; y < smoothBmp.Height(); y++) for(UINT x = 0; x < 10; x++)
+		for(UINT y = 0; y < smoothBmp.Height(); y++)
+			for(UINT x = 0; x < smoothBmp.Width(); x++)
+			{
+				float weight = (float)curLayer.superpixelWeights[pixelAssignments(y, x)];
+				Vec3f c = Vec3f(RGBColor::Interpolate(RGBColor::Black, RGBColor::White, weight));
+				discreteBmp[y][x] = RGBColor(c);
+			}
+
+		//discreteBmp = Utility::OverlayBitmap(discreteBmp, Utility::MakeSuperpixelOverlay(pixelAssignments), RGBColor::Black);
+
+		for(UINT y = 0; y < smoothBmp.Height(); y++) for(UINT x = 0; x < 40; x++)
 		{
 			smoothBmp[y][x] = RGBColor(curLayer.color);
 			discreteBmp[y][x] = RGBColor(curLayer.color);

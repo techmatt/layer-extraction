@@ -44,6 +44,7 @@ namespace BaseCodeApp
         private int CHITrials = 8;
         private PaletteCache paletteCache = new PaletteCache("../PaletteCache");
         private PaletteData currPalette = new PaletteData();
+        private string clipboardText = ""; //necessary because background workers can't access the clipboard
 
         public class LayerConstraints
         {
@@ -377,6 +378,11 @@ namespace BaseCodeApp
                     data = paletteCache.GetPalette("chipatch"+spaceString, k, currImageFile);
                 }
    
+            }
+            else if (pmethod == 4)
+            {
+                if (clipboardText.Length == 0) clipboardText = Clipboard.GetText();
+                data = PaletteData.FromString(clipboardText);
             }
             else
             {
@@ -1010,6 +1016,8 @@ namespace BaseCodeApp
 
 
             ColorSpace space = (colorSpaceBox.SelectedIndex == 0) ? ColorSpace.RGB : ColorSpace.LAB;
+
+            clipboardText = Clipboard.GetText();
 
             bw = new BackgroundWorker();
             bw.DoWork += delegate
@@ -1755,6 +1763,14 @@ namespace BaseCodeApp
             }
 
 
+        }
+
+        private void buttonCopyPalette_Click(object sender, EventArgs e)
+        {
+            currPalette = new PaletteData();
+            currPalette.colors = this.palette.Select(c => c.BackColor).ToList<Color>();
+            currPalette.lab = this.palette.Select(c => Util.RGBtoLAB(c.BackColor)).ToList<CIELAB>();
+            Clipboard.SetText(currPalette.ToString());
         }
 
     }

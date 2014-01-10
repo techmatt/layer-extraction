@@ -63,6 +63,7 @@ public:
     };
 
     Vector<ColorCoordinate> Extract(const AppParameters &parameters, const Bitmap &bmp);
+	Vector<ColorCoordinate> Extract(const AppParameters &parameters, const Bitmap &bmp, Grid<UINT> &assignmentsOut);
     void Extract(const AppParameters &parameters, const Bitmap &bmp, Vector<Superpixel> &superpixelsOut, Grid<UINT> &assignmentsOut);
 
 private:

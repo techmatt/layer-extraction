@@ -61,6 +61,7 @@
             this.buttonVideo = new System.Windows.Forms.Button();
             this.videoWindowButton = new System.Windows.Forms.Button();
             this.massColorButton = new System.Windows.Forms.Button();
+            this.buttonCopyPalette = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layerBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
@@ -129,7 +130,7 @@
             this.KBox.Name = "KBox";
             this.KBox.Size = new System.Drawing.Size(69, 27);
             this.KBox.TabIndex = 6;
-            this.KBox.Text = "5";
+            this.KBox.Text = "6";
             // 
             // saveButton
             // 
@@ -158,7 +159,8 @@
             "K-Means",
             "CHI-Resize",
             "ConvexHull",
-            "CHI-Patch"});
+            "CHI-Patch",
+            "Clipboard"});
             this.paletteMethodBox.Location = new System.Drawing.Point(378, 649);
             this.paletteMethodBox.Name = "paletteMethodBox";
             this.paletteMethodBox.Size = new System.Drawing.Size(162, 27);
@@ -255,10 +257,11 @@
             // 
             this.statusBox.BackColor = System.Drawing.SystemColors.Control;
             this.statusBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.statusBox.Location = new System.Drawing.Point(-1, 730);
+            this.statusBox.Location = new System.Drawing.Point(194, 774);
             this.statusBox.Name = "statusBox";
             this.statusBox.Size = new System.Drawing.Size(1230, 20);
             this.statusBox.TabIndex = 14;
+            this.statusBox.Text = "Status";
             // 
             // label2
             // 
@@ -271,7 +274,7 @@
             // 
             // layerSynthesisButton
             // 
-            this.layerSynthesisButton.Location = new System.Drawing.Point(634, 608);
+            this.layerSynthesisButton.Location = new System.Drawing.Point(29, 773);
             this.layerSynthesisButton.Name = "layerSynthesisButton";
             this.layerSynthesisButton.Size = new System.Drawing.Size(159, 38);
             this.layerSynthesisButton.TabIndex = 19;
@@ -332,9 +335,9 @@
             // 
             // outputMeshes
             // 
-            this.outputMeshes.Location = new System.Drawing.Point(555, 526);
+            this.outputMeshes.Location = new System.Drawing.Point(29, 731);
             this.outputMeshes.Name = "outputMeshes";
-            this.outputMeshes.Size = new System.Drawing.Size(231, 37);
+            this.outputMeshes.Size = new System.Drawing.Size(184, 37);
             this.outputMeshes.TabIndex = 26;
             this.outputMeshes.Text = "Output Training Meshes";
             this.outputMeshes.UseVisualStyleBackColor = true;
@@ -342,9 +345,9 @@
             // 
             // trainModelButton
             // 
-            this.trainModelButton.Location = new System.Drawing.Point(555, 568);
+            this.trainModelButton.Location = new System.Drawing.Point(219, 729);
             this.trainModelButton.Name = "trainModelButton";
-            this.trainModelButton.Size = new System.Drawing.Size(126, 38);
+            this.trainModelButton.Size = new System.Drawing.Size(77, 38);
             this.trainModelButton.TabIndex = 27;
             this.trainModelButton.Text = "Train";
             this.trainModelButton.UseVisualStyleBackColor = true;
@@ -374,19 +377,30 @@
             // 
             // massColorButton
             // 
-            this.massColorButton.Location = new System.Drawing.Point(546, 612);
+            this.massColorButton.Location = new System.Drawing.Point(302, 731);
             this.massColorButton.Name = "massColorButton";
-            this.massColorButton.Size = new System.Drawing.Size(82, 29);
+            this.massColorButton.Size = new System.Drawing.Size(97, 36);
             this.massColorButton.TabIndex = 29;
             this.massColorButton.Text = "massColor";
             this.massColorButton.UseVisualStyleBackColor = true;
             this.massColorButton.Click += new System.EventHandler(this.massColorButton_Click);
             // 
+            // buttonCopyPalette
+            // 
+            this.buttonCopyPalette.Location = new System.Drawing.Point(405, 729);
+            this.buttonCopyPalette.Name = "buttonCopyPalette";
+            this.buttonCopyPalette.Size = new System.Drawing.Size(135, 38);
+            this.buttonCopyPalette.TabIndex = 30;
+            this.buttonCopyPalette.Text = "Copy Palette";
+            this.buttonCopyPalette.UseVisualStyleBackColor = true;
+            this.buttonCopyPalette.Click += new System.EventHandler(this.buttonCopyPalette_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1276, 774);
+            this.ClientSize = new System.Drawing.Size(1276, 825);
+            this.Controls.Add(this.buttonCopyPalette);
             this.Controls.Add(this.massColorButton);
             this.Controls.Add(this.videoWindowButton);
             this.Controls.Add(this.trainModelButton);
@@ -468,6 +482,7 @@
         private System.Windows.Forms.Button buttonVideo;
         private System.Windows.Forms.Button videoWindowButton;
         private System.Windows.Forms.Button massColorButton;
+        private System.Windows.Forms.Button buttonCopyPalette;
     }
 }
 
