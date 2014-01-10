@@ -51,4 +51,6 @@ private:
     SparseMatrix<double> WBase;
     int pass;
 	int correctionPass;
+
+	Grid<UINT> pixelAssignments;
 };

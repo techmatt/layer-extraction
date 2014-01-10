@@ -120,4 +120,54 @@ namespace Utility
         }
         return result;
     }
+
+	__forceinline Bitmap ExpandBitmap(const Bitmap &bmp, RGBColor backColor)
+	{
+		Bitmap result = bmp;
+		for(UINT y = 1; y < bmp.Height() - 1; y++)
+			for(UINT x = 1; x < bmp.Width() - 1; x++)
+			{
+				RGBColor c = bmp[y][x];
+				if(c == backColor)
+				{
+					if(bmp[y - 1][x] != backColor) c = bmp[y - 1][x];
+					if(bmp[y + 1][x] != backColor) c = bmp[y + 1][x];
+					if(bmp[y][x - 1] != backColor) c = bmp[y][x - 1];
+					if(bmp[y][x + 1] != backColor) c = bmp[y][x + 1];
+					result[y][x] = c;
+				}
+			}
+		return result;
+	}
+
+	__forceinline Bitmap MakeSuperpixelOverlay(const Grid<UINT> &assignment)
+	{
+		//const RGBColor borderColor(91, 206, 255);
+		const RGBColor borderColor(0, 0, 1);
+		Bitmap bmp(assignment.Cols(), assignment.Rows(), RGBColor::Black);
+		for(UINT y = 1; y < bmp.Height() - 1; y++)
+			for(UINT x = 1; x < bmp.Width() - 1; x++)
+			{
+				if(assignment(y, x) != assignment(y + 1, x) ||
+				   assignment(y, x) != assignment(y, x + 1) ||
+				   assignment(y, x) != assignment(y - 1, x) ||
+				   assignment(y, x) != assignment(y, x - 1))
+					bmp[y][x] = borderColor;
+			}
+
+		bmp = ExpandBitmap(bmp, RGBColor::Black);
+		//bmp = ExpandBitmap(bmp, RGBColor::Black);
+		return bmp;
+	}
+
+	__forceinline Bitmap OverlayBitmap(const Bitmap &bmp, const Bitmap &overlay, RGBColor backColor)
+	{
+		Bitmap result = bmp;
+		for(UINT y = 0; y < bmp.Height(); y++)
+			for(UINT x = 0; x < bmp.Width(); x++)
+			{
+				if(overlay[y][x] != backColor) result[y][x] = overlay[y][x];
+			}
+		return result;
+	}
 };

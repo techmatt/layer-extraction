@@ -60,8 +60,13 @@ void Superpixel::ComputeColor( const Bitmap &bmp )
 
 Vector<ColorCoordinate> SuperpixelExtractorSuperpixel::Extract(const AppParameters &parameters, const Bitmap &bmp)
 {
+	Grid<UINT> assignmentsOut;
+	return Extract(parameters, bmp, assignmentsOut);
+}
+
+Vector<ColorCoordinate> SuperpixelExtractorSuperpixel::Extract(const AppParameters &parameters, const Bitmap &bmp, Grid<UINT> &assignmentsOut)
+{
     Vector<Superpixel> superpixelsOut;
-    Grid<UINT> assignmentsOut;
     Extract(parameters, bmp, superpixelsOut, assignmentsOut);
 
     Vector<ColorCoordinate> result;
