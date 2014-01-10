@@ -948,7 +948,76 @@ namespace BaseCodeApp
         private void deleteLayerButton_Click(object sender, EventArgs e)
         {
             //DLL.ProcessCommand("DeleteLayer");
-            DLL.ProcessCommand("RBFVideoRecolor");
+            //DLL.ProcessCommand("RBFVideoRecolor");
+            DLL.ProcessCommand("CompareMethods");
+
+
+            //get the layers
+            /*List<Bitmap> mattes = new List<Bitmap>();
+            List<Bitmap> colors = new List<Bitmap>();
+
+            List<Bitmap> bgcolors = new List<Bitmap>();
+            String directory = "../KNNMatting/";
+
+            for (int i = 1; i < 6; i++)
+            {
+                String filename = Path.Combine(directory,"0" + i + "_foreground.png");
+                String matteFilename = Path.Combine(directory,"0" + i + ".png");
+                mattes.Add(new Bitmap(matteFilename));
+                colors.Add(new Bitmap(filename));
+
+                String bgcolor = Path.Combine(directory,"0" + i + "_background.png");
+                bgcolors.Add(new Bitmap(bgcolor));
+            }
+
+            //recombine the layer images
+            int width = mattes[0].Width;
+            int height = mattes[0].Height;
+            Bitmap combined = new Bitmap(width, height);
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    DenseVector color = new DenseVector(3);
+                    for (int i = 0; i < mattes.Count; i++)
+                    {
+                        Color fg = colors[i].GetPixel(x,y);
+                        color += mattes[i].GetPixel(x, y).G / 255.0 * Util.ToDenseVector(fg);
+                    }
+                    combined.SetPixel(x, y, Color.FromArgb((int)Clamp(color[0]), (int)Clamp(color[1]), (int)Clamp(color[2])));
+                }
+            }
+            combined.Save(Path.Combine(directory,"KNNCombined.png"));
+
+            //recolor the flowers from KNN matting
+            int changeLayer = 2;
+            DenseVector from = new DenseVector(new double[] { 174, 46, 33 });
+            //DenseVector from = new DenseVector(new double[] { 24, 96, 186 });
+             
+            DenseVector to = new DenseVector(new double[] { 63,72,204});
+            DenseVector delta = to - from;
+
+            Bitmap recolored = new Bitmap(width, height);
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+
+                    Color fg = colors[changeLayer].GetPixel(x, y);
+                    Color bg = bgcolors[changeLayer].GetPixel(x, y);
+                    double alpha = mattes[changeLayer].GetPixel(x, y).G / 255.0;
+
+                    //change the foreground color
+                    DenseVector newFg = Util.ToDenseVector(fg) + delta;
+
+                    DenseVector color = newFg * alpha + Util.ToDenseVector(bg) * (1 - alpha);
+                    recolored.SetPixel(x, y, Color.FromArgb((int)Clamp(color[0]), (int)Clamp(color[1]), (int)Clamp(color[2])));
+                }
+            }
+            recolored.Save(Path.Combine(directory, "RecoloredCombined.png"));*/
+
         }
 
         private void extractLayersButton_Click(object sender, EventArgs e)

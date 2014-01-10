@@ -70,8 +70,6 @@ Video RBFPropagation::Recolor(const AppParameters &parameters, const Video &vide
 	Console::WriteLine("Negative strokes " + String(targetPixelColors.Length()-numChanges));
 
 
-	
-
 	for (int r=0; r < numConstraints; r++)
 	{	
 		const PixelConstraint& trainConstraint = targetPixelColors[r];
