@@ -199,6 +199,17 @@ void Recolorizer::ComputeSuperpixel(const AppParameters &parameters, const Bitma
     //SuperpixelExtractorPeriodic extractor;
     SuperpixelExtractorSuperpixel extractor;
     superpixelColors = extractor.Extract(parameters, bmp);
+
+	//superpixelColors.ReSize(0);
+	//TODO: just make every pixel a superpixel...
+	/*int idx=0;
+	for(int x=0; x<bmp.Width(); x++)
+	{
+		for (int y=0; y<bmp.Height(); y++)
+		{
+			superpixelColors.PushEnd(ColorCoordinate(parameters, bmp[y][x], Vec2i(x,y), bmp.Width(), bmp.Height()));
+		}
+	}*/
 }
 
 void Recolorizer::ComputeWeightMatrix(const AppParameters &parameters)

@@ -1130,7 +1130,146 @@ void App::SynthesizeTexture(const String &parameterFilename)
 	synthesizer.Synthesize(rgbpyr, pyramid, _parameters, generator);
 }
 
+void App::CompareMethods()
+{
+	Console::WriteLine("Compare methods");
+	_parameters.Init("../Parameters.txt");
+	String directory = "../ComparisonEdits/";
 
+	String rbfDir = directory+"rbf/";
+	String mpepDir = directory+"mpep/";
+	String layerDir = directory+"layers/";
+
+	Utility::MakeDirectory(rbfDir);
+	Utility::MakeDirectory(mpepDir);
+	Utility::MakeDirectory(layerDir);
+
+	//get all the images in the directory
+	Directory imageDir(directory);
+	Vector<String> files = imageDir.FilesWithSuffix(".png");
+	for (String file:files)
+	{
+		String basename = file.Partition("/").Last();
+		int count = 0;
+		if (Utility::FileExists(directory+"strokes/"+basename) && Utility::FileExists(directory+"palettes/"+basename))
+		{
+			//process layers
+			Console::WriteLine("Processing "+file);
+			Console::WriteLine("Layers");
+
+			Bitmap original; original.LoadPNG(directory+file);
+			Bitmap points; points.LoadPNG(directory+"palettes/"+basename);
+			Bitmap strokes; strokes.LoadPNG(directory+"strokes/"+basename);
+
+			Bitmap debug(original.Width(), original.Height(),RGBColor::White);
+			for(int x=0; x<original.Width(); x++)
+				for(int y=0; y<original.Height(); y++)
+					if(original[y][x] != points[y][x])
+						debug[y][x] = points[y][x];
+			debug.SavePNG("palettePoints.png");
+			original.SavePNG("original.png");
+			points.SavePNG("mask.png");
+
+			Vector<PixelConstraint> palettePoints;
+			Utility::AddMaskConstraints(original, points, palettePoints);
+			Console::WriteLine("Palette size " + String(palettePoints.Length()));
+			if (palettePoints.Length() >= 10)
+				continue;
+
+			//render the palette
+			Bitmap paletteImg(20, palettePoints.Length()*20);
+			Vector<Vec3f> sourcePalette;
+			Vector<RGBColor> newPalette;
+			AliasRender g;
+			for (int c=0; c<palettePoints.Length(); c++)
+			{
+				RGBColor sourceColor = original[palettePoints[c].coord.y][palettePoints[c].coord.x];
+				g.DrawSquare(paletteImg, Vec2i(10, c*20+10), 10, sourceColor, sourceColor);
+				sourcePalette.PushEnd(Vec3f(sourceColor));
+
+				if (palettePoints[c].change)
+				{
+					RGBColor changeColor(palettePoints[c].targetColor);
+					g.DrawRect(paletteImg, Rectangle2i(10,c*20, 19, c*20+19), changeColor, changeColor);
+					newPalette.PushEnd(changeColor);
+				} else
+				{
+					newPalette.PushEnd(sourceColor);
+				}
+			}
+			paletteImg.SavePNG(layerDir+"palette_"+basename);
+			
+
+			//PixelLayerSet layers = ExtractLayers(original, sourcePalette, "" ,false);
+			//Bitmap layerResult = _extractor.RecolorLayers(original, _layers, newPalette);
+			//layerResult.SavePNG(layerDir+basename);
+
+
+			//process stroke-based algorithms
+
+			//get strokes
+			Vector<PixelConstraint> strokeConstraints;
+			Utility::AddMaskConstraints(original, strokes, strokeConstraints); 
+
+
+			/*Console::WriteLine("RBF");
+			Video video;
+			video.frames.PushEnd(original);
+			RBFPropagation rbf;
+			//try different parameters
+			for (int i=1; i<6; i++)
+			{
+				_parameters.rbf_colorScale = 0.1*i;
+				Video rbfResult = rbf.Recolor(_parameters, video, strokeConstraints);
+				rbfResult.frames.First().SavePNG(rbfDir+basename.FindAndReplace(".png", "_"+String(_parameters.rbf_colorScale)+".png"));
+			}*/
+
+			Console::WriteLine("MPEP");
+			
+			double tempSuperpixelCount = _parameters.superpixelCount;
+			_parameters.superpixelCount = 10000;
+			//double temp = _parameters.pixelNeighborCount;
+			//_parameters.pixelNeighborCount = _parameters.superpixelNeighborCount;
+			
+			//_parameters.pixelNeighborCount = temp;
+			double tempNeighborCount = _parameters.superpixelNeighborCount;
+			
+
+			//TODO:try different parameters?
+			//double constraintWeights[3] = {0.001, 0.01, 0.1};
+			int K[6] = {3, 5, 10, 20, 30, 50};
+			for (int k=0; k<6; k++)
+			{
+			//	for (int c=0; c<3; c++)
+			//	{
+					//_parameters.userConstraintWeight = constraintWeights[c];
+					Recolorizer recolorizer;
+					recolorizer.Init(_parameters, original);
+					_parameters.superpixelNeighborCount = K[k];
+					Bitmap mpepResult = recolorizer.Recolor(_parameters, original, strokeConstraints); //recolorizer.Recolor(_parameters, original, strokeConstraints);
+					mpepResult.SavePNG(mpepDir+basename.FindAndReplace(".png","_K"+String(K[k])+".png"));
+					mpepResult.FreeMemory();
+			//	}
+			}
+			_parameters.superpixelNeighborCount = tempNeighborCount;
+			_parameters.superpixelCount = tempSuperpixelCount;
+
+			count++;
+			Console::WriteLine("Done with that image! Processed so far:" + String(count));
+
+			//cleanup
+			original.FreeMemory();
+			strokes.FreeMemory();
+			points.FreeMemory();
+			//layerResult.FreeMemory();
+			
+			
+		}
+	}
+	Console::WriteLine("Done!");
+
+
+}
 
 //Li et al Instant Propagation Video Recoloring
 void App::RBFVideoRecolor()
@@ -1139,14 +1278,16 @@ _parameters.Init("../Parameters.txt");
 
 	Video video;
 
-	const UINT frameCount = 124;
+	const UINT frameCount = 1;
 	for (UINT frameIndex = 0; frameIndex < frameCount; frameIndex++)
 	{
 		Bitmap bmp;
 		//bmp.LoadPNG("../Data/softboy/softboy_intro_1" + String::ZeroPad(frameIndex, 3) + ".png");
-		bmp.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_" + String::ZeroPad(frameIndex, 4) + ".png");
+		//bmp.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_" + String::ZeroPad(frameIndex, 4) + ".png");
 		//bmp.LoadPNG("../Data/sintel-5/sintel-5_" + String::ZeroPad(frameIndex, 2) + ".png");
 		//bmp.LoadPNG("../Data/flowersBlur.png");
+		//bmp.LoadPNG("../Data/CreativeCommons/c_ambler.png");
+		bmp.LoadPNG("../Data/CreativeCommons/ajhill.png");
 		video.frames.PushEnd(bmp);
 	}
 
@@ -1154,11 +1295,15 @@ _parameters.Init("../Parameters.txt");
 	Vector<PixelConstraint> constraints;
 	Bitmap original;
 	//original.LoadPNG("../Data/flowersBlur.png");
-	original.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_0000.png");
+	//original.LoadPNG("../Data/bigbuckbunny/bigbuckbunny_0000.png");
+	//original.LoadPNG("../Data/CreativeCommons/c_ambler.png");
+	original.LoadPNG("../Data/CreativeCommons/ajhill.png");
 
 	Bitmap mask;
 	//mask.LoadPNG("../Data/flowersBlur_denseMask.png");
-	mask.LoadPNG("../Data/bigbuckbunny_mask.png");
+	//mask.LoadPNG("../Data/bigbuckbunny_mask.png");
+	//mask.LoadPNG("../Data/CreativeCommons/c_ambler_mask.png");
+	mask.LoadPNG("../Data/CreativeCommons/ajhill_mask2.png");
 
 	Utility::AddMaskConstraints(original, mask, constraints);
 
@@ -1171,7 +1316,7 @@ _parameters.Init("../Parameters.txt");
 
 	Utility::MakeDirectory("../Results/RBFResults/");
 
-	String videoDirectory = "../Results/RBFResults/bigbuckbunny";
+	String videoDirectory = "../Results/RBFResults/ajhill";
 	Utility::MakeDirectory(videoDirectory);
 
 	for(UINT frameIndex = 0; frameIndex < video.frames.Length(); frameIndex++)
@@ -1204,8 +1349,10 @@ UINT32 App::ProcessCommand(const String &command)
 	else if (words[0] == "RBFVideoRecolor") {
 		RBFVideoRecolor();
 	}
+	else if (words[0] == "CompareMethods") {
+		CompareMethods();
+	}
 	
-
 	return 0;
 }
 

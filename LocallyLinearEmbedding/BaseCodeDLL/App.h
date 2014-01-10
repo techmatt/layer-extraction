@@ -35,6 +35,7 @@ private:
 	void DeleteLayer(const String &parameterFilename);
 	void ExtractVideoLayers();
 	void CacheLayers(const Vector<Vec3f> &palette, const Vector<PixelLayer> &pixellayers, const String& imageFile);
+	void CompareMethods();
 
 	void FilterLayers(const String &parameterFilename);
 	bool ReadLayersFromCache(const String& cache, PixelLayerSet &layers, Vector<Vec3f>& palette, const Vector<PixelConstraint>& constraints);
