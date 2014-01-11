@@ -44,8 +44,8 @@ useMatlab=false
 # These terms are only used for recolorizing (have no effect on LayerExtractor)
 #
 weightRegularizationTerm=0.000001
-#userConstraintWeight=0.00001
-userConstraintWeight = 0.001
+userConstraintWeight=0.00001
+#userConstraintWeight = 0.001
 distantConstraintWeight=0.000001
 colorInertiaWeight=0.0000000
 periodicBasisCount=3
