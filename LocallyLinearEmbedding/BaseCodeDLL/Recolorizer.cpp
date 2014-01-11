@@ -77,7 +77,20 @@ Bitmap Recolorizer::Recolor(const AppParameters &parameters, const Bitmap &bmp, 
 
 Bitmap Recolorizer::Recolor(const AppParameters &parameters, const Bitmap &bmp, const Vector<PixelConstraint> &targetPixelColors)
 {
-    return Recolor(parameters, bmp, MapPixelConstraintsToSuperpixelConstraints(parameters, targetPixelColors));
+	const int superpixelCount = superpixelNeighbors.Length();
+	Vector<Vec3f> newSuperpixelColors(superpixelCount);
+	Vector<SuperpixelConstraint> constraints = MapPixelConstraintsToSuperpixelConstraints(parameters, targetPixelColors);
+	for (int i=0; i<superpixelColors.Length(); i++)
+		newSuperpixelColors[i] = Vec3f(0,0,0);
+
+	for(int i=0; i<constraints.Length(); i++)
+	{
+		newSuperpixelColors[constraints[i].index] = constraints[i].targetColor;
+	}
+	VisualizeSuperpixels(parameters, bmp, &newSuperpixelColors, "debugStrokesMPEP");
+
+	return Recolor(parameters, bmp, constraints);
+    //return Recolor(parameters, bmp, MapPixelConstraintsToSuperpixelConstraints(parameters, targetPixelColors));
 }
 
 Bitmap Recolorizer::Recolor(const AppParameters &parameters, const Bitmap &bmp, const Vector<SuperpixelConstraint> &superpixelConstraints)
