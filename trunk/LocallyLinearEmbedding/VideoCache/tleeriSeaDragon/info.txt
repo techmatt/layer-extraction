@@ -1,0 +1,12 @@
+image_0.png|#040bc5,#065847,#7e8e28,#39ca30,#1afe09
+image_1.png|#57098c,#595248,#ca52e2,#76b2d1,#fdb9dc
+image_2.png|#173b2a,#a00e6f,#fd00cc,#dd908d,#0ff8d9
+image_3.png|#0c05c2,#793e79,#ca52e2,#54bbb5,#ecdd48
+image_4.png|#383d17,#1b5804,#e35f49,#fe9e3a,#bbec28
+image_5.png|#0203c3,#225077,#b97094,#aab95d,#aceca7
+image_6.png|#760207,#6e403d,#458dbe,#66bdcc,#22fa92
+image_7.png|#690b64,#0d4cad,#cc57e9,#ff9258,#3cfa55
+image_8.png|#76050b,#6c3d6a,#5289c8,#63bcc6,#6cedfc
+image_9.png|#4106ae,#15518a,#9e7cc5,#4cc282,#97f137
+image_10.png|#0c05c2,#47416d,#ca52e2,#76b4d0,#f8dfbc
+image_11.png|#3d07b4,#664153,#518aac,#2bca5a,#0ffc74
