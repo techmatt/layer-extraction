@@ -1177,7 +1177,7 @@ void App::CompareMethods()
 				continue;
 
 			//render the palette
-			Bitmap paletteImg(20, palettePoints.Length()*20);
+			/*Bitmap paletteImg(20, palettePoints.Length()*20);
 			Vector<Vec3f> sourcePalette;
 			Vector<RGBColor> newPalette;
 			AliasRender g;
@@ -1202,7 +1202,7 @@ void App::CompareMethods()
 
 			PixelLayerSet layers = ExtractLayers(original, sourcePalette, "" ,false);
 			Bitmap layerResult = _extractor.RecolorLayers(original, _layers, newPalette);
-			layerResult.SavePNG(layerDir+basename);
+			layerResult.SavePNG(layerDir+basename);*/
 
 
 			//process stroke-based algorithms
@@ -1212,7 +1212,7 @@ void App::CompareMethods()
 			Utility::AddMaskConstraints(original, strokes, strokeConstraints); 
 
 
-			Console::WriteLine("RBF");
+			/*Console::WriteLine("RBF");
 			Video video;
 			video.frames.PushEnd(original);
 			RBFPropagation rbf;
@@ -1222,11 +1222,11 @@ void App::CompareMethods()
 				_parameters.rbf_colorScale = 0.1*i;
 				Video rbfResult = rbf.Recolor(_parameters, video, strokeConstraints);
 				rbfResult.frames.First().SavePNG(rbfDir+basename.FindAndReplace(".png", "_"+String(_parameters.rbf_colorScale)+".png"));
-			}
+			}*/
 
 			Console::WriteLine("MPEP");
 			
-		/*	double tempSuperpixelCount = _parameters.superpixelCount;
+			double tempSuperpixelCount = _parameters.superpixelCount;
 			_parameters.superpixelCount = 4000;
 			//double temp = _parameters.pixelNeighborCount;
 			//_parameters.pixelNeighborCount = _parameters.superpixelNeighborCount;
@@ -1236,24 +1236,25 @@ void App::CompareMethods()
 			
 
 			//TODO:try different parameters?
-			//double constraintWeights[3] = {0.001, 0.01, 0.1};
-			int K[6] = {10, 20, 30, 50, 60};
-			for (int k=0; k<5; k++)
+			double constraintWeights[4] = {0.00001, 0.0001, 0.0005, 0.001};
+			int K[3] = {10, 30, 50};
+			for (int k=0; k<2; k++)
 			{
-				//for (int c=0; c<3; c++)
-				//{
-					//_parameters.userConstraintWeight = constraintWeights[c];
-					Recolorizer recolorizer;
-					_parameters.superpixelNeighborCount = K[k];
+				for (int c=0; c<2; c++)
+				{
+					_parameters.userConstraintWeight = constraintWeights[c];
+					RecolorizerPixel recolorizer;
+					//_parameters.superpixelNeighborCount = K[k];
+					_parameters.recolorizerPixelNeighbors = K[k];
 					recolorizer.Init(_parameters, original);
-					Bitmap mpepResult = recolorizer.Recolor(_parameters, original, strokeConstraints, 0.001, 0.6);; //recolorizer.Recolor(_parameters, original, strokeConstraints);
-					mpepResult.SavePNG(mpepDir+basename.FindAndReplace(".png","_K"+String(K[k])+".png"));
+					Bitmap mpepResult = recolorizer.Recolor(_parameters, original, strokeConstraints);//, 0.001, 0.6);; //recolorizer.Recolor(_parameters, original, strokeConstraints);
+					mpepResult.SavePNG(mpepDir+basename.FindAndReplace(".png","_K"+String(K[k])+"_U"+String(c)+".png"));
 					mpepResult.FreeMemory();
-				//}
+				}
 			}
 			_parameters.superpixelNeighborCount = tempNeighborCount;
 			_parameters.superpixelCount = tempSuperpixelCount;
-			Console::WriteLine("SNeighbors " + String(_parameters.superpixelNeighborCount));*/
+			Console::WriteLine("SNeighbors " + String(_parameters.superpixelNeighborCount));
 
 			count++;
 			Console::WriteLine("Done with that image! Processed so far:" + String(count));

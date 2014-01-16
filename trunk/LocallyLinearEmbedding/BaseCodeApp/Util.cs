@@ -534,6 +534,16 @@ namespace Engine
         {
             return new DenseVector(new double[] { lab.L, lab.A, lab.B });
         }
+
+        public static Color DenseVectorToRGB(DenseVector color)
+        {
+            return Color.FromArgb((int)Clamp(color[0]), (int)Clamp(color[1]), (int)Clamp(color[2]));
+        }
+
+        private static double Clamp(double channel)
+        {
+            return Math.Max(0, Math.Min(channel, 255));
+        }
     }
 }
 

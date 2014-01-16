@@ -33,6 +33,7 @@ Main.h is included by all source files and includes every header file in the cor
 #include "SuperpixelExtractor.h"
 #include "SuperpixelExtractorVideo.h"
 #include "Recolorizer.h"
+#include "RecolorizerPixel.h"
 #include "Layers.h"
 #include "LayerExtractor.h"
 #include "LayerExtractorVideo.h"

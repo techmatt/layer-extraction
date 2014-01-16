@@ -78,6 +78,8 @@ struct AppParameters
 		rbf_spatialScale = file.GetDouble("rbf_spatialScale");
 		rbf_basisRatio = file.GetDouble("rbf_basisRatio");
 
+		recolorizerPixelNeighbors = file.GetInteger("recolorizerPixelNeighbors");
+
     }
 
     String imageFile;
@@ -152,5 +154,7 @@ struct AppParameters
 	double rbf_timeScale;
 	double rbf_spatialScale;
 	double rbf_basisRatio;
+
+	int recolorizerPixelNeighbors;
 	
 };

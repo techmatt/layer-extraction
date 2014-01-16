@@ -118,6 +118,7 @@
     <ClInclude Include="RBFPropagation.h">
       <Filter>RBFProp</Filter>
     </ClInclude>
+    <ClInclude Include="RecolorizerPixel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -195,6 +196,7 @@
     <ClCompile Include="RBFPropagation.cpp">
       <Filter>RBFProp</Filter>
     </ClCompile>
+    <ClCompile Include="RecolorizerPixel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Base">
