@@ -14,12 +14,12 @@ VecNf RBFPropagation::MakeFeatureVector(const AppParameters &parameters, const V
 {
 	RGBColor color = video.frames[frame][coord.y][coord.x];
 	VecNf features(6);
-    features[0] = color.r / 255.0f / parameters.rbf_colorScale;
-    features[1] = color.g / 255.0f / parameters.rbf_colorScale;
-    features[2] = color.b / 255.0f / parameters.rbf_colorScale;
-    features[3] = coord.x/(float)video.Width() / parameters.rbf_spatialScale;
-    features[4] = coord.y/(float)video.Height() / parameters.rbf_spatialScale; //though, in the code they normalize this by the width and not the height
-	features[5] = frame/(float)video.frames.Length() / parameters.rbf_timeScale;
+    features[0] = (color.r / 255.0f) / parameters.rbf_colorScale;
+    features[1] = (color.g / 255.0f) / parameters.rbf_colorScale;
+    features[2] = (color.b / 255.0f) / parameters.rbf_colorScale;
+    features[3] = (coord.x/(float)video.Width()) / parameters.rbf_spatialScale;
+    features[4] = (coord.y/(float)video.Height()) / parameters.rbf_spatialScale; //though, in the code they normalize this by the width and not the height
+	features[5] = (frame/(float)video.frames.Length()) / parameters.rbf_timeScale;
 	return features;
 }
 

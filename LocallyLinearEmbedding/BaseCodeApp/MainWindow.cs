@@ -41,7 +41,7 @@ namespace BaseCodeApp
         private BackgroundWorker bw = new BackgroundWorker();
         private List<Button> palette = new List<Button>();
         private String currImageFile = "";
-        private int CHITrials = 8;
+        private int CHITrials = 5;
         private PaletteCache paletteCache = new PaletteCache("../PaletteCache");
         private PaletteData currPalette = new PaletteData();
         private string clipboardText = ""; //necessary because background workers can't access the clipboard
@@ -604,7 +604,6 @@ namespace BaseCodeApp
         private void CreatePreviews()
         {
 
-
             //print the fraction of negative pixels also within the (RGB) convex hull
             List<Point> points = new List<Point>();
             double negPixels = 0;
@@ -950,6 +949,32 @@ namespace BaseCodeApp
             //DLL.ProcessCommand("DeleteLayer");
             //DLL.ProcessCommand("RBFVideoRecolor");
             DLL.ProcessCommand("CompareMethods");
+            //ComparePalettes();
+
+            //save layers on black background
+           /* String directory = "../KNNMatting/";
+            int changeLayer = 0;
+            Bitmap orig = new Bitmap(currImageFile);
+            int width = orig.Width;
+            int height = orig.Height;
+            Bitmap bg = new Bitmap(orig.Width, orig.Height);
+            Bitmap fg = new Bitmap(orig.Width, orig.Height);
+            for (int x=0; x<width; x++)
+            {
+                for (int y=0; y<height; y++)
+                {
+                    DenseVector result = new DenseVector(3);
+                    for (int i = 1; i < layers.layers.Count; i++)
+                    {
+                        result = result + layers.layers[i][x, y] * layers.colors[i];
+                    }
+                    DenseVector fgResult = layers.layers[0][x, y] * layers.colors[0];
+                    fg.SetPixel(x,y,Util.DenseVectorToRGB(fgResult));
+                    bg.SetPixel(x,y,Util.DenseVectorToRGB(result));
+                }
+            }
+            fg.Save(Path.Combine(directory, "layersFG.png"));
+            bg.Save(Path.Combine(directory, "layersBG.png"));*/
 
 
             //get the layers
@@ -959,7 +984,7 @@ namespace BaseCodeApp
             List<Bitmap> bgcolors = new List<Bitmap>();
             String directory = "../KNNMatting/";
 
-            for (int i = 1; i < 6; i++)
+            for (int i = 1; i < 2; i++)
             {
                 String filename = Path.Combine(directory,"0" + i + "_foreground.png");
                 String matteFilename = Path.Combine(directory,"0" + i + ".png");
@@ -991,14 +1016,18 @@ namespace BaseCodeApp
             combined.Save(Path.Combine(directory,"KNNCombined.png"));
 
             //recolor the flowers from KNN matting
-            int changeLayer = 2;
-            DenseVector from = new DenseVector(new double[] { 174, 46, 33 });
+            int changeLayer = 0;
+            //DenseVector from = new DenseVector(new double[] { 174, 46, 33 });
             //DenseVector from = new DenseVector(new double[] { 24, 96, 186 });
+            DenseVector from = new DenseVector(new double[]{211,71,161});
              
-            DenseVector to = new DenseVector(new double[] { 63,72,204});
+            //DenseVector to = new DenseVector(new double[] { 63,72,204});
+            DenseVector to = new DenseVector(new double[] {0, 162, 232});
             DenseVector delta = to - from;
 
             Bitmap recolored = new Bitmap(width, height);
+            Bitmap onBlackFG = new Bitmap(width, height);
+            Bitmap onBlackBG = new Bitmap(width, height);
 
             for (int x = 0; x < width; x++)
             {
@@ -1007,6 +1036,7 @@ namespace BaseCodeApp
 
                     Color fg = colors[changeLayer].GetPixel(x, y);
                     Color bg = bgcolors[changeLayer].GetPixel(x, y);
+                    
                     double alpha = mattes[changeLayer].GetPixel(x, y).G / 255.0;
 
                     //change the foreground color
@@ -1014,9 +1044,16 @@ namespace BaseCodeApp
 
                     DenseVector color = newFg * alpha + Util.ToDenseVector(bg) * (1 - alpha);
                     recolored.SetPixel(x, y, Color.FromArgb((int)Clamp(color[0]), (int)Clamp(color[1]), (int)Clamp(color[2])));
+
+                    DenseVector fgblack = Util.ToDenseVector(fg)*alpha + Util.ToDenseVector(Color.Black)*(1-alpha);
+                    onBlackFG.SetPixel(x, y, Color.FromArgb((int)Clamp(fgblack[0]), (int)Clamp(fgblack[1]), (int)Clamp(fgblack[2])));
+                    DenseVector bgblack = Util.ToDenseVector(bg) * (1-alpha) + Util.ToDenseVector(Color.Black) * alpha;
+                    onBlackBG.SetPixel(x, y, Color.FromArgb((int)Clamp(bgblack[0]), (int)Clamp(bgblack[1]), (int)Clamp(bgblack[2])));
                 }
             }
-            recolored.Save(Path.Combine(directory, "RecoloredCombined.png"));*/
+            recolored.Save(Path.Combine(directory, "RecoloredCombined.png"));
+            onBlackBG.Save(Path.Combine(directory, "BlackBG.png"));
+            onBlackFG.Save(Path.Combine(directory, "BlackFG.png"));*/
 
         }
 
@@ -1680,7 +1717,7 @@ namespace BaseCodeApp
             info.FileName = "\"C:/Program Files (x86)/scala/bin/scala.bat\"";
             info.WorkingDirectory = exeDir;
 
-            info.Arguments = dependencies+" "+classPath+" "+jar+" suggest mesh.txt all 10 -lightness";
+            info.Arguments = dependencies+" "+classPath+" "+jar+" suggest mesh.txt all 12 -lightness";
             info.UseShellExecute = false;
             info.RedirectStandardOutput = true;
             info.RedirectStandardError = true;
@@ -1840,6 +1877,145 @@ namespace BaseCodeApp
             currPalette.colors = this.palette.Select(c => c.BackColor).ToList<Color>();
             currPalette.lab = this.palette.Select(c => Util.RGBtoLAB(c.BackColor)).ToList<CIELAB>();
             Clipboard.SetText(currPalette.ToString());
+        }
+
+        private double ComputeOverlap(double[,] a, double[,] b, int width, int height)
+        {
+            double overlap = 0;
+            double aMagnitude = 0;
+            double bMagnitude = 0;
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    aMagnitude += a[x, y];
+                    bMagnitude += b[x, y];
+                    overlap += a[x, y] * b[x, y];
+                }
+            }
+
+            return overlap/(aMagnitude*bMagnitude);
+        }
+
+        private void ComparePalettes()
+        {
+            //extract palettes, render them
+            //compute average sum of weights above/below 1
+            //compute percent of pixels with weights above/below 1/0
+            //compute percent of pixels outside convex hull
+            //compute image reconstruction error
+            String pDir = "../PaletteStats";
+            String renderDir = "../PaletteStats/renders";
+            String outFile = "../PaletteStats/stats.csv";
+            
+
+            File.WriteAllText(outFile, "image,k,reconstruction-error,percent-outside-bounds-pixels,percent-outside-hull-pixels,sum-bad-weights,avg-overlap, min-overlap, max-overlap,percent-outside-bounds-pixels\n");
+
+            Directory.CreateDirectory(renderDir);
+
+            String[] files = Directory.GetFiles(pDir, "*.png");
+            int min = 4;
+            int max = 9;
+            foreach (String rawfile in files)
+            {
+                Bitmap orig = new Bitmap(rawfile);
+                String file = rawfile.Replace("\\", "/");
+
+                Console.WriteLine("Processing " + file);
+                currImageFile = file;
+                activeImage = Image.FromFile(currImageFile);
+                pictureBox.Image = activeImage;
+                pictureBoxBitmap = new Bitmap(pictureBox.Image.Width, pictureBox.Image.Height);
+                g = Graphics.FromImage(pictureBoxBitmap);
+
+
+                for (int k = min; k <= max; k++)
+                {
+                    KBox.Text = "" + k;
+                    ExtractPalette(3, ColorSpace.RGB);
+                    
+                    //render palette
+                    String basename = new FileInfo(file).Name;
+                    Bitmap render = new Bitmap(20, k * 20);
+                    Graphics g2 = Graphics.FromImage(render);
+                    for (int c=0; c<k; c++)
+                        g2.FillRectangle(new SolidBrush(currPalette.colors[c]), 0, c*20, 20, 20);
+                    render.Save(Path.Combine(renderDir, Util.ConvertFileName(basename, "_" + k)));
+
+                    currPalette = new PaletteData();
+
+                    ExtractLayers(3, 0, ColorSpace.RGB);
+
+                    //compute stats
+                    double rerror = 0;
+                    double poutsidehull = 0;
+                    double poutsidebounds = 0;
+                    double sumbadweights = 0;
+                    double avgoverlap = 0;
+                    double minoverlap = 0;
+                    double maxoverlap = 0;
+                    double poutsideboundspixels = 0;
+
+                    List<DenseVector> hullPoints = currPalette.colors.Select<Color, DenseVector>(c=>Util.ToDenseVector(c)).ToList<DenseVector>();
+                    var hull = Util.GetConvexHull(hullPoints);
+
+                    Bitmap recolored = Recolor(layers, layers.colors, layers.space);
+                    int width = recolored.Width;
+                    int height = recolored.Height;
+                    for (int x = 0; x < width; x++)
+                    {
+                        for (int y = 0; y < height; y++)
+                        {
+                            rerror += (Util.ToDenseVector(orig.GetPixel(x, y)) / 255.0).DotProduct(Util.ToDenseVector(recolored.GetPixel(x, y)) / 255.0);
+                            bool validWeights = true;
+                            for (int l = 0; l < layers.colors.Count; l++)
+                            {
+                                double value = layers.layers[l][x, y];
+                                if (value > 1.1 || value < -0.1)
+                                {
+                                    poutsidebounds++;
+                                    sumbadweights += Math.Min(Math.Abs(value+0.1), Math.Abs(value - 1.1));
+                                    validWeights = false;
+                                }
+                            }
+                            if (!Util.InHull(Util.ToDenseVector(recolored.GetPixel(x, y)), hull))
+                                poutsidehull++;
+                            if (!validWeights)
+                                poutsideboundspixels++;
+
+                        }
+                    }
+                    rerror /= (width * height);
+                    poutsidebounds /= (width * height);
+                    sumbadweights /= (width * height);
+                    poutsidehull /= (width * height);
+                    poutsideboundspixels /= (width * height);
+
+                    double numComparisons = 0;
+                    for (int a = 0; a < layers.colors.Count; a++)
+                    {
+                        for (int b = a+1; b < layers.colors.Count; b++)
+                        {
+                            double overlap = Math.Abs(ComputeOverlap(layers.layers[a], layers.layers[b], width, height));
+                            avgoverlap += overlap;
+                            minoverlap = Math.Min(overlap, minoverlap);
+                            maxoverlap = Math.Max(overlap, maxoverlap);
+                            numComparisons++;
+                        }
+                    }
+                    avgoverlap /= numComparisons;
+
+
+                    File.AppendAllText(outFile, String.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}\n", file.Split('/').Last(), k, rerror, poutsidebounds, poutsidehull, sumbadweights, avgoverlap, minoverlap, maxoverlap,poutsideboundspixels));
+                    recolored.Dispose();
+                    ClearPalette();
+                    
+                }
+
+                
+            }
+
         }
 
     }

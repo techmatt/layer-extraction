@@ -53,6 +53,7 @@
     <ClInclude Include="NNLeastSquares\nnls.h" />
     <ClInclude Include="RBFPropagation.h" />
     <ClInclude Include="Recolorizer.h" />
+    <ClInclude Include="RecolorizerPixel.h" />
     <ClInclude Include="SuperpixelExtractor.h" />
     <ClInclude Include="SuperpixelExtractorVideo.h" />
     <ClInclude Include="TextureSynthesis.h" />
@@ -92,6 +93,7 @@
     <ClCompile Include="NNLeastSquares\nnls.cpp" />
     <ClCompile Include="RBFPropagation.cpp" />
     <ClCompile Include="Recolorizer.cpp" />
+    <ClCompile Include="RecolorizerPixel.cpp" />
     <ClCompile Include="SuperpixelExtractor.cpp" />
     <ClCompile Include="SuperpixelExtractorVideo.cpp" />
     <ClCompile Include="TextureSynthesis.cpp" />
