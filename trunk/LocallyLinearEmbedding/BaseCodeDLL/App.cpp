@@ -1486,7 +1486,7 @@ void App::GetWords(const String& paletteFile)
 		bmp.FreeMemory();
 	}
 	Console::WriteLine("Extracting words");
-	BagOfWords bow(_parameters, images, 100, true);
+	BagOfWords bow(_parameters, images, 50, true);
 }
 
 void App::OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename)

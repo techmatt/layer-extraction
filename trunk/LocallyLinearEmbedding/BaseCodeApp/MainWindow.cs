@@ -1603,7 +1603,7 @@ namespace BaseCodeApp
             File.WriteAllLines("../Training/paletteFile.txt", lines.ToArray<String>());
             Console.WriteLine("Done writing palettes file");
 
-           // DLLInterface.BCGetWords(DLL.baseCodeDLLContext, "../Training/paletteFile.txt");
+            DLLInterface.BCGetWords(DLL.baseCodeDLLContext, "../Training/paletteFile.txt");
 
             foreach (String dir in subdirs)
             {
@@ -1666,7 +1666,7 @@ namespace BaseCodeApp
                         {
                         }
                         Console.WriteLine("Outputting Mesh");
-                        DLLInterface.BCOutputMesh(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, outFile);
+                        DLLInterface.BCOutputMesh(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, outFile.Replace("\\","/"));
                         Console.WriteLine("Freeing");
                         Marshal.FreeHGlobal(bmpInfo.colorData);
                         Marshal.FreeHGlobal(palettePtr);

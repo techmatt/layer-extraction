@@ -26,7 +26,7 @@ Bitmap RecolorizerPixel::Recolor(const AppParameters &parameters, const Bitmap &
 
 
     Console::WriteLine("Loading Eigen matrix...");
-	SparseMatrix<double> M(n,n);
+	SparseMatrix<double> M(2*n,n);
 	for (UINT pixelIndex = 0; pixelIndex < n; pixelIndex++)
 	{
 		const SparseRow<double> &curRow = WBase[pixelIndex];
@@ -40,12 +40,13 @@ Bitmap RecolorizerPixel::Recolor(const AppParameters &parameters, const Bitmap &
     for(const PixelConstraint &c : targetPixelColors)
     {
 		int index = c.coord.y*bmp.Width()+c.coord.x;
-        M.PushDiagonalElement(index, parameters.userConstraintWeight);
+        //M.PushDiagonalElement(index, parameters.userConstraintWeight);
+		M.PushElement(n+index, index, sqrt(parameters.userConstraintWeight)); 
     }
 
 	EigenSolver solver;
 
-    Console::WriteLine("Starting sove...");
+    Console::WriteLine("Starting solve...");
 
     Vector<Vec3f> newPixelColors(n);
 
@@ -53,15 +54,18 @@ Bitmap RecolorizerPixel::Recolor(const AppParameters &parameters, const Bitmap &
     {
         ComponentTimer("Linear solve " + String(featureIndex));
         
-        Vector<double> b(n,0);
+        Vector<double> b(2*n,0); //[0 G]
         for(const PixelConstraint &c : targetPixelColors)
         {
-			int index = c.coord.y*bmp.Width()+c.coord.x;
-            b[index] += parameters.userConstraintWeight * c.targetColor[featureIndex];
+			int index = n + c.coord.y*bmp.Width()+c.coord.x;
+            //b[index] += parameters.userConstraintWeight * c.targetColor[featureIndex];
+			b[index] += sqrt(parameters.userConstraintWeight) * c.targetColor[featureIndex];
         }
 
-        Vector<double> x = solver.Solve(M, b, EigenSolver::ConjugateGradient_Diag);
-        
+        //Vector<double> x = solver.Solve(M, b, EigenSolver::ConjugateGradient_Diag);
+        Vector<double> x = solver.Solve(M, b, EigenSolver::QR);
+		Console::WriteLine("X length "+String(x.Length()));
+
         for(UINT i = 0; i < n; i++)
         {
             newPixelColors[i][featureIndex] = (float)x[i];
@@ -77,7 +81,6 @@ Bitmap RecolorizerPixel::Recolor(const AppParameters &parameters, const Bitmap &
 			result[y][x] = RGBColor(newPixelColors[index]);
 		}
 	}
-
 	return result;
 }
 
@@ -101,10 +104,10 @@ void RecolorizerPixel::ComputeWeightMatrix(const AppParameters &parameters, cons
     }
 
     Console::WriteLine("Building W-matrix");
-    SparseMatrix<double> WMatrix = W.Transpose() * W;
+    //SparseMatrix<double> WMatrix = W;
 	Console::WriteLine("Done building");
 
-	WBase = WMatrix;
+	WBase = W;//WMatrix;
 }
 
 void RecolorizerPixel::ComputeNearestNeighbors(const AppParameters &parameters, const Bitmap &bmp)

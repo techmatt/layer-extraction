@@ -32,11 +32,11 @@ Vector<double> EigenSolver::Solve(const Eigen::SparseMatrix<double> &M, const Ve
     //    Eigen::SparseLU< Eigen::SparseMatrix<double> > factorization(M);
     //    x = factorization.solve(bEigen);
     //}
-    //else if(method == QR)
-    //{
-    //    Eigen::SparseQR< Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > factorization(M);
-    //    x = factorization.solve(bEigen);
-    //}
+    else if(method == QR)
+    {
+        Eigen::SparseQR< Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > factorization(M);
+        x = factorization.solve(bEigen);
+    }
     else if(method == ConjugateGradient_Diag)
     {
         Eigen::ConjugateGradient< Eigen::SparseMatrix<double>, Eigen::Lower, Eigen::DiagonalPreconditioner<double > > solver;

@@ -22,7 +22,8 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 	_blurredLayers = blurredLayers;
 	_layers = layers;
 
-	BagOfWords bow(AppParameters(), Vector<PixelLayerSet>(), 100, true);
+	int numWords = 50; //100
+	BagOfWords bow(AppParameters(), Vector<PixelLayerSet>(), numWords, true);
 
 	// compute features for each layer
 	double maxSize = -10000;
@@ -35,6 +36,12 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 
 		Segment segment;
 
+		Console::WriteLine("Weight");
+		// average weight
+		double avgWeight = currLayer.WeightMean();
+		segment.features.Add("RelativeSize", Vector<double>(1,avgWeight));
+		maxSize = max(maxSize, avgWeight);
+
 		Console::WriteLine("Centroid");
 		// normalized centroid (image center is (0,0))
 		Vec2f centroid(0,0);
@@ -42,8 +49,13 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 		for (int r=0; r<layerHeight; r++)
 			for (int c=0; c<layerWidth; c++)
 				centroid += currLayer.pixelWeights(r,c)*Vec2f(c,r);
-		centroid.x /= (layerWidth*layerHeight)*layerWidth;
-		centroid.y /= (layerWidth*layerHeight)*layerHeight;
+		double segSize = avgWeight*(layerWidth*layerHeight);
+		centroid.x = centroid.x / (segSize*layerWidth);
+		centroid.y = centroid.y / (segSize*layerHeight);
+
+		//shift the centroid
+		centroid.x -= 0.5;
+		centroid.y -= 0.5;
 		
 		Vector<double> centroidVec; centroidVec.PushEnd(centroid.x); centroidVec.PushEnd(centroid.y);
 		segment.features.Add("RelativeCentroid", centroidVec);
@@ -61,12 +73,6 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 			bowVec.PushEnd((double)bowNf[i]);
 		segment.features.Add("BoW", bowVec);
 
-		Console::WriteLine("Weight");
-		// average weight
-		double avgWeight = currLayer.WeightMean();
-		segment.features.Add("RelativeSize", Vector<double>(1,avgWeight));
-		maxSize = max(maxSize, avgWeight);
-
 		Console::WriteLine("Overlap");
 		// overlap with other layers (after blurring)
 		double totalOverlap = 0;
@@ -76,8 +82,11 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 				continue;
 			int numPixels = layerWidth*layerHeight;
 			double dotprod = blurredLayers[layerIndex].DotProduct(blurredLayers[otherLayerIndex]);
-			double thisWeight = blurredLayers[layerIndex].WeightMean()*numPixels;
-			double otherWeight = blurredLayers[otherLayerIndex].WeightMean()*numPixels;
+
+			//not the size...
+			double thisWeight = sqrt(blurredLayers[layerIndex].Norm());
+			double otherWeight = sqrt(blurredLayers[otherLayerIndex].Norm());
+
 			double overlap = dotprod/(thisWeight*otherWeight);
 			segment.adjacencies.Add(otherLayerIndex, pair<double,double>(overlap, overlap));
 			totalOverlap += overlap;
@@ -161,9 +170,10 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 		// PCA eccentricity (eigenvector division)
 		double firstAxis = pca.GetEigenvalue(0);
 		double secondAxis = pca.GetEigenvalue(1);
+		Console::WriteLine("Axes: " + String(firstAxis) + " " + String(secondAxis));//, "Axis is not larger!");
+
 		double eccentricity = min(firstAxis,secondAxis)/max(firstAxis, secondAxis);
 		segment.features.Add("Eccentricity", Vector<double>(1,eccentricity));
-
 
 		//cleanup
 		delete[] ranges;
@@ -195,11 +205,13 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 	}
 
 	//add relative size over max term
-	/*for (UINT layerIndex=0; layerIndex<layers.Length(); layerIndex++)
+	for (UINT layerIndex=0; layerIndex<layers.Length(); layerIndex++)
 	{
+		Console::WriteLine("Adding relative size over max " + String(layerIndex));
 		double size = segments[layerIndex].features["RelativeSize"][0];
-		segments[layerIndex].features.Add("RelativeSizeOverMax", Vector<double>(size/maxSize));
-	}*/
+		Segment &segment = segments[layerIndex];
+		segment.features.Add("RelativeSizeOverMax", Vector<double>(1, size/maxSize));
+	}
 
 	//initialize the groups, one segment per group
 	for (UINT groupIndex=0; groupIndex < layers.Length(); groupIndex++)
@@ -256,6 +268,7 @@ Vector<String> LayerMesh::StringRepresentation()
 		Vector<String> &featureNames = segment.features.Keys();
 		for (String f : featureNames)
 		{
+			Console::WriteLine(f);
 			Console::WriteLine(f + " " +String(segment.features[f].Length()));
 			lines.PushEnd(f+" "+ StringJoin(segment.features[f], " "));
 		}
