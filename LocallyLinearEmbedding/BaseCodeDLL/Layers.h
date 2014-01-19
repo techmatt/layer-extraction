@@ -117,6 +117,15 @@ struct PixelLayer
 		return pixelWeights.Rows();
 	}
 
+	double Norm() const
+	{
+		double norm = 0;
+		for (UINT r=0; r<pixelWeights.Rows(); r++)
+			for (UINT c=0; c<pixelWeights.Cols(); c++)
+				norm += pixelWeights(r,c)*pixelWeights(r,c);
+		return norm;
+	}
+
 	double WeightMean() const
 	{
 		double mean = 0;

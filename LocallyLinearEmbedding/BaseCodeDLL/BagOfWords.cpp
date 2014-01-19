@@ -149,9 +149,9 @@ cv::Mat BagOfWords::SampleLayer(const PixelLayer& layer, int idx, Vector<KeyPoin
 	extractor->compute(image, keypoints,samples); 
 
 	Console::WriteLine("Num of keypoints " + String(keypoints.size()));
-	cv::Mat output;
-	cv::drawKeypoints(image, keypoints, output, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-	imwrite("keypoints_"+std::string(String(idx).CString())+".png", output, compression_params);
+	//cv::Mat output;
+	//cv::drawKeypoints(image, keypoints, output, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+	//imwrite("keypoints_"+std::string(String(idx).CString())+".png", output, compression_params);
 
 	for (cv::KeyPoint &k:keypoints)
 	{
