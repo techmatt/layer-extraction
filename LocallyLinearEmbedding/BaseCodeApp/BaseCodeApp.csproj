@@ -52,6 +52,12 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Emgu.CV">
+      <HintPath>..\..\DLLs\x64\Emgu.CV.dll</HintPath>
+    </Reference>
+    <Reference Include="Emgu.Util">
+      <HintPath>..\..\DLLs\x64\Emgu.Util.dll</HintPath>
+    </Reference>
     <Reference Include="MathNet.Numerics">
       <HintPath>..\..\DLLs\MathNet.Numerics.dll</HintPath>
     </Reference>
@@ -75,6 +81,7 @@
     <Compile Include="Clustering.cs" />
     <Compile Include="Color.cs" />
     <Compile Include="ColorNames.cs" />
+    <Compile Include="ColorTemplate.cs" />
     <Compile Include="DLLInterface.cs" />
     <Compile Include="HungarianAlgorithm.cs" />
     <Compile Include="LayerExtract.cs" />
@@ -89,6 +96,8 @@
     <Compile Include="PriorityQueue.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SegmentMesh.cs" />
+    <Compile Include="UnionFind.cs" />
     <Compile Include="Util.cs">
       <SubType>Component</SubType>
     </Compile>

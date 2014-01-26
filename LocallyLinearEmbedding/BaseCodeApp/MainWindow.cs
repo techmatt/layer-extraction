@@ -46,6 +46,8 @@ namespace BaseCodeApp
         private PaletteData currPalette = new PaletteData();
         private string clipboardText = ""; //necessary because background workers can't access the clipboard
 
+        bool useSegments = true;
+
         public class LayerConstraints
         {
             public LayerConstraints(int layerCount)
@@ -948,8 +950,29 @@ namespace BaseCodeApp
         {
             //DLL.ProcessCommand("DeleteLayer");
             //DLL.ProcessCommand("RBFVideoRecolor");
-            DLL.ProcessCommand("CompareMethods");
+            //DLL.ProcessCommand("CompareMethods");
             //ComparePalettes();
+            Random random = new Random();
+            Bitmap randomRGB = new Bitmap(20 * 100, 20);
+            Bitmap randomLAB = new Bitmap(20 * 100, 20);
+            Graphics grgb = Graphics.FromImage(randomRGB);
+            Graphics glab = Graphics.FromImage(randomLAB);
+
+            //save out random rgb
+            for (int i = 0; i < 100; i++)
+            {
+                Color rgb = Color.FromArgb((int)Clamp(random.NextDouble() * 255), (int)Clamp(random.NextDouble() * 255), (int)Clamp(random.NextDouble() * 255));
+                grgb.FillRectangle(new SolidBrush(rgb), i * 20, 0, 20, 20);
+                
+
+                //save out random lab
+                CIELAB lab = new CIELAB(random.NextDouble() * 100, random.NextDouble() * 200 - 100, random.NextDouble() * 200 - 100);
+                Color rlab = Util.LABtoRGB(lab);
+                glab.FillRectangle(new SolidBrush(rlab), i * 20, 0, 20, 20);
+            }
+
+            randomRGB.Save("randomRGB.png");
+            randomLAB.Save("randomLAB.png");
 
             //save layers on black background
            /* String directory = "../KNNMatting/";
@@ -1524,44 +1547,53 @@ namespace BaseCodeApp
             Bitmap bmp = new Bitmap(currImageFile);
             List<Color> bmpData = Util.BitmapTo1DArray(bmp).ToList<Color>();
 
-            double[] palette = new double[data.colors.Count * 3];
-            for (int i = 0; i < data.colors.Count; i++)
+            if (!useSegments)
             {
-                Color color = data.colors[i];
-                palette[3 * i] = color.R / 255.0;
-                palette[3 * i + 1] = color.G / 255.0;
-                palette[3 * i + 2] = color.B / 255.0;
-            }
-            IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
+                double[] palette = new double[data.colors.Count * 3];
+                for (int i = 0; i < data.colors.Count; i++)
+                {
+                    Color color = data.colors[i];
+                    palette[3 * i] = color.R / 255.0;
+                    palette[3 * i + 1] = color.G / 255.0;
+                    palette[3 * i + 2] = color.B / 255.0;
+                }
+                IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
 
-            //for now, pass in RGB format
-            byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
-            for (int idx = 0; idx < bmpData.Count; idx++)
+                //for now, pass in RGB format
+                byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
+                for (int idx = 0; idx < bmpData.Count; idx++)
+                {
+                    Color color = bmpData[idx];
+                    rgbData[3 * idx] = (byte)color.R;
+                    rgbData[3 * idx + 1] = (byte)color.G;
+                    rgbData[3 * idx + 2] = (byte)color.B;
+                }
+
+                BCBitmapInfo bmpInfo = new BCBitmapInfo();
+                bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
+                bmpInfo.width = bmp.Width;
+                bmpInfo.height = bmp.Height;
+
+                try
+                {
+                    Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
+                    Marshal.Copy(palette, 0, palettePtr, palette.Length);
+                }
+                finally
+                {
+                }
+
+                DLLInterface.BCOutputMesh(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, filename);
+                Marshal.FreeHGlobal(bmpInfo.colorData);
+                Marshal.FreeHGlobal(palettePtr);
+                bmp.Dispose();
+            }
+            else
             {
-                Color color = bmpData[idx];
-                rgbData[3 * idx] = (byte)color.R;
-                rgbData[3 * idx + 1] = (byte)color.G;
-                rgbData[3 * idx + 2] = (byte)color.B;
+                ColorTemplate template = new ColorTemplate(bmp, data);
+                SegmentMesh mesh = new SegmentMesh(template);
+                File.WriteAllLines(filename, mesh.StringRepresentation().ToArray<String>());
             }
-
-            BCBitmapInfo bmpInfo = new BCBitmapInfo();
-            bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
-            bmpInfo.width = bmp.Width;
-            bmpInfo.height = bmp.Height;
-
-            try
-            {
-                Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
-                Marshal.Copy(palette, 0, palettePtr, palette.Length);
-            }
-            finally
-            {
-            }
-
-            DLLInterface.BCOutputMesh(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, filename);
-            Marshal.FreeHGlobal(bmpInfo.colorData);
-            Marshal.FreeHGlobal(palettePtr);
-            bmp.Dispose();
 
         }
 
@@ -1572,27 +1604,50 @@ namespace BaseCodeApp
             String paletteFile = "../Training/templates.csv";
             String outDir = "../Training/CLmeshes";
 
-            Dictionary<String, PaletteData> palettes = LoadFilePalettes(paletteFile);
+            if (useSegments)
+            {
+                directory = "../Training/flickr";
+            }
+
+            Dictionary<String, PaletteData> palettes = new Dictionary<String, PaletteData>();
+            if (!useSegments) palettes = LoadFilePalettes(paletteFile);
 
             String[] subdirs = Directory.GetDirectories(directory);
 
             //write the palette file - filename|r,g,b r,g,b r,g,b
             Console.WriteLine("Outputting palettes");
             List<String> lines = new List<String>();
+            int count = 0;
             foreach (String dir in subdirs)
             {
                 String[] files = Directory.GetFiles(dir);
                 foreach (String file in files)
                 {
+                    Console.Write("Extracting image " + file + " count " + count+"/"+files.Length+"\r");
                     try
                     {
-                        Bitmap bmp = new Bitmap(file);
-                        if (bmp.Width < 100 || bmp.Height < 100)
-                            continue;
+                        if (!useSegments)
+                        {
+                            Bitmap bmp = new Bitmap(file);
+                            if (bmp.Width < 100 || bmp.Height < 100)
+                                continue;
 
-                        String baseName = new FileInfo(file).Name;
-                        PaletteData data = palettes[baseName];
-                        lines.Add(file + "|" + String.Join(" ", data.colors.Select<Color, String>(c => c.R + "," + c.G + "," + c.B)));
+                            String baseName = new FileInfo(file).Name;
+                            PaletteData data = palettes[baseName];
+                            lines.Add(file + "|" + String.Join(" ", data.colors.Select<Color, String>(c => c.R + "," + c.G + "," + c.B)));
+                        }
+                        else
+                        {
+                            currImageFile = file;
+                            KBox.Text = "5";
+                            ExtractPalette(3, ColorSpace.RGB);
+                            PaletteData data = currPalette;
+                            lines.Add(file + "|" + String.Join(" ", data.colors.Select<Color, String>(c => c.R + "," + c.G + "," + c.B)));
+
+                            String baseName = new FileInfo(file).Name;
+                            palettes.Add(baseName, data);
+                        }
+                        count++;
                     }
                     catch (Exception ex)
                     {
@@ -1603,7 +1658,8 @@ namespace BaseCodeApp
             File.WriteAllLines("../Training/paletteFile.txt", lines.ToArray<String>());
             Console.WriteLine("Done writing palettes file");
 
-            DLLInterface.BCGetWords(DLL.baseCodeDLLContext, "../Training/paletteFile.txt");
+            if (!useSegments)
+                DLLInterface.BCGetWords(DLL.baseCodeDLLContext, "../Training/paletteFile.txt");
 
             foreach (String dir in subdirs)
             {
@@ -1612,65 +1668,76 @@ namespace BaseCodeApp
                 String[] files = Directory.GetFiles(dir);
                 foreach (String file in files)
                 {
-                    try
-                    {
-                        Console.WriteLine("Handling "+file);
-                        String baseName = new FileInfo(file).Name;
-                        String outFile = Path.Combine(outSubDir, Util.ConvertFileName(baseName, "", ".txt"));
+                    Console.WriteLine("Handling " + file);
+                    String baseName = new FileInfo(file).Name;
+                    String outFile = Path.Combine(outSubDir, Util.ConvertFileName(baseName, "", ".txt"));
 
-                        //read and process the file
-                        Bitmap bmp = new Bitmap(file);
-                        if (bmp.Width < 100 || bmp.Height < 100)
-                            continue;
+                    //read and process the file
+                    Bitmap bmp = new Bitmap(file);
+                    if (bmp.Width < 100 || bmp.Height < 100)
+                        continue;
+                    try
+                    {                     
                         List<Color> bmpData = Util.BitmapTo1DArray(bmp).ToList<Color>();
 
                         PaletteData data = palettes[baseName];
+                        if (!useSegments)
+                        {
+                            double[] palette = new double[data.colors.Count * 3];
+                            for (int i = 0; i < data.colors.Count; i++)
+                            {
+                                Color color = data.colors[i];
+                                palette[3 * i] = color.R / 255.0;
+                                palette[3 * i + 1] = color.G / 255.0;
+                                palette[3 * i + 2] = color.B / 255.0;
+                            }
+                            IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
 
-                        double[] palette = new double[data.colors.Count * 3];
-                        for (int i = 0; i < data.colors.Count; i++)
-                        {
-                            Color color = data.colors[i];
-                            palette[3 * i] = color.R / 255.0;
-                            palette[3 * i + 1] = color.G / 255.0;
-                            palette[3 * i + 2] = color.B / 255.0;
-                        }
-                        IntPtr palettePtr = Marshal.AllocHGlobal(Marshal.SizeOf(palette[0]) * palette.Length);
+                            //for now, pass in RGB format
+                            byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
+                            for (int idx = 0; idx < bmpData.Count; idx++)
+                            {
+                                Color color = bmpData[idx];
+                                rgbData[3 * idx] = (byte)color.R;
+                                rgbData[3 * idx + 1] = (byte)color.G;
+                                rgbData[3 * idx + 2] = (byte)color.B;
+                            }
+                            Console.WriteLine("Allocating");
+                            BCBitmapInfo bmpInfo = new BCBitmapInfo();
+                            bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
+                            bmpInfo.width = bmp.Width;
+                            bmpInfo.height = bmp.Height;
 
-                        //for now, pass in RGB format
-                        byte[] rgbData = new byte[bmp.Width * bmp.Height * 3];
-                        for (int idx = 0; idx < bmpData.Count; idx++)
-                        {
-                            Color color = bmpData[idx];
-                            rgbData[3 * idx] = (byte)color.R;
-                            rgbData[3 * idx + 1] = (byte)color.G;
-                            rgbData[3 * idx + 2] = (byte)color.B;
-                        }
-                        Console.WriteLine("Allocating");
-                        BCBitmapInfo bmpInfo = new BCBitmapInfo();
-                        bmpInfo.colorData = Marshal.AllocHGlobal(Marshal.SizeOf(rgbData[0]) * rgbData.Length);
-                        bmpInfo.width = bmp.Width;
-                        bmpInfo.height = bmp.Height;
-                        
 
-                        try
-                        {
-                            Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
-                            Marshal.Copy(palette, 0, palettePtr, palette.Length);
+
+                            try
+                            {
+                                Marshal.Copy(rgbData, 0, bmpInfo.colorData, rgbData.Length);
+                                Marshal.Copy(palette, 0, palettePtr, palette.Length);
+                            }
+                            catch (Exception t)
+                            {
+                                Console.WriteLine(t.StackTrace);
+                                Console.WriteLine(t.Message);
+                            }
+                            finally
+                            {
+                            }
+                            Console.WriteLine("Outputting Mesh");
+                            DLLInterface.BCOutputMesh(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, outFile.Replace("\\", "/"));
+                            Console.WriteLine("Freeing");
+                            Marshal.FreeHGlobal(bmpInfo.colorData);
+                            Marshal.FreeHGlobal(palettePtr);
+                            bmp.Dispose();
                         }
-                        catch (Exception t)
+                        else
                         {
-                            Console.WriteLine(t.StackTrace);
-                            Console.WriteLine(t.Message);
+                            Console.WriteLine("Outputting Mesh");
+                            ColorTemplate template = new ColorTemplate(bmp, palettes[baseName]);
+                            SegmentMesh mesh = new SegmentMesh(template);
+                            List<String> stringRep = mesh.StringRepresentation();
+                            File.WriteAllLines(outFile, stringRep.ToArray<String>());
                         }
-                        finally
-                        {
-                        }
-                        Console.WriteLine("Outputting Mesh");
-                        DLLInterface.BCOutputMesh(DLL.baseCodeDLLContext, bmpInfo, palettePtr, data.colors.Count, outFile.Replace("\\","/"));
-                        Console.WriteLine("Freeing");
-                        Marshal.FreeHGlobal(bmpInfo.colorData);
-                        Marshal.FreeHGlobal(palettePtr);
-                        bmp.Dispose();
                     }
                     catch (Exception ex)
                     {
@@ -1685,6 +1752,7 @@ namespace BaseCodeApp
 
         private void getRecoloringsButton_Click(object sender, EventArgs e)
         {
+           
             String basename = new FileInfo(currImageFile).Name;
 
             //cache info
@@ -1717,7 +1785,10 @@ namespace BaseCodeApp
             info.FileName = "\"C:/Program Files (x86)/scala/bin/scala.bat\"";
             info.WorkingDirectory = exeDir;
 
-            info.Arguments = dependencies+" "+classPath+" "+jar+" suggest mesh.txt all 12 -lightness";
+            if (!useSegments)
+                info.Arguments = dependencies+" "+classPath+" "+jar+" suggest mesh.txt all 12";// -lightness";
+            else
+                info.Arguments = dependencies + " " + classPath + " " + jar + " suggest mesh.txt all-segments 12";
             info.UseShellExecute = false;
             info.RedirectStandardOutput = true;
             info.RedirectStandardError = true;
@@ -1759,6 +1830,13 @@ namespace BaseCodeApp
 
                 String[] hexCodes = line.Split(',');
                 List<DenseVector> colors = hexCodes.Select(h => ColorTranslator.FromHtml(h)).Select(c => new DenseVector(new double[]{c.R, c.G, c.B})).ToList<DenseVector>();
+               /* Random random = new Random();
+
+                List<DenseVector> colors = new List<DenseVector>();
+                for (int i = 0; i < hexCodes.Count(); i++)
+                {
+                    colors.Add(new DenseVector(new double[]{255 * random.NextDouble(), 255 * random.NextDouble(), 255 * random.NextDouble()}));
+                }*/
 
                 // recolor the image
                 Bitmap recoloring = Recolor(this.layers, colors, ColorSpace.RGB);
@@ -1795,7 +1873,11 @@ namespace BaseCodeApp
             info.FileName = "\"C:/Program Files (x86)/scala/bin/scala.bat\"";
             info.WorkingDirectory = exeDir;
 
-            info.Arguments = dependencies + " " + classPath + " " + jar + " train ../CLmeshes/all all";
+            if (!useSegments)
+                info.Arguments = dependencies + " " + classPath + " " + jar + " train ../CLmeshes/all all";
+            else
+                info.Arguments = dependencies + " " + classPath + " " + jar + " train ../CLmeshes/flickr all-segments -includegroups";
+
             info.UseShellExecute = false;
             info.RedirectStandardOutput = true;
             info.RedirectStandardError = true;

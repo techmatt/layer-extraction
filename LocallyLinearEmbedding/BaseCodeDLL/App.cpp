@@ -1227,32 +1227,38 @@ void App::CompareMethods()
 			Console::WriteLine("MPEP");
 			
 			double tempSuperpixelCount = _parameters.superpixelCount;
-			_parameters.superpixelCount = 4000;
+			_parameters.superpixelCount = 10000;//4000;
 			//double temp = _parameters.pixelNeighborCount;
 			//_parameters.pixelNeighborCount = _parameters.superpixelNeighborCount;
 			
 			//_parameters.pixelNeighborCount = temp;
 			double tempNeighborCount = _parameters.superpixelNeighborCount;
-			
+			double tempSpatial = _parameters.spatialToColorScale;
 
 			//TODO:try different parameters?
-			double constraintWeights[4] = {0.00001, 0.0001, 0.0005, 0.001};
-			int K[3] = {10, 30, 50};
-			for (int k=0; k<2; k++)
+			double constraintWeights[7] = {0.00000001, 0.0000001, 0.00001, 0.0001, 0.001, 0.1, 1.0};
+			int K[9] = {3, 5, 10, 30, 50, 60, 70, 300};
+			//Recolorizer recolorizer;
+			//recolorizer.Init(_parameters, original);
+			for (int k=7; k<9; k++)
 			{
-				for (int c=0; c<2; c++)
+				for (int c=0; c<1; c++)
 				{
-					_parameters.userConstraintWeight = constraintWeights[c];
-					RecolorizerPixel recolorizer;
-					//_parameters.superpixelNeighborCount = K[k];
-					_parameters.recolorizerPixelNeighbors = K[k];
+					//_parameters.userConstraintWeight = constraintWeights[c];
+					//_parameters.spatialToColorScale = 0.2;
+					//RecolorizerPixel recolorizer;
+					Recolorizer recolorizer; 
+					_parameters.pixelNeighborCount = 100;
+					_parameters.superpixelNeighborCount = K[k];
+					//_parameters.recolorizerPixelNeighbors = K[k];
 					recolorizer.Init(_parameters, original);
-					Bitmap mpepResult = recolorizer.Recolor(_parameters, original, strokeConstraints);//, 0.001, 0.6);; //recolorizer.Recolor(_parameters, original, strokeConstraints);
+					Bitmap mpepResult = recolorizer.Recolor(_parameters, original, strokeConstraints);//, 0.001, 0.6); //recolorizer.Recolor(_parameters, original, strokeConstraints);
 					mpepResult.SavePNG(mpepDir+basename.FindAndReplace(".png","_K"+String(K[k])+"_U"+String(c)+".png"));
 					mpepResult.FreeMemory();
 				}
 			}
 			_parameters.superpixelNeighborCount = tempNeighborCount;
+			_parameters.spatialToColorScale = tempSpatial;
 			_parameters.superpixelCount = tempSuperpixelCount;
 			Console::WriteLine("SNeighbors " + String(_parameters.superpixelNeighborCount));
 

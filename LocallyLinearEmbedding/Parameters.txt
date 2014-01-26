@@ -7,14 +7,15 @@ maskFile=angelSkyMaskB.png
 #
 superpixelIterations=5
 #superpixelCount=5000
-#superpixelCount=4000
-superpixelCount=2000
+superpixelCount=4000
+#superpixelCount=2000
 
 #
 # Locally-linear embedding constants
 #
 #spatialToColorScale=0.01
 spatialToColorScale=0.5
+#spatialToColorScale = 1.0
 temporalToColorScale=1.0
 pixelNeighborCount=10
 superpixelNeighborCount=30
