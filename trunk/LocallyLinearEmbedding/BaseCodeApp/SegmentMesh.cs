@@ -5,12 +5,12 @@ using System.Text;
 using Engine;
 using System.Drawing;
 using System.IO;
-/*using Emgu.CV;
+using Emgu.CV;
 using Emgu.Util;
-using Emgu.CV.Structure;*/
+using Emgu.CV.Structure;
 
 
-namespace Colorizer
+namespace Engine
 {
     class NamedFeature
     {
@@ -359,12 +359,12 @@ namespace Colorizer
 
 
             //Add elongation (width/length normalized between 0-square to 1-long http://hal.archives-ouvertes.fr/docs/00/44/60/37/PDF/ARS-Journal-SurveyPatternRecognition.pdf         
-//            PointF[] points = s.points.Select<Point, PointF>(p => new PointF(p.X, p.Y)).ToArray<PointF>();
-//            Emgu.CV.Structure.MCvBox2D box = Emgu.CV.PointCollection.MinAreaRect(points);
+            PointF[] points = s.points.Select<Point, PointF>(p => new PointF(p.X, p.Y)).ToArray<PointF>();
+            Emgu.CV.Structure.MCvBox2D box = Emgu.CV.PointCollection.MinAreaRect(points);
 //
-//            PointF[] vertices = box.GetVertices();
-//            double elongation = 1 - Math.Min(box.size.Width + 1, box.size.Height + 1) / Math.Max(box.size.Width + 1, box.size.Height + 1);
-//            s.features.Add(new NamedFeature("Elongation", new List<double>{elongation}));
+            PointF[] vertices = box.GetVertices();
+            double elongation = 1 - Math.Min(box.size.Width + 1, box.size.Height + 1) / Math.Max(box.size.Width + 1, box.size.Height + 1);
+            s.features.Add(new NamedFeature("Elongation", new List<double>{elongation}));
 
             //TODO: implement this without EmguCV
             s.features.Add(new NamedFeature("Elongation", new List<double> { 0.5 }));
