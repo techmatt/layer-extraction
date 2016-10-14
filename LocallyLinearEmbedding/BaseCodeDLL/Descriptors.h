@@ -1,7 +1,10 @@
 #pragma once
+
+#ifdef USE_OPENCV
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/nonfree/nonfree.hpp"
+
 
 /**
  * Compute various descriptors
@@ -20,3 +23,4 @@ class Descriptors
 		cv::Mat image;
 		vector<cv::Mat> filteredImages;
 };
+#endif

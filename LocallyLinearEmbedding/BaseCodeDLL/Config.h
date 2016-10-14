@@ -77,3 +77,5 @@
 //#define USE_WMF
 
 //#define SUPPRESS_CONSOLE
+
+//#define USE_OPENCV

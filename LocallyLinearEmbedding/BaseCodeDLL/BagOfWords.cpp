@@ -1,6 +1,9 @@
 #include "Main.h"
 #include "BagOfWords.h"
+
+#ifdef USE_OPENCV
 #include "opencv2/imgproc/imgproc.hpp"
+
 
 
 BagOfWords::BagOfWords(const AppParameters& params, Vector<PixelLayerSet> images, UINT numWords, bool loadIfNeeded)
@@ -327,3 +330,4 @@ float BagOfWords::GaussianKernel(float x, float sigma)
 }
 
 
+#endif

@@ -22,6 +22,7 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 	_blurredLayers = blurredLayers;
 	_layers = layers;
 
+#ifdef USE_OPENV
 	int numWords = 50; //100
 	BagOfWords bow(AppParameters(), Vector<PixelLayerSet>(), numWords, true);
 
@@ -225,7 +226,7 @@ LayerMesh::LayerMesh(const PixelLayerSet &layers)
 		groups.PushEnd(group);
 	}
 	VisualizeContrast();
-
+#endif
 }
 
 void LayerMesh::VisualizeContrast()

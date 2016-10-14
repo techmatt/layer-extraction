@@ -1,5 +1,8 @@
 #include "Main.h"
+
+#ifdef USE_OPENCV
 #include "segment-image.h"
+#endif
 
 const bool usingRecolorizer = false;
 
@@ -96,6 +99,26 @@ BCLayers* App::ExtractLayers(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &pal
 	Vector<PixelLayer> pixellayers = ExtractLayers(bmp, palette, constraints, autoCorrect);
 
 	CacheLayers(palette, pixellayers, imageFile);
+
+	const bool dumpLayers = true;
+	if (dumpLayers)
+	{
+		const string baseDir = R"(C:\Code\layer-extraction\Images\les-miserables-layers\)";
+		for (int i = 0; i < pixellayers.Length(); i++)
+		{
+			ofstream file(baseDir + "layer" + to_string(i) + ".csv");
+			auto &l = pixellayers[i];
+			file << l.color.x << ',' << l.color.y << ',' << l.color.z << endl;
+			for (int y = 0; y < l.pixelWeights.Rows(); y++)
+			{
+				for (int x = 0; x < l.pixelWeights.Cols(); x++)
+				{
+					file << l.pixelWeights(y, x) << ",";
+				}
+				file << endl;
+			}
+		}
+	}
 
 	BCLayers *result = PixelLayersToBCLayers(pixellayers);
 
@@ -1404,7 +1427,12 @@ BCBitmapInfo* App::SegmentImage(const BCBitmapInfo &bcbmp)
 		}
 	}
 	int numCCs; 
+
+#ifdef USE_OPENCV
 	Bitmap result = ImageToBitmap(segment_image(BitmapToImage(bmp), 0.5, 500, 20, &numCCs));
+#else
+	Bitmap result;
+#endif
 
 	BCBitmapInfo *info = new BCBitmapInfo();
 
@@ -1492,7 +1520,9 @@ void App::GetWords(const String& paletteFile)
 		bmp.FreeMemory();
 	}
 	Console::WriteLine("Extracting words");
+#ifdef USE_OPENCV
 	BagOfWords bow(_parameters, images, 50, true);
+#endif
 }
 
 void App::OutputMesh(const BCBitmapInfo &bcbmp, const Vector<Vec3f> &palette, const String &filename)

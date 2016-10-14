@@ -1,5 +1,6 @@
 #include "Main.h"
 
+#ifdef USE_OPENCV
 Descriptors::Descriptors(const Bitmap &bmp)
 {
 	//Convert the area around the bitmap to a Mat
@@ -89,3 +90,4 @@ VecNf Descriptors::ComputeGaborFeatures(Vec2i point)
 	return VecNf();
 }
 
+#endif

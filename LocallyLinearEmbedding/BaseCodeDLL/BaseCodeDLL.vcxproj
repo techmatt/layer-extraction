@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -111,33 +111,34 @@
     <ProjectGuid>{A1FD2443-4B10-42D8-AEE2-3444225A8D1C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ScreenCaptureDLL</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -169,7 +170,7 @@
     <LibraryPath>..\..\Libraries;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>..\..\FelzenszwalbSegmentation;.\;..\..\;..\;..\..\Include;C:\Program Files %28x86%29\Microsoft DirectX 9.0 SDK %28Summer 2004%29\Include;C:\Program Files %28x86%29\Windows Kits\8.0\Include;$(IncludePath)</IncludePath>
+    <IncludePath>.\;..\..\;..\;..\..\Include;C:\Program Files %28x86%29\Microsoft DirectX 9.0 SDK %28Summer 2004%29\Include;C:\Program Files %28x86%29\Windows Kits\8.0\Include;$(IncludePath)</IncludePath>
     <LibraryPath>..\..\Libraries;$(LibraryPath)</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
     <TargetName>BaseCode</TargetName>
@@ -227,7 +228,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>BaseCodeDLL.def</ModuleDefinitionFile>
-      <AdditionalDependencies>ann64.lib;zlib64.lib;libpng64.lib;winmm.lib;opencv_nonfree247d.lib;opencv_core247d.lib;opencv_features2d247d.lib;opencv_flann247d.lib;opencv_highgui247d.lib;opencv_imgproc247d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ann64.lib;zlib64.lib;libpng64.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\bin\BaseCode.dll</OutputFile>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
