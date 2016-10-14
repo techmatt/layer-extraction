@@ -5,6 +5,9 @@
 
 #include "mLibInclude.h"
 
+#include "imageLayers.h"
+#include "lightUtil.h"
+
 #include "app.h"
 
 /*extern SpeechParameters* g_speechParams;

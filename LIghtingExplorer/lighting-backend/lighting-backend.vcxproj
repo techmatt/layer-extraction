@@ -12,13 +12,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="app.cpp" />
+    <ClCompile Include="imageLayers.cpp" />
+    <ClCompile Include="lightUtil.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="mLibSource.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app.h" />
+    <ClInclude Include="imageLayers.h" />
+    <ClInclude Include="lightUtil.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="mLibInclude.h" />
   </ItemGroup>

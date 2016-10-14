@@ -43,3 +43,8 @@
 /LocallyLinearEmbedding/bin/*.png
 /LocallyLinearEmbedding/PaletteCache/*.txt
 /LocallyLinearEmbedding/bin
+/Images
+/LIghtingExplorer/lighting-backend/x64/Release
+/LocallyLinearEmbedding/BaseCodeDLL/Console.txt
+/LocallyLinearEmbedding/VideoCache/*.dat
+/LocallyLinearEmbedding/ipch/BASECODEDLL-263ff8d7/*.ipch
