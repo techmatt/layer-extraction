@@ -1,9 +1,9 @@
 
 #include "main.h"
 
-void ImageLayers::load(const string &baseDir)
+void ImageLayers::loadCSV(const string &baseDir)
 {
-	const int layerCount = Directory::enumerateFiles(baseDir).size();
+	const int layerCount = Directory::enumerateFiles(baseDir, ".csv").size();
 	layers.resize(layerCount);
 	for (int i = 0; i < layerCount; i++)
 	{
@@ -24,12 +24,29 @@ void ImageLayers::load(const string &baseDir)
 		l.g.allocate(dimX, dimY);
 		for (int y = 0; y < dimY; y++)
 		{
-			auto parts = util::split(lines[y], ',');
+			auto parts = util::split(lines[y + 1], ',');
 			for (int x = 0; x < dimX; x++)
 			{
-				l.g(x, y) = convert::toFloat(parts[y]);
+				l.g(x, y) = convert::toFloat(parts[x]);
 			}
 		}
+	}
+}
+
+void ImageLayers::saveDAT(const string &baseDir) const
+{
+	for (size_t i = 0; i < layers.size(); i++)
+	{
+		auto &l = layers[i];
+		
+		Bitmap bmp(l.g.getDimensions());
+		for (auto &p : bmp)
+		{
+			BYTE b = util::boundToByte(l.g(p.x, p.y) * 255.0f);
+			p.value = vec4uc(b, b, b, 255);
+		}
+		LodePNG::save(bmp, baseDir + "layer" + to_string(i) + ".png");
+		util::serializeToFile(baseDir + "layer" + to_string(i) + ".dat", l);
 	}
 }
 

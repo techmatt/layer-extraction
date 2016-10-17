@@ -3,12 +3,17 @@
 
 void App::go()
 {
-	layers.load(R"(C:\Code\layer-extraction\Images\les-miserables-layers\)");
+	explorer.init();
+	explorer.layers.saveDAT(R"(C:\Code\layer-extraction\Images\les-miserables-layers\)");
+	
+	LightingConstraints constraints;
 
-	vector<vec3f> colors;
-	for (auto &l : layers.layers)
-		colors.push_back(l.baseColor);
+	const float startWeight = 0.01f;
+	const float targetWeight = 1.0f;
+	const Bitmap startImage = LodePNG::load(R"(C:\Code\layer-extraction\Images\les-miserables-start.png)");
+	const Bitmap targetImage = LodePNG::load(R"(C:\Code\layer-extraction\Images\les-miserables-target.png)");
 
-	Bitmap bmp = layers.compositeImage(colors);
-	LodePNG::save(bmp, R"(C:\Code\layer - extraction\Images\test.png)");
+	constraints.init(startImage, startWeight, targetImage, targetWeight);
+
+	explorer.populateCandidates(constraints);
 }

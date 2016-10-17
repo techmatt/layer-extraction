@@ -13,6 +13,8 @@
   <ItemGroup>
     <ClCompile Include="app.cpp" />
     <ClCompile Include="imageLayers.cpp" />
+    <ClCompile Include="lightingConstraints.cpp" />
+    <ClCompile Include="lightingExplorer.cpp" />
     <ClCompile Include="lightUtil.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -22,8 +24,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app.h" />
+    <ClInclude Include="gradientFreeOpt.h" />
     <ClInclude Include="imageLayers.h" />
+    <ClInclude Include="lightingConstraints.h" />
+    <ClInclude Include="lightingExplorer.h" />
     <ClInclude Include="lightUtil.h" />
+    <ClInclude Include="LSH.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="mLibInclude.h" />
   </ItemGroup>
