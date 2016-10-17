@@ -17,9 +17,9 @@ struct LightingExplorer
 	vector<float> makeSignature(const Bitmap &bmp) const;
 
 	int blocksX, blocksY, signatureDim;
-	ImageLayers layers;
+	
+	ImageLayers fullLayers;
+	ImageLayers smallLayers;
 	//LSHEuclidean<size_t> hash;
 	vector<LightingSample> candidateSamples;
-
-	static const int signatureBlockSize = 8;
 };

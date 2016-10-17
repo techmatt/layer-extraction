@@ -1,6 +1,34 @@
 
 #include "main.h"
 
+void ImageLayers::downSample(int blockSize)
+{
+	const double scale = 1.0 / (blockSize * blockSize);
+
+	vector<Layer> newLayers(layers.size());
+	int newDimX = dimX / blockSize;
+	int newDimY = dimY / blockSize;
+	
+	for (auto &l : iterate(newLayers))
+	{
+		l.value.baseColor = layers[l.index].baseColor;
+		auto &newG = l.value.g;
+		auto &oldG = layers[l.index].g;
+		newG.allocate(newDimX, newDimY);
+		for (auto &p : newG)
+		{
+			double sum = 0.0;
+			for (int yOffset = 0; yOffset < blockSize; yOffset++)
+				for (int xOffset = 0; xOffset < blockSize; xOffset++)
+					sum += oldG(p.x * blockSize + xOffset, p.y * blockSize + yOffset);
+			p.value = float(sum * scale);
+		}
+	}
+	layers = newLayers;
+	dimX = newDimX;
+	dimY = newDimY;
+}
+
 void ImageLayers::loadCSV(const string &baseDir)
 {
 	const int layerCount = Directory::enumerateFiles(baseDir, ".csv").size();
@@ -35,6 +63,7 @@ void ImageLayers::loadCSV(const string &baseDir)
 
 void ImageLayers::saveDAT(const string &baseDir) const
 {
+	util::makeDirectory(baseDir);
 	for (size_t i = 0; i < layers.size(); i++)
 	{
 		auto &l = layers[i];
@@ -53,14 +82,19 @@ void ImageLayers::saveDAT(const string &baseDir) const
 Bitmap ImageLayers::compositeImage(const vector<vec3f>& layerColors) const
 {
 	Grid2<vec3f> result(dimX, dimY, vec3f::origin);
-	for (auto &v : result)
+
+//#pragma omp parallel for
+	for (int y = 0; y < dimY; y++)
 	{
-		vec3f c = vec3f::origin;
-		for (int layerIndex = 0; layerIndex < layers.size(); layerIndex++)
+		for (int x = 0; x < dimX; x++)
 		{
-			c += layerColors[layerIndex] * layers[layerIndex].g(v.x, v.y);
+			vec3f c = vec3f::origin;
+			for (int layerIndex = 0; layerIndex < layers.size(); layerIndex++)
+			{
+				c += layerColors[layerIndex] * layers[layerIndex].g(x, y);
+			}
+			result(x, y) = c;
 		}
-		v.value = c;
 	}
 	return LightUtil::gridToBitmap(result);
 }

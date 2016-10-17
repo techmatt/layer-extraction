@@ -33,3 +33,24 @@ vector<vec3f> LightUtil::rawToLights(const vector<float>& raw)
 	}
 	return lights;
 }
+
+Bitmap LightUtil::downsampleBitmap(const Bitmap &bmp, int blockSize)
+{
+	const double scale = 1.0 / (blockSize * blockSize);
+
+	int newDimX = bmp.getDimX() / blockSize;
+	int newDimY = bmp.getDimY() / blockSize;
+
+	Grid2<vec3f> result(newDimX, newDimY);
+
+	for (auto &p : result)
+	{
+		vec3f sum = vec3f::origin;
+		for (int yOffset = 0; yOffset < blockSize; yOffset++)
+			for (int xOffset = 0; xOffset < blockSize; xOffset++)
+				sum += LightUtil::toColorVec3(bmp(p.x * blockSize + xOffset, p.y * blockSize + yOffset));
+		p.value = sum * scale;
+	}
+
+	return LightUtil::gridToBitmap(result);
+}

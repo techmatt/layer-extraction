@@ -26,6 +26,8 @@ struct ImageLayers
 	void saveDAT(const string &baseDir) const;
 	Bitmap compositeImage(const vector<vec3f> &layerColors) const;
 
+	void downSample(int blockSize);
+
 	int dimX;
 	int dimY;
 	vector<Layer> layers;

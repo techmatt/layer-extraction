@@ -1,4 +1,10 @@
 
+struct Constants
+{
+	static constexpr int smallLayersBlockSize = 4;
+	static constexpr int signatureBlockSize = 4;
+};
+
 struct LightingParameters
 {
 	LightingParameters()

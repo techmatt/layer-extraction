@@ -13,6 +13,8 @@ struct LightUtil
 	}
 	static Bitmap gridToBitmap(const Grid2<vec3f> &g);
 
+	static Bitmap downsampleBitmap(const Bitmap &bmp, int blockSize);
+
 	static vector<float> lightsToRaw(const vector<vec3f> &lights);
 	static vector<vec3f> rawToLights(const vector<float> &raw);
 };

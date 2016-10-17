@@ -5,10 +5,12 @@ const float minDistSqThreshold = 1.0f;
 
 void LightingExplorer::init()
 {
-	layers.loadCSV(R"(C:\Code\layer-extraction\Images\les-miserables-layers\)");
+	fullLayers.loadCSV(R"(C:\Code\layer-extraction\Images\les-miserables-layers\)");
+	smallLayers = fullLayers;
+	smallLayers.downSample(Constants::smallLayersBlockSize);
 
-	blocksX = layers.dimX / signatureBlockSize;
-	blocksY = layers.dimY / signatureBlockSize;
+	blocksX = fullLayers.dimX / Constants::signatureBlockSize;
+	blocksY = fullLayers.dimY / Constants::signatureBlockSize;
 	signatureDim = blocksX * blocksY * 3;
 	cout << "signatude dim: " << signatureDim << endl;
 }
@@ -19,15 +21,15 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 	
 	GradientFreeProblem problem;
 	problem.fitness = FitnessFunction([&](const vector<float> &x) {
-		return constraints.evalFitness(layers, x);
+		return constraints.evalFitness(smallLayers, x);
 	});
 	problem.render = RenderFunction([&](const vector<float> &x) {
-		return layers.compositeImage(LightUtil::rawToLights(x));
+		return fullLayers.compositeImage(LightUtil::rawToLights(x));
 	});
 
 	const bool useGoodStart = true;
 	vector<float> startX;
-	for (auto &l : layers.layers)
+	for (auto &l : fullLayers.layers)
 	{
 		if (useGoodStart)
 		{
@@ -86,7 +88,7 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 
 vector<float> LightingExplorer::makeSignature(const vector<vec3f> &lights) const
 {
-	const Bitmap bmp = layers.compositeImage(lights);
+	const Bitmap bmp = fullLayers.compositeImage(lights);
 	return makeSignature(bmp);
 }
 
@@ -98,15 +100,15 @@ vector<float> LightingExplorer::makeSignature(const Bitmap &bmp) const
 		for (int blockX = 0; blockX < blocksX; blockX++)
 		{
 			vec3f avg = vec3f::origin;
-			for(int yOffset = 0; yOffset < signatureBlockSize; yOffset++)
-				for (int xOffset = 0; xOffset < signatureBlockSize; xOffset++)
+			for(int yOffset = 0; yOffset < Constants::signatureBlockSize; yOffset++)
+				for (int xOffset = 0; xOffset < Constants::signatureBlockSize; xOffset++)
 				{
-					const vec4uc v = bmp(blockX * signatureBlockSize + xOffset, blockY * signatureBlockSize + yOffset);
+					const vec4uc v = bmp(blockX * Constants::signatureBlockSize + xOffset, blockY * Constants::signatureBlockSize + yOffset);
 					avg.x += v.x;
 					avg.y += v.y;
 					avg.z += v.z;
 				}
-			avg /= signatureBlockSize * signatureBlockSize * 255.0f * 3.0f;
+			avg /= Constants::signatureBlockSize * Constants::signatureBlockSize * 255.0f * 3.0f;
 			result[signatureIndex++] = avg.x;
 			result[signatureIndex++] = avg.y;
 			result[signatureIndex++] = avg.z;

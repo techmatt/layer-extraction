@@ -27,28 +27,28 @@ public:
 		cmaes_t opt;
 
 		const int dimension = problem.startingPoints[0].size();
-		const int lambda = 100;
+		const int lambda = 50;
 		vector<double> xStart, stdDev;
 		for (float f : problem.startingPoints[0])
 		{
-			stdDev.push_back(0.1f);
+			stdDev.push_back(0.01f);
 			xStart.push_back(f);
 		}
 		
-		vector<float> x(dimension);
-
 		/* Initialize everything into the struct evo, 0 means default */
 		double *arFunVals = cmaes_init(&opt, dimension, xStart.data(), stdDev.data(), 0, lambda, nullptr);
 		cout << cmaes_SayHello(&opt) << endl;
 		int iter = 0;
-		const int maxIters = 100;
-		const bool verbose = true;
+		const int maxIters = 50;
+		const bool verbose = false;
 		while (!cmaes_TestForTermination(&opt) && iter <= maxIters)
 		{
 			double *const* pop = cmaes_SamplePopulation(&opt);
 
-			for (int i = 0; i < cmaes_Get(&opt, "lambda"); ++i)
+#pragma omp parallel for schedule(dynamic, 1)
+			for (int i = 0; i < lambda; i++)
 			{
+				vector<float> x(dimension);
 				for (int j = 0; j < dimension; j++)
 					x[j] = (float)pop[i][j];
 
