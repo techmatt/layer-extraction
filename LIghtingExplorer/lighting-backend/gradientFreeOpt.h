@@ -24,12 +24,24 @@ class GradientFreeOptCMAES
 public:
 	vector<float> optimize(const GradientFreeProblem &problem)
 	{
+		vector<float> x = optimizeInternal(problem, problem.startingPoints[0], 50, 20);
+		x = optimizeInternal(problem, x, 50, 20);
+		x = optimizeInternal(problem, x, 50, 20);
+		x = optimizeInternal(problem, x, 50, 20);
+		x = optimizeInternal(problem, x, 100, 50);
+		x = optimizeInternal(problem, x, 100, 50);
+		x = optimizeInternal(problem, x, 100, 50);
+		x = optimizeInternal(problem, x, 100, 200);
+		return x;
+	}
+
+	vector<float> optimizeInternal(const GradientFreeProblem &problem, const vector<float> &startingPoint, int lambda, int maxIters)
+	{
 		cmaes_t opt;
 
-		const int dimension = problem.startingPoints[0].size();
-		const int lambda = 50;
+		const int dimension = startingPoint.size();
 		vector<double> xStart, stdDev;
-		for (float f : problem.startingPoints[0])
+		for (float f : startingPoint)
 		{
 			stdDev.push_back(0.01f);
 			xStart.push_back(f);
@@ -39,7 +51,6 @@ public:
 		double *arFunVals = cmaes_init(&opt, dimension, xStart.data(), stdDev.data(), 0, lambda, nullptr);
 		cout << cmaes_SayHello(&opt) << endl;
 		int iter = 0;
-		const int maxIters = 50;
 		const bool verbose = false;
 		while (!cmaes_TestForTermination(&opt) && iter <= maxIters)
 		{

@@ -27,7 +27,7 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 		return fullLayers.compositeImage(LightUtil::rawToLights(x));
 	});
 
-	const bool useGoodStart = true;
+	const bool useGoodStart = false;
 	vector<float> startX;
 	for (auto &l : fullLayers.layers)
 	{
