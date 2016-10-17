@@ -1,11 +1,11 @@
 
 #include "main.h"
 
-//SpeechParameters *g_speechParams;
+LightingParameters *g_lightingParams;
 
 void main()
 {
-	//g_speechParams = new SpeechParameters();
+	g_lightingParams = new LightingParameters();
 
 	App app;
 	app.go();

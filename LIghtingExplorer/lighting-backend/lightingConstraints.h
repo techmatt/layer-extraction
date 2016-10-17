@@ -12,5 +12,7 @@ struct LightingConstraints
 	void init(const Bitmap &startImage, float startWeight, const Bitmap &targetImage, float targetWeight);
 	float evalFitness(const ImageLayers &l, const vector<float> &x) const;
 
+	void saveDebug();
+
 	Grid2<PixelConstraint> pixelConstraints;
 };

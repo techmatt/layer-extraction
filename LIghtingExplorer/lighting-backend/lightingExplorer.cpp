@@ -21,13 +21,26 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 	problem.fitness = FitnessFunction([&](const vector<float> &x) {
 		return constraints.evalFitness(layers, x);
 	});
+	problem.render = RenderFunction([&](const vector<float> &x) {
+		return layers.compositeImage(LightUtil::rawToLights(x));
+	});
 
+	const bool useGoodStart = false;
 	vector<float> startX;
 	for (auto &l : layers.layers)
 	{
-		startX.push_back(l.baseColor.x);
-		startX.push_back(l.baseColor.y);
-		startX.push_back(l.baseColor.z);
+		if (useGoodStart)
+		{
+			startX.push_back(l.baseColor.x);
+			startX.push_back(l.baseColor.y);
+			startX.push_back(l.baseColor.z);
+		}
+		else
+		{
+			startX.push_back(0.0f);
+			startX.push_back(0.0f);
+			startX.push_back(0.0f);
+		}
 	}
 	problem.startingPoints.push_back(startX);
 

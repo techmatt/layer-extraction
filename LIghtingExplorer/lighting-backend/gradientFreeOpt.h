@@ -2,10 +2,12 @@
 // interface
 
 typedef function<float(const vector<float> &x)> FitnessFunction;
+typedef function<Bitmap(const vector<float> &x)> RenderFunction;
 class GradientFreeProblem
 {
 public:
 	FitnessFunction fitness;
+	RenderFunction render;
 	vector< vector<float> > startingPoints;
 };
 
@@ -20,9 +22,10 @@ class GradientFreeOptRandomWalk
 public:
 	vector<float> optimize(const GradientFreeProblem &problem)
 	{
-		const int totalMutations = 10000;
-		const int wavefrontSize = 100;
+		const int totalMutations = 1000;
+		const int wavefrontSize = 50;
 		const int wavefrontCullRate = 50;
+		const bool verbose = true;
 
 		for (auto &i : problem.startingPoints)
 			addWavefrontEntry(problem, i);
@@ -39,6 +42,11 @@ public:
 				sort(wavefront.begin(), wavefront.end(), [](const WavefrontEntry &a, const WavefrontEntry &b) { return a.fitness > b.fitness; });
 				if (wavefront.size() > wavefrontSize) wavefront.resize(wavefrontSize);
 				cout << "mutation " << mutationCount << ": " << wavefront.front().fitness << " -> " << wavefront.back().fitness << endl;
+				if (verbose)
+				{
+					Bitmap bmp = problem.render(wavefront.front().values);
+					LodePNG::save(bmp, R"(C:\Code\layer-extraction\Images\debug\)" + to_string(mutationCount) + ".png");
+				}
 			}
 		}
 
@@ -63,14 +71,14 @@ private:
 
 	vector<float> mutate(const vector<float> &x)
 	{
-		const float expectedMutations = 5.0f;
+		const float expectedMutations = 3.0f;
 		const float mutationChance = expectedMutations / (float)x.size();
 
 		vector<float> result = x;
 		for (int i = 0; i < x.size(); i++)
 		{
 			if (util::randomUniformf() < mutationChance)
-				result[i] += (float)RNG::global.normal();
+				result[i] += (float)RNG::global.normal() * 0.1f;
 		}
 		return result;
 	}

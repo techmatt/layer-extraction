@@ -19,5 +19,6 @@
     <ClInclude Include="lightingExplorer.h" />
     <ClInclude Include="gradientFreeOpt.h" />
     <ClInclude Include="lightingConstraints.h" />
+    <ClInclude Include="lightingParams.h" />
   </ItemGroup>
 </Project>

@@ -5,6 +5,7 @@
 
 #include "mLibInclude.h"
 //#include "LSH.h"
+#include "lightingParams.h"
 #include "gradientFreeOpt.h"
 
 #include "imageLayers.h"

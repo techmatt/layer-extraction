@@ -14,6 +14,7 @@ void App::go()
 	const Bitmap targetImage = LodePNG::load(R"(C:\Code\layer-extraction\Images\les-miserables-target.png)");
 
 	constraints.init(startImage, startWeight, targetImage, targetWeight);
+	constraints.saveDebug();
 
 	explorer.populateCandidates(constraints);
 }

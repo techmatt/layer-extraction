@@ -16,12 +16,12 @@ void LightingConstraints::init(const Bitmap &startImage, float startWeight, cons
 		if (s4 == t4)
 		{
 			p.value.weight = startWeight;
-			p.value.targetColor = LightUtil::vec4ucToColorVec3(s4);
+			p.value.targetColor = LightUtil::toColorVec3(s4);
 		}
 		else
 		{
 			p.value.weight = targetWeight;
-			p.value.targetColor = LightUtil::vec4ucToColorVec3(t4);
+			p.value.targetColor = LightUtil::toColorVec3(t4);
 		}
 	}
 }
@@ -34,10 +34,21 @@ float LightingConstraints::evalFitness(const ImageLayers & l, const vector<float
 	for (auto &p : pixelConstraints)
 	{
 		const vec3f cA = p.value.targetColor;
-		const vec3f cB = LightUtil::vec4ucToColorVec3(bmp(p.x, p.y));
+		const vec3f cB = LightUtil::toColorVec3(bmp(p.x, p.y));
 		const float diff = vec3f::distSq(cA, cB);
 		fitness -= diff * p.value.weight;
 	}
 
 	return fitness;
+}
+
+void LightingConstraints::saveDebug()
+{
+	Grid2<vec3f> g(pixelConstraints.getDimensions());
+	for (auto &p : g)
+	{
+		p.value = pixelConstraints(p.x, p.y).targetColor;
+	}
+	Bitmap bmp = LightUtil::gridToBitmap(g);
+	LodePNG::save(bmp, params().debugDir + "constraints.png");
 }
