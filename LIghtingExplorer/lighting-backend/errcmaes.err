@@ -1,0 +1,40 @@
+
+ -- Mon Oct 17 13:54:02 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 13:57:50 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 13:59:04 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 14:00:32 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 14:01:02 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 14:01:04 2016
+ Warning: sigma increased due to equal function values
+   Reconsider the formulation of the objective function
+
+ -- Mon Oct 17 14:01:24 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 14:02:34 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 14:03:08 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 14:04:06 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 14:06:32 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 14:07:02 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'
+
+ -- Mon Oct 17 14:10:10 2016
+ cmaes_ReadFromFile(): could not open 'cmaes_initials.par'

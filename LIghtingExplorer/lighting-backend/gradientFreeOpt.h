@@ -1,7 +1,9 @@
 
 // interface
 
-typedef function<float(const vector<float> &x)> FitnessFunction;
+#include "CMAES/src/cmaes_interface.h"
+
+typedef function<double(const vector<float> &x)> FitnessFunction;
 typedef function<Bitmap(const vector<float> &x)> RenderFunction;
 class GradientFreeProblem
 {
@@ -15,6 +17,70 @@ class GradientFreeOpt
 {
 public:
 	virtual vector<float> optimize(const GradientFreeProblem &problem) = 0;
+};
+
+class GradientFreeOptCMAES
+{
+public:
+	vector<float> optimize(const GradientFreeProblem &problem)
+	{
+		cmaes_t opt;
+
+		const int dimension = problem.startingPoints[0].size();
+		const int lambda = 100;
+		vector<double> xStart, stdDev;
+		for (float f : problem.startingPoints[0])
+		{
+			stdDev.push_back(0.1f);
+			xStart.push_back(f);
+		}
+		
+		vector<float> x(dimension);
+
+		/* Initialize everything into the struct evo, 0 means default */
+		double *arFunVals = cmaes_init(&opt, dimension, xStart.data(), stdDev.data(), 0, lambda, nullptr);
+		cout << cmaes_SayHello(&opt) << endl;
+		int iter = 0;
+		const int maxIters = 100;
+		const bool verbose = true;
+		while (!cmaes_TestForTermination(&opt) && iter <= maxIters)
+		{
+			double *const* pop = cmaes_SamplePopulation(&opt);
+
+			for (int i = 0; i < cmaes_Get(&opt, "lambda"); ++i)
+			{
+				for (int j = 0; j < dimension; j++)
+					x[j] = (float)pop[i][j];
+
+				arFunVals[i] = -problem.fitness(x);
+
+				if (verbose && i == 0)
+				{
+					cout << "iter " << iter << ": " << arFunVals[0] << ", " << arFunVals[1] << endl;
+					const Bitmap bmp = problem.render(x);
+					LodePNG::save(bmp, R"(C:\Code\layer-extraction\Images\debug\)" + to_string(iter) + ".png");
+				}
+			}
+
+			iter++;
+			cmaes_UpdateDistribution(&opt, arFunVals);
+		}
+		string terminationReason = "<unknown>";
+		if (cmaes_TestForTermination(&opt) != nullptr)
+			terminationReason = cmaes_TestForTermination(&opt);
+		cout << "done: " << terminationReason << endl;
+		
+		//xfinal = cmaes_GetNew(&opt, "xmean"); /* "xbestever" might be used as well */
+		double *xFinal = cmaes_GetNew(&opt, "xbestever"); /* "xbestever" might be used as well */
+		cmaes_exit(&opt); /* release memory */
+
+		vector<float> result(dimension);
+		for (int j = 0; j < dimension; j++)
+			result[j] = (float)xFinal[j];
+		free(xFinal);
+
+		return result;
+	}
 };
 
 class GradientFreeOptRandomWalk
@@ -58,7 +124,7 @@ private:
 	struct WavefrontEntry
 	{
 		vector<float> values;
-		float fitness;
+		double fitness;
 	};
 
 	void addWavefrontEntry(const GradientFreeProblem &problem, const vector<float> &x)

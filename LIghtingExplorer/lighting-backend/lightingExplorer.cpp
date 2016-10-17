@@ -25,7 +25,7 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 		return layers.compositeImage(LightUtil::rawToLights(x));
 	});
 
-	const bool useGoodStart = false;
+	const bool useGoodStart = true;
 	vector<float> startX;
 	for (auto &l : layers.layers)
 	{
@@ -44,7 +44,8 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 	}
 	problem.startingPoints.push_back(startX);
 
-	GradientFreeOptRandomWalk opt;
+	//GradientFreeOptRandomWalk opt;
+	GradientFreeOptCMAES opt;
 	vector<float> result = opt.optimize(problem);
 
 	LightingSample sample;

@@ -26,11 +26,11 @@ void LightingConstraints::init(const Bitmap &startImage, float startWeight, cons
 	}
 }
 
-float LightingConstraints::evalFitness(const ImageLayers & l, const vector<float>& x) const
+double LightingConstraints::evalFitness(const ImageLayers & l, const vector<float>& x) const
 {
 	const Bitmap bmp = l.compositeImage(LightUtil::rawToLights(x));
 
-	float fitness = 0.0f;
+	double fitness = 0.0;
 	for (auto &p : pixelConstraints)
 	{
 		const vec3f cA = p.value.targetColor;

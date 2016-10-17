@@ -8,7 +8,7 @@ void App::go()
 	
 	LightingConstraints constraints;
 
-	const float startWeight = 0.01f;
+	const float startWeight = 0.0001f;
 	const float targetWeight = 1.0f;
 	const Bitmap startImage = LodePNG::load(R"(C:\Code\layer-extraction\Images\les-miserables-start.png)");
 	const Bitmap targetImage = LodePNG::load(R"(C:\Code\layer-extraction\Images\les-miserables-target.png)");
@@ -17,4 +17,6 @@ void App::go()
 	constraints.saveDebug();
 
 	explorer.populateCandidates(constraints);
+	const Bitmap bmpFinal = explorer.layers.compositeImage(explorer.candidateSamples[0].lightColors);
+	util::save
 }

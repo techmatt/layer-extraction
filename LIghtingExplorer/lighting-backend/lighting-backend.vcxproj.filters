@@ -8,6 +8,7 @@
     <ClCompile Include="lightUtil.cpp" />
     <ClCompile Include="lightingExplorer.cpp" />
     <ClCompile Include="lightingConstraints.cpp" />
+    <ClCompile Include="CMAES\src\cmaes.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app.h" />
