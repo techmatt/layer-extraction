@@ -2,7 +2,9 @@
 struct Constants
 {
 	static constexpr int smallLayersBlockSize = 4;
-	static constexpr int signatureBlockSize = 4;
+	static constexpr int signatureBlockSize = 2;
+	static constexpr float exclusionRadius = 0.01f;
+	static constexpr double exclusionStrength = 1.0;
 };
 
 struct LightingParameters

@@ -4,8 +4,8 @@
 void App::go()
 {
 	explorer.init();
-	explorer.fullLayers.saveDAT(R"(C:\Code\layer-extraction\Images\les-miserables-layers\)");
-	explorer.smallLayers.saveDAT(R"(C:\Code\layer-extraction\Images\les-miserables-layers-small\)");
+	//explorer.fullLayers.saveDAT(R"(C:\Code\layer-extraction\Images\les-miserables-layers\)");
+	//explorer.smallLayers.saveDAT(R"(C:\Code\layer-extraction\Images\les-miserables-layers-small\)");
 	
 	LightingConstraints constraints;
 

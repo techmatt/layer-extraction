@@ -26,10 +26,8 @@ void LightingConstraints::init(const Bitmap &startImage, float startWeight, cons
 	}
 }
 
-double LightingConstraints::evalFitness(const ImageLayers & l, const vector<float>& x) const
+double LightingConstraints::evalFitness(const Bitmap & bmp, const vector<float>& x) const
 {
-	const Bitmap bmp = l.compositeImage(LightUtil::rawToLights(x));
-
 	double fitness = 0.0;
 	for (auto &p : pixelConstraints)
 	{
@@ -40,6 +38,12 @@ double LightingConstraints::evalFitness(const ImageLayers & l, const vector<floa
 	}
 
 	return fitness;
+}
+
+double LightingConstraints::evalFitness(const ImageLayers & l, const vector<float>& x) const
+{
+	const Bitmap bmp = l.compositeImage(LightUtil::rawToLights(x));
+	return evalFitness(bmp, x);
 }
 
 void LightingConstraints::saveDebug()

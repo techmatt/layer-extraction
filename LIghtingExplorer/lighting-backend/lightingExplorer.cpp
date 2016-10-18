@@ -5,12 +5,13 @@ const float minDistSqThreshold = 1.0f;
 
 void LightingExplorer::init()
 {
-	fullLayers.loadCSV(R"(C:\Code\layer-extraction\Images\les-miserables-layers\)");
+	//fullLayers.loadCSV(R"(C:\Code\layer-extraction\Images\les-miserables-layers\)");
+	fullLayers.loadDAT(R"(C:\Code\layer-extraction\Images\les-miserables-layers\)");
 	smallLayers = fullLayers;
 	smallLayers.downSample(Constants::smallLayersBlockSize);
 
-	blocksX = fullLayers.dimX / Constants::signatureBlockSize;
-	blocksY = fullLayers.dimY / Constants::signatureBlockSize;
+	blocksX = smallLayers.dimX / Constants::signatureBlockSize;
+	blocksY = smallLayers.dimY / Constants::signatureBlockSize;
 	signatureDim = blocksX * blocksY * 3;
 	cout << "signatude dim: " << signatureDim << endl;
 }
@@ -18,15 +19,8 @@ void LightingExplorer::init()
 void LightingExplorer::populateCandidates(const LightingConstraints &constraints)
 {
 	candidateSamples.clear();
+	acceptedSamples.clear();
 	
-	GradientFreeProblem problem;
-	problem.fitness = FitnessFunction([&](const vector<float> &x) {
-		return constraints.evalFitness(smallLayers, x);
-	});
-	problem.render = RenderFunction([&](const vector<float> &x) {
-		return fullLayers.compositeImage(LightUtil::rawToLights(x));
-	});
-
 	const bool useGoodStart = false;
 	vector<float> startX;
 	for (auto &l : fullLayers.layers)
@@ -44,16 +38,45 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 			startX.push_back(0.0f);
 		}
 	}
-	problem.startingPoints.push_back(startX);
+	
+	populateCandidatesExclusion(constraints, startX, acceptedSamples);
+}
+
+void LightingExplorer::populateCandidatesExclusion(const LightingConstraints &constraints, const vector<float> &startX, const vector<LightingSample> &excludedSamples)
+{
+	GradientFreeProblem problem;
+	problem.fitness = FitnessFunction([&](const vector<float> &x) {
+		const Bitmap bmp = smallLayers.compositeImage(LightUtil::rawToLights(x));
+		
+		float fitness = constraints.evalFitness(smallLayers, x);
+
+		const vector<float> signature = makeSignature(bmp);
+		for (auto &e : excludedSamples)
+		{
+			const float dist = math::distL2(e.signature, e.signature) / signatureDim;
+			if (dist < Constants::exclusionRadius)
+			{
+				fitness -= Constants::exclusionStrength * (1.0f - dist / Constants::exclusionRadius);
+			}
+		}
+		return fitness;
+	});
+	problem.render = RenderFunction([&](const vector<float> &x) {
+		return fullLayers.compositeImage(LightUtil::rawToLights(x));
+	});
 
 	//GradientFreeOptRandomWalk opt;
 	GradientFreeOptCMAES opt;
-	vector<float> result = opt.optimize(problem);
+	vector< vector<float> > candidates;
+	vector<float> bestResult = opt.optimize(problem, startX, candidates);
 
-	LightingSample sample;
-	sample.lightColors = LightUtil::rawToLights(result);
-	sample.signature = makeSignature(sample.lightColors);
-	candidateSamples.push_back(sample);
+	for (auto &c : candidates)
+	{
+		LightingSample sample;
+		sample.lightColors = LightUtil::rawToLights(c);
+		sample.signature = makeSignature(sample.lightColors);
+		candidateSamples.push_back(sample);
+	}
 }
 
 /*void LightingExplorer::go()
@@ -88,7 +111,7 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 
 vector<float> LightingExplorer::makeSignature(const vector<vec3f> &lights) const
 {
-	const Bitmap bmp = fullLayers.compositeImage(lights);
+	const Bitmap bmp = smallLayers.compositeImage(lights);
 	return makeSignature(bmp);
 }
 

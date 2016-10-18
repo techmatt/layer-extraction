@@ -61,6 +61,13 @@ void ImageLayers::loadCSV(const string &baseDir)
 	}
 }
 
+void ImageLayers::loadDAT(const string & baseDir)
+{
+	util::deserializeFromFile(baseDir + "layers.dat", layers);
+	dimX = layers[0].g.getDimX();
+	dimY = layers[0].g.getDimY();
+}
+
 void ImageLayers::saveDAT(const string &baseDir) const
 {
 	util::makeDirectory(baseDir);
@@ -75,8 +82,8 @@ void ImageLayers::saveDAT(const string &baseDir) const
 			p.value = vec4uc(b, b, b, 255);
 		}
 		LodePNG::save(bmp, baseDir + "layer" + to_string(i) + ".png");
-		util::serializeToFile(baseDir + "layer" + to_string(i) + ".dat", l);
 	}
+	util::serializeToFile(baseDir + "layers.dat", layers);
 }
 
 Bitmap ImageLayers::compositeImage(const vector<vec3f>& layerColors) const

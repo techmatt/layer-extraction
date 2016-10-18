@@ -11,6 +11,8 @@ struct LightingExplorer
 
 	void populateCandidates(const LightingConstraints &constraints);
 
+	void populateCandidatesExclusion(const LightingConstraints &constraints, const vector<float> &startX, const vector<LightingSample> &excludedSamples);
+
 	//void maybeAddSample(const Bitmap &bmp, const vector<vec3f> &lightColors);
 
 	vector<float> makeSignature(const vector<vec3f> &lights) const;
@@ -22,4 +24,5 @@ struct LightingExplorer
 	ImageLayers smallLayers;
 	//LSHEuclidean<size_t> hash;
 	vector<LightingSample> candidateSamples;
+	vector<LightingSample> acceptedSamples;
 };
