@@ -9,7 +9,7 @@ void App::go()
 	
 	LightingConstraints constraints;
 
-	const float startWeight = 0.001f;
+	const float startWeight = 0.0001f;
 	const float targetWeight = 1.0f;
 	Bitmap startImage = LodePNG::load(R"(C:\Code\layer-extraction\Images\les-miserables-start.png)");
 	Bitmap targetImage = LodePNG::load(R"(C:\Code\layer-extraction\Images\les-miserables-target.png)");

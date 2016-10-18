@@ -88,6 +88,10 @@ void ImageLayers::saveDAT(const string &baseDir) const
 
 Bitmap ImageLayers::compositeImage(const vector<vec3f>& layerColors) const
 {
+	vector<vec3f> fixedLayerColors = layerColors;
+	fixedLayerColors[0] = layers[0].baseColor;
+	fixedLayerColors[5] = layers[5].baseColor;
+
 	Grid2<vec3f> result(dimX, dimY, vec3f::origin);
 
 //#pragma omp parallel for
@@ -98,7 +102,7 @@ Bitmap ImageLayers::compositeImage(const vector<vec3f>& layerColors) const
 			vec3f c = vec3f::origin;
 			for (int layerIndex = 0; layerIndex < layers.size(); layerIndex++)
 			{
-				c += layerColors[layerIndex] * layers[layerIndex].g(x, y);
+				c += fixedLayerColors[layerIndex] * layers[layerIndex].g(x, y);
 			}
 			result(x, y) = c;
 		}

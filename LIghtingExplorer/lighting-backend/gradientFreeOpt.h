@@ -24,26 +24,28 @@ class GradientFreeOptCMAES
 public:
 	vector<float> optimize(const GradientFreeProblem &problem, const vector<float> &startX, vector< vector<float> > &candidates)
 	{
-		vector<float> x = optimizeInternal(problem, startX, 50, 20, nullptr);
-		/*x = optimizeInternal(problem, x, 50, 20, nullptr);
-		x = optimizeInternal(problem, x, 50, 20, nullptr);
-		x = optimizeInternal(problem, x, 50, 20, nullptr);
-		x = optimizeInternal(problem, x, 100, 50, nullptr);
-		x = optimizeInternal(problem, x, 100, 50, nullptr);
-		x = optimizeInternal(problem, x, 100, 50, nullptr);*/
-		x = optimizeInternal(problem, x, 100, 50, &candidates);
+		const int baseLambda = 100;
+		vector<float> x = optimizeInternal(problem, startX, baseLambda, 20, nullptr);
+		x = optimizeInternal(problem, x, baseLambda, 20, nullptr);
+		x = optimizeInternal(problem, x, baseLambda, 20, nullptr);
+		x = optimizeInternal(problem, x, baseLambda, 20, nullptr);
+		x = optimizeInternal(problem, x, baseLambda, 50, nullptr);
+		x = optimizeInternal(problem, x, baseLambda, 50, nullptr);
+		x = optimizeInternal(problem, x, baseLambda, 50, &candidates);
+		x = optimizeInternal(problem, x, baseLambda, 200, &candidates);
 		return x;
 	}
 
 	vector<float> optimizeInternal(const GradientFreeProblem &problem, const vector<float> &startingPoint, int lambda, int maxIters, vector< vector<float> > *candidates)
 	{
+		const float baseStdDev = 0.01f;
 		cmaes_t opt;
 
 		const int dimension = startingPoint.size();
 		vector<double> xStart, stdDev;
 		for (float f : startingPoint)
 		{
-			stdDev.push_back(0.01f);
+			stdDev.push_back(baseStdDev);
 			xStart.push_back(f);
 		}
 		

@@ -26,4 +26,5 @@ struct LightingExplorer
 	//LSHEuclidean<size_t> hash;
 	vector<LightingSample> candidateSamples;
 	vector<LightingSample> acceptedSamples;
+	vector<LightingSample> finalSamples;
 };

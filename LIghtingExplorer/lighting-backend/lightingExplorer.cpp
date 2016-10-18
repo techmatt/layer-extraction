@@ -39,6 +39,7 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 		}
 	}
 	
+	const int finalSampleCount = 20;
 	const int exclusionIterCount = 5;
 	for (int iter = 0; iter < exclusionIterCount; iter++)
 	{
@@ -54,15 +55,24 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 				for (auto &e : acceptedSamples)
 				{
 					const float dist = math::distL2(c.signature, e.signature) * Constants::signatureDistScale / signatureDim;
-					cout << dist << "," << c.baseFitness << "," << bestFitness << endl;
+					//cout << dist << "," << c.baseFitness << "," << bestFitness << endl;
 					if (dist < Constants::acceptanceExclusionRadius)
 					{
+						const bool verbose = false;
+						if (verbose)
+						{
+							const Bitmap b0 = fullLayers.compositeImage(c.lightColors);
+							const Bitmap b1 = fullLayers.compositeImage(e.lightColors);
+							LodePNG::save(b0, params().debugDir + "b0.png");
+							LodePNG::save(b1, params().debugDir + "b1.png");
+							cout << dist << endl;
+							cin.get();
+						}
 						acceptable = false;
 					}
 				}
 				if (acceptable)
 				{
-					cout << "accepted" << endl;
 					bestSample = &c;
 					bestFitness = c.baseFitness;
 				}
@@ -79,6 +89,66 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 		}
 	}
 
+	for (auto &a : iterate(acceptedSamples))
+	{
+		cout << a.index << ": " << a.value.baseFitness << endl;
+		LodePNG::save(fullLayers.compositeImage(a.value.lightColors), params().debugDir + "accepted" + to_string(a.index) + ".png");
+	}
+
+	for (int iter = 0; iter < finalSampleCount; iter++)
+	{
+		LightingSample *bestSample = nullptr;
+		double bestFitness = -numeric_limits<double>::max();
+		for (auto &c : candidateSamples)
+		{
+			if (c.baseFitness > bestFitness)
+			{
+				bool acceptable = true;
+				for (auto &e : finalSamples)
+				{
+					const float dist = math::distL2(c.signature, e.signature) * Constants::signatureDistScale / signatureDim;
+					//cout << dist << "," << c.baseFitness << "," << bestFitness << endl;
+					if (dist < Constants::finalExclusionRadius)
+					{
+						acceptable = false;
+					}
+				}
+				if (acceptable)
+				{
+					bestSample = &c;
+					bestFitness = c.baseFitness;
+				}
+			}
+		}
+		if (bestSample == nullptr)
+		{
+			cout << "No acceptable samples found" << endl;
+			finalSamples.push_back(util::randomElement(candidateSamples));
+		}
+		else
+		{
+			cout << "Final sample fitness: " << bestFitness << endl;
+			finalSamples.push_back(*bestSample);
+		}
+	}
+
+	const int displayX = 5;
+	const int displayY = 4;
+	const int buffer = 10;
+	int resultIndex = 0;
+	Bitmap bmpOut((fullLayers.dimX + buffer) * displayX, (fullLayers.dimY + buffer) * displayY, vec4uc(255, 255, 255, 255));
+	for (int dX = 0; dX < displayX; dX++)
+	{
+		for (int dY = 0; dY < displayY; dY++)
+		{
+			const Bitmap bmp = fullLayers.compositeImage(finalSamples[resultIndex].lightColors);
+			cout << finalSamples[resultIndex].baseFitness << endl;
+			resultIndex++;
+
+			bmpOut.copyIntoImage(bmp, (fullLayers.dimX + buffer) * dX, (fullLayers.dimY + buffer) * dY);
+		}
+	}
+	LodePNG::save(bmpOut, params().debugDir + "finalResults.png");
 }
 
 void LightingExplorer::populateCandidatesExclusion(const LightingConstraints &constraints, const vector<float> &startX, const vector<LightingSample> &excludedSamples)

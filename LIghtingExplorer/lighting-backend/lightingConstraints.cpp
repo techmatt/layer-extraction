@@ -34,7 +34,20 @@ double LightingConstraints::evalFitness(const Bitmap & bmp, const vector<float>&
 		const vec3f cA = p.value.targetColor;
 		const vec3f cB = LightUtil::toColorVec3(bmp(p.x, p.y));
 		const float diff = vec3f::distSq(cA, cB);
-		fitness -= diff * p.value.weight;
+
+		//if (p.value.weight < 0.1f)
+		if(false)
+		{
+			// hack: match value only
+			const float vA = 0.3f * cA.x + 0.5f * cA.y + 0.2f * cA.z;
+			const float vB = 0.3f * cB.x + 0.5f * cB.y + 0.2f * cB.z;
+			const float diff = vA - vB;
+			fitness -= diff * diff * p.value.weight;
+		}
+		else
+		{
+			fitness -= diff * p.value.weight;
+		}
 	}
 
 	return fitness;
