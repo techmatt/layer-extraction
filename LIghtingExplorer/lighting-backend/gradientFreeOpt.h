@@ -25,13 +25,13 @@ public:
 	vector<float> optimize(const GradientFreeProblem &problem, const vector<float> &startX, vector< vector<float> > &candidates)
 	{
 		vector<float> x = optimizeInternal(problem, startX, 50, 20, nullptr);
-		x = optimizeInternal(problem, x, 50, 20, nullptr);
+		/*x = optimizeInternal(problem, x, 50, 20, nullptr);
 		x = optimizeInternal(problem, x, 50, 20, nullptr);
 		x = optimizeInternal(problem, x, 50, 20, nullptr);
 		x = optimizeInternal(problem, x, 100, 50, nullptr);
 		x = optimizeInternal(problem, x, 100, 50, nullptr);
-		x = optimizeInternal(problem, x, 100, 50, nullptr);
-		x = optimizeInternal(problem, x, 100, 200, &candidates);
+		x = optimizeInternal(problem, x, 100, 50, nullptr);*/
+		x = optimizeInternal(problem, x, 100, 50, &candidates);
 		return x;
 	}
 
@@ -90,7 +90,7 @@ public:
 				for (int j = 0; j < dimension; j++)
 					x[j] = (float)pop[bestPopIndex][j];
 				candidates->push_back(x);
-				cout << "iter " << iter << ": " << bestPopValue << endl;
+				if(iter % 50 == 0) cout << "iter " << iter << ": " << bestPopValue << endl;
 			}
 
 			iter++;

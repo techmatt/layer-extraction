@@ -3,6 +3,7 @@ struct LightingSample
 {
 	vector<vec3f> lightColors;
 	vector<float> signature;
+	double baseFitness;
 };
 
 struct LightingExplorer

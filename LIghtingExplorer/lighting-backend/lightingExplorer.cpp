@@ -39,7 +39,46 @@ void LightingExplorer::populateCandidates(const LightingConstraints &constraints
 		}
 	}
 	
-	populateCandidatesExclusion(constraints, startX, acceptedSamples);
+	const int exclusionIterCount = 5;
+	for (int iter = 0; iter < exclusionIterCount; iter++)
+	{
+		populateCandidatesExclusion(constraints, startX, acceptedSamples);
+
+		LightingSample *bestSample = nullptr;
+		double bestFitness = -numeric_limits<double>::max();
+		for (auto &c : candidateSamples)
+		{
+			if (c.baseFitness > bestFitness)
+			{
+				bool acceptable = true;
+				for (auto &e : acceptedSamples)
+				{
+					const float dist = math::distL2(c.signature, e.signature) * Constants::signatureDistScale / signatureDim;
+					cout << dist << "," << c.baseFitness << "," << bestFitness << endl;
+					if (dist < Constants::acceptanceExclusionRadius)
+					{
+						acceptable = false;
+					}
+				}
+				if (acceptable)
+				{
+					cout << "accepted" << endl;
+					bestSample = &c;
+					bestFitness = c.baseFitness;
+				}
+			}
+		}
+		if (bestSample == nullptr)
+		{
+			cout << "No acceptable samples found" << endl;
+		}
+		else
+		{
+			cout << "Accepted sample fitness: " << bestFitness << endl;
+			acceptedSamples.push_back(*bestSample);
+		}
+	}
+
 }
 
 void LightingExplorer::populateCandidatesExclusion(const LightingConstraints &constraints, const vector<float> &startX, const vector<LightingSample> &excludedSamples)
@@ -48,18 +87,22 @@ void LightingExplorer::populateCandidatesExclusion(const LightingConstraints &co
 	problem.fitness = FitnessFunction([&](const vector<float> &x) {
 		const Bitmap bmp = smallLayers.compositeImage(LightUtil::rawToLights(x));
 		
-		float fitness = constraints.evalFitness(smallLayers, x);
+		const float baseFitness = constraints.evalFitness(smallLayers, x);
 
+		float exclusionFitness = 0.0f;
 		const vector<float> signature = makeSignature(bmp);
 		for (auto &e : excludedSamples)
 		{
-			const float dist = math::distL2(e.signature, e.signature) / signatureDim;
-			if (dist < Constants::exclusionRadius)
+			const float dist = math::distL2(signature, e.signature) * Constants::signatureDistScale / signatureDim;
+			//cout << dist << endl;
+			if (dist < Constants::fitnessExclusionRadius)
 			{
-				fitness -= Constants::exclusionStrength * (1.0f - dist / Constants::exclusionRadius);
+				exclusionFitness -= Constants::exclusionStrength * (1.0f - dist / Constants::fitnessExclusionRadius);
 			}
 		}
-		return fitness;
+		//if(excludedSamples.size())
+		//	cout << baseFitness << "," << exclusionFitness << endl;
+		return baseFitness + exclusionFitness;
 	});
 	problem.render = RenderFunction([&](const vector<float> &x) {
 		return fullLayers.compositeImage(LightUtil::rawToLights(x));
@@ -75,6 +118,7 @@ void LightingExplorer::populateCandidatesExclusion(const LightingConstraints &co
 		LightingSample sample;
 		sample.lightColors = LightUtil::rawToLights(c);
 		sample.signature = makeSignature(sample.lightColors);
+		sample.baseFitness = constraints.evalFitness(smallLayers, c);
 		candidateSamples.push_back(sample);
 	}
 }
