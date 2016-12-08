@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-inline void ImageSuperpixels::loadEdits(const Bitmap & imgInput, const Bitmap & imgEdit)
+void ImageSuperpixels::loadEdits(const Bitmap &imgInput, const Bitmap & imgEdit)
 {
 	for (auto &p : imgEdit)
 	{
@@ -11,23 +11,25 @@ inline void ImageSuperpixels::loadEdits(const Bitmap & imgInput, const Bitmap & 
 
 		if (p.value.getVec3() == vec3uc(255, 0, 255))
 		{
-			super.targetColorWeight += appParams().stasisWeight;
-			super.targetColor += colorUtil::toVec3f(inputColor);
+			super.addColorTarget(colorUtil::toVec3f(inputColor), appParams().stasisWeight);
 		}
 		else if (p.value.getVec3() != inputColor.getVec3())
 		{
-			super.targetColorWeight += appParams().editWeight;
-			super.targetColor += colorUtil::toVec3f(p.value);
+			super.addColorTarget(colorUtil::toVec3f(p.value), appParams().editWeight);
 		}
 		else
 		{
-			super.targetColorWeight += appParams().regularizationWeight;
-			super.targetColor += colorUtil::toVec3f(inputColor);
+			super.addColorTarget(colorUtil::toVec3f(inputColor), appParams().regularizationWeight);
 		}
+	}
+
+	for (auto &s : superpixels)
+	{
+		s.targetColor /= s.targetColorWeight;
 	}
 }
 
-void ImageSuperpixels::computeNeighborhoods()
+void ImageSuperpixels::computeNeighborhoods(const Bitmap &imgInput)
 {
 	ComponentTimer timer("Computing nearest neighbors");
 
@@ -63,7 +65,7 @@ void ImageSuperpixels::computeNeighborhoods()
 
 }
 
-void ImageSuperpixels::computeNeighborhoodWeights()
+void ImageSuperpixels::computeNeighborhoodWeights(const Bitmap &imgInput)
 {
 	ComponentTimer timer("Computing neighborhood weights");
 

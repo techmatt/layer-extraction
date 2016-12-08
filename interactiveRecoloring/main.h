@@ -14,5 +14,7 @@ typedef ColorImageR8G8B8A8 Bitmap;
 #include "superPixelGenerator.h"
 #include "imageSuperpixels.h"
 
+#include "recolorizer.h"
+
 #include "app.h"
 

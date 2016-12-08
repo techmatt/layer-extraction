@@ -6,6 +6,13 @@ struct Superpixel
 		targetColorWeight = 0.0f;
 		targetColor = vec3f::origin;
 	}
+
+	void addColorTarget(const vec3f &c, float weight)
+	{
+		targetColorWeight += weight;
+		targetColor += c * weight;
+	}
+
 	SuperpixelCoord coord;
 
 	//
@@ -45,13 +52,11 @@ struct ImageSuperpixels
 
 	void loadEdits(const Bitmap &imgInput, const Bitmap &imgEdit);
 
-	void computeNeighborhoods();
-	void computeNeighborhoodWeights();
+	void computeNeighborhoods(const Bitmap &imgInput);
+	void computeNeighborhoodWeights(const Bitmap &imgInput);
 
 	vector<double> computeWeights(const vector<unsigned int>& indices, const float * pixelFeatures);
 	
-	Bitmap imgInput;
-
 	vector<Superpixel> superpixels;
 	Grid2<int> assignments;
 

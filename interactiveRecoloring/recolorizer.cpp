@@ -1,5 +1,51 @@
 #include "Main.h"
 
+void Recolorizer::init(const Bitmap &_imgInput)
+{
+	imgInput = _imgInput;
+	
+	SuperpixelGeneratorSuperpixel generator;
+	const vector<SuperpixelCoord> superpixelCoords = generator.extract(imgInput, superpixels.assignments);
+
+	superpixels.loadCoords(superpixelCoords);
+	superpixels.computeNeighborhoods(imgInput);
+	superpixels.computeNeighborhoodWeights(imgInput);
+}
+
+Bitmap Recolorizer::recolor(const Bitmap &imgEdits)
+{
+	superpixels.loadEdits(imgInput, imgEdits);
+
+	vector<vec3f> newSuperpixelColors(superpixels.superpixels.size());
+	for (auto &p : iterate(newSuperpixelColors))
+	{
+		p.value = superpixels.superpixels[p.index].targetColor;
+	}
+
+	return makeFinalRender(newSuperpixelColors);
+}
+
+Bitmap Recolorizer::makeFinalRender(const vector<vec3f>& newSuperpixelColors)
+{
+	ComponentTimer timer("Final render");
+
+	Bitmap result = imgInput;
+	for(auto &p : result)
+	{
+		const PixelNeighborhood &neighborhood = superpixels.pixelNeighborhoods(p.x, p.y);
+		const size_t k = neighborhood.neighbors.size();
+
+		vec3f sum = vec3f::origin;
+		for (size_t neighborIndex = 0; neighborIndex < k; neighborIndex++)
+		{
+			sum += newSuperpixelColors[neighborhood.neighbors[neighborIndex]] * (float)neighborhood.weights[neighborIndex];
+		}
+		p.value = colorUtil::toVec4uc(sum);
+	}
+
+	return result;
+}
+
 #if 0
 void Recolorizer::Init(const Bitmap &bmp)
 {
@@ -68,24 +114,6 @@ Bitmap Recolorizer::Recolor(const Bitmap &bmp, const vector<PixelConstraint> &ta
     VisualizeSuperpixels(bmp, &newSuperpixelColors, "superpixelsConstraints");
 
     return Recolor(bmp, superpixelConstraints);
-}
-
-Bitmap Recolorizer::Recolor(const Bitmap &bmp, const vector<PixelConstraint> &targetPixelColors)
-{
-	const int superpixelCount = superpixelNeighbors.size();
-	vector<vec3f> newSuperpixelColors(superpixelCount);
-	vector<SuperpixelConstraint> constraints = MapPixelConstraintsToSuperpixelConstraints(targetPixelColors);
-	for (int i=0; i<superpixelColors.size(); i++)
-		newSuperpixelColors[i] = vec3f(0,0,0);
-
-	for(int i=0; i<constraints.size(); i++)
-	{
-		newSuperpixelColors[constraints[i].index] = constraints[i].targetColor;
-	}
-	VisualizeSuperpixels(bmp, &newSuperpixelColors, "debugStrokesMPEP");
-
-	return Recolor(bmp, constraints);
-    //return Recolor(bmp, MapPixelConstraintsToSuperpixelConstraints(targetPixelColors));
 }
 
 Bitmap Recolorizer::Recolor(const Bitmap &bmp, const vector<SuperpixelConstraint> &superpixelConstraints)

@@ -4,7 +4,7 @@ debugDir=C:\Code\layer-extraction\interactiveRecoloring\viz\
 inputImage=C:\Code\layer-extraction\interactiveRecoloring\examples\birdTiny.png
 editImage=C:\Code\layer-extraction\interactiveRecoloring\examples\birdTinyEditA.png
 
-superpixelIterations=5
+superpixelIterations=2
 superpixelCount=100
 
 spatialToColorScale=0.5

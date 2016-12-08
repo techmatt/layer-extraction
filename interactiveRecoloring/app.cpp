@@ -3,17 +3,12 @@
 
 void App::go()
 {
+	const Bitmap imgInput = LodePNG::load(appParams().inputImage);
 	const Bitmap imgEdits = LodePNG::load(appParams().editImage);
-	
-	ImageSuperpixels superpixels;
 
-	superpixels.imgInput = LodePNG::load(appParams().inputImage);
+	Recolorizer recolorizer;
+	recolorizer.init(imgInput);
 
-	SuperpixelGeneratorSuperpixel generator;
-	const vector<SuperpixelCoord> superpixelCoords = generator.extract(superpixels.imgInput, superpixels.assignments);
-
-	superpixels.loadCoords(superpixelCoords);
-	superpixels.computeNeighborhoods();
-	superpixels.computeNeighborhoodWeights();
-
+	const Bitmap result = recolorizer.recolor(imgEdits);
+	LodePNG::save(result, util::replace(appParams().inputImage, ".png", "-result.png"));
 }

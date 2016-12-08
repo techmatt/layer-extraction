@@ -1,4 +1,15 @@
 
+struct Recolorizer
+{
+	void init(const Bitmap &_imgInput);
+
+	Bitmap recolor(const Bitmap &imgEdits);
+	Bitmap makeFinalRender(const vector<vec3f> &newSuperpixelColors);
+
+	ImageSuperpixels superpixels;
+	Bitmap imgInput;
+};
+
 /*struct SuperpixelQueueEntry
 {
     SuperpixelQueueEntry(SuperpixelNeighborhood &_n, double _shortestDist)
@@ -15,7 +26,7 @@ __forceinline bool operator < (const SuperpixelQueueEntry &a, const SuperpixelQu
     return (a.shortestDist > b.shortestDist);
 }*/
 
-class Recolorizer
+/*class Recolorizer
 {
 public:
     void Init(const Bitmap &bmp);
@@ -42,4 +53,4 @@ private:
 
     vector<double> weightMatrixDiagonal;
     vector<Eigen::Triplet<double> > weightMatrixTriplets;
-};
+};*/

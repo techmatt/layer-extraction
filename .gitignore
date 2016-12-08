@@ -56,3 +56,5 @@
 /interactiveRecoloring/*.db
 /interactiveRecoloring/examples
 /interactiveRecoloring/viz
+/interactiveRecoloring/recolorizer - Copy.cpp
+/interactiveRecoloring/recolorizer - Copy.h
