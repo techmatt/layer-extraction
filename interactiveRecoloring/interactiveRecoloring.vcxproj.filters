@@ -16,6 +16,15 @@
     <ClInclude Include="colorUtil.h">
       <Filter>recoloring</Filter>
     </ClInclude>
+    <ClInclude Include="recolorizer.h">
+      <Filter>recoloring</Filter>
+    </ClInclude>
+    <ClInclude Include="superpixelGenerator.h">
+      <Filter>recoloring</Filter>
+    </ClInclude>
+    <ClInclude Include="imageSuperpixels.h">
+      <Filter>recoloring</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="app.cpp">
@@ -27,6 +36,15 @@
     <ClCompile Include="mLibSource.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="recolorizer.cpp">
+      <Filter>recoloring</Filter>
+    </ClCompile>
+    <ClCompile Include="superpixelGenerator.cpp">
+      <Filter>recoloring</Filter>
+    </ClCompile>
+    <ClCompile Include="imageSuperpixels.cpp">
+      <Filter>recoloring</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="core">
@@ -35,5 +53,8 @@
     <Filter Include="recoloring">
       <UniqueIdentifier>{27758f9e-cfa1-44e3-b45b-25d4dcfa201d}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="recoloringParams.txt" />
   </ItemGroup>
 </Project>

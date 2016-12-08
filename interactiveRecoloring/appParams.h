@@ -8,12 +8,50 @@ struct AppParameters
 {
 	AppParameters()
 	{
-		debugDir = R"(TODO)";
-		dataDir = R"(C:\Code\text2scene\data\SEL\)";
+		ParameterFile file("recoloringParams.txt");
+
+		//
+		// directories
+		//
+		file.readParameter("debugDir", debugDir);
+		file.readParameter("inputImage", inputImage);
+		file.readParameter("editImage", editImage);
+
+		//
+		// superpixel constants
+		//
+		file.readParameter("superpixelIterations", superpixelIterations);
+		file.readParameter("superpixelCount", superpixelCount);
+
+		file.readParameter("spatialToColorScale", spatialToColorScale);
+		file.readParameter("pixelNeighborCount", pixelNeighborCount);
+		file.readParameter("superpixelNeighborCount", superpixelNeighborCount);
+		file.readParameter("periodicBasisCount", periodicBasisCount);
+
+		file.readParameter("stasisWeight", stasisWeight);
+		file.readParameter("editWeight", editWeight);
+		file.readParameter("regularizationWeight", regularizationWeight);
+
+		file.readParameter("neighborhoodRegularizationWeight", neighborhoodRegularizationWeight);
 	}
 
 	string debugDir;
-	string dataDir;
+
+	string inputImage, editImage;
+
+	int superpixelIterations;
+	int superpixelCount;
+
+	float spatialToColorScale;
+	int pixelNeighborCount;
+	int superpixelNeighborCount;
+	int periodicBasisCount;
+
+	float stasisWeight;
+	float editWeight;
+	float regularizationWeight;
+
+	double neighborhoodRegularizationWeight;
 };
 
 extern AppParameters* g_appParams;

@@ -50,3 +50,9 @@
 /LocallyLinearEmbedding/ipch/BASECODEDLL-263ff8d7/*.ipch
 /LIghtingExplorer/lighting-backend/x64/Debug/lighting-backend.tlog/unsuccessfulbuild
 /interactiveRecoloring/.vs
+/interactiveRecoloring/ipch
+/interactiveRecoloring/x64
+/interactiveRecoloring/*.opendb
+/interactiveRecoloring/*.db
+/interactiveRecoloring/examples
+/interactiveRecoloring/viz
