@@ -13,23 +13,8 @@
     <ClInclude Include="mLibInclude.h">
       <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="parsedSentence.h">
-      <Filter>SEL</Filter>
-    </ClInclude>
-    <ClInclude Include="patternMatcher.h">
-      <Filter>SEL</Filter>
-    </ClInclude>
-    <ClInclude Include="sceneCommand.h">
-      <Filter>SEL</Filter>
-    </ClInclude>
-    <ClInclude Include="sceneEntity.h">
-      <Filter>SEL</Filter>
-    </ClInclude>
-    <ClInclude Include="SELParser.h">
-      <Filter>SEL</Filter>
-    </ClInclude>
-    <ClInclude Include="SELUtil.h">
-      <Filter>SEL</Filter>
+    <ClInclude Include="colorUtil.h">
+      <Filter>recoloring</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -42,42 +27,13 @@
     <ClCompile Include="mLibSource.cpp">
       <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="parsedSentence.cpp">
-      <Filter>SEL</Filter>
-    </ClCompile>
-    <ClCompile Include="SELParser.cpp">
-      <Filter>SEL</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\data\SEL\spatialNouns.txt">
-      <Filter>data</Filter>
-    </Text>
-    <Text Include="..\data\SEL\abstractNouns.txt">
-      <Filter>data</Filter>
-    </Text>
-    <Text Include="..\data\SEL\countingAdjectives.txt">
-      <Filter>data</Filter>
-    </Text>
-    <Text Include="known-failures.txt">
-      <Filter>notes</Filter>
-    </Text>
-    <Text Include="dependency-notes.txt">
-      <Filter>notes</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="data">
-      <UniqueIdentifier>{7cae1a07-c831-4d17-9fd0-aa7f8078563d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="core">
-      <UniqueIdentifier>{37e88e3b-b785-4d08-9d7a-cfca1c3fcca5}</UniqueIdentifier>
+      <UniqueIdentifier>{987da47a-0c37-4e43-b305-068854816271}</UniqueIdentifier>
     </Filter>
-    <Filter Include="notes">
-      <UniqueIdentifier>{88328fff-06bc-430c-aeee-4fbfecdd63f3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SEL">
-      <UniqueIdentifier>{5f44275c-4bcf-4ab3-a18a-bf20aa75ccef}</UniqueIdentifier>
+    <Filter Include="recoloring">
+      <UniqueIdentifier>{27758f9e-cfa1-44e3-b45b-25d4dcfa201d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

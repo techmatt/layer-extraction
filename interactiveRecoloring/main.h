@@ -7,13 +7,7 @@
 
 #include "appParams.h"
 
-#include "SELUtil.h"
-
-#include "sceneEntity.h"
-#include "sceneCommand.h"
-#include "parsedSentence.h"
-#include "PatternMatcher.h"
-#include "SELParser.h"
+#include "colorUtil.h"
 
 #include "app.h"
 
