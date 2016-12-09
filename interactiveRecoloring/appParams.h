@@ -13,7 +13,7 @@ struct AppParameters
 		//
 		// directories
 		//
-		file.readParameter("debugDir", debugDir);
+		file.readParameter("vizDir", vizDir);
 		file.readParameter("inputImage", inputImage);
 		file.readParameter("editImage", editImage);
 
@@ -35,7 +35,7 @@ struct AppParameters
 		file.readParameter("neighborhoodRegularizationWeight", neighborhoodRegularizationWeight);
 	}
 
-	string debugDir;
+	string vizDir;
 
 	string inputImage, editImage;
 

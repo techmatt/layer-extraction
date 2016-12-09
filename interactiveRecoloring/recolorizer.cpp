@@ -10,22 +10,70 @@ void Recolorizer::init(const Bitmap &_imgInput)
 	superpixels.loadCoords(superpixelCoords);
 	superpixels.computeNeighborhoods(imgInput);
 	superpixels.computeNeighborhoodWeights(imgInput);
+
+	computeManifoldMatrix();
 }
 
 Bitmap Recolorizer::recolor(const Bitmap &imgEdits)
 {
+	ComponentTimer timer("recoloring image");
+	const size_t n = superpixels.superpixels.size();
+
 	superpixels.loadEdits(imgInput, imgEdits);
 
-	vector<vec3f> newSuperpixelColors(superpixels.superpixels.size());
-	for (auto &p : iterate(newSuperpixelColors))
+	vector<vec3f> targetSuperpixelColors(n);
+	for (auto &p : iterate(targetSuperpixelColors))
 	{
 		p.value = superpixels.superpixels[p.index].targetColor;
 	}
+	LodePNG::save(makeFinalRender(targetSuperpixelColors, true), appParams().vizDir + "targetSuperpixelColors.png");
 
-	return makeFinalRender(newSuperpixelColors);
+	vector<double> newDiagonal = manifoldDiagonal;
+
+	for (const auto &s : iterate(superpixels.superpixels))
+	{
+		newDiagonal[s.index] += s.value.targetColorWeight;
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		manifoldTriplets[i] = Eigen::Triplet<double>(i, i, newDiagonal[i]);
+	}
+
+	cout << "Loading Eigen matrix..." << endl;
+	Eigen::SparseMatrix<double> M(n, n);
+	M.setFromTriplets(manifoldTriplets.begin(), manifoldTriplets.end());
+
+	cout << "Starting cholesky solve..." << endl;
+	//Eigen::SimplicialCholesky< Eigen::SparseMatrix<double> > choleskyFactorization(M);
+	Eigen::SimplicialLDLT< Eigen::SparseMatrix<double> > choleskyFactorization(M);
+	cout << "Cholesky solve done" << endl;
+
+	vector<vec3f> newSuperpixelColors(n);
+	for (int colorChannel = 0; colorChannel < 3; colorChannel++)
+	{
+		ComponentTimer("Linear solve for channel " + to_string(colorChannel));
+
+		Eigen::VectorXd b(n);
+		for (int i = 0; i < n; i++)
+		{
+			b[i] = superpixels.superpixels[i].targetColorWeight * superpixels.superpixels[i].targetColor[colorChannel];
+		}
+
+		const Eigen::VectorXd x = choleskyFactorization.solve(b);
+
+		for (int i = 0; i < n; i++)
+		{
+			newSuperpixelColors[i][colorChannel] = (float)x[i];
+		}
+	}
+
+	LodePNG::save(makeFinalRender(newSuperpixelColors, true), appParams().vizDir + "newSuperpixelColors.png");
+
+	return makeFinalRender(newSuperpixelColors, false);
 }
 
-Bitmap Recolorizer::makeFinalRender(const vector<vec3f>& newSuperpixelColors)
+Bitmap Recolorizer::makeFinalRender(const vector<vec3f>& newSuperpixelColors, bool flat)
 {
 	ComponentTimer timer("Final render");
 
@@ -35,15 +83,63 @@ Bitmap Recolorizer::makeFinalRender(const vector<vec3f>& newSuperpixelColors)
 		const PixelNeighborhood &neighborhood = superpixels.pixelNeighborhoods(p.x, p.y);
 		const size_t k = neighborhood.neighbors.size();
 
-		vec3f sum = vec3f::origin;
-		for (size_t neighborIndex = 0; neighborIndex < k; neighborIndex++)
+		if (flat)
 		{
-			sum += newSuperpixelColors[neighborhood.neighbors[neighborIndex]] * (float)neighborhood.weights[neighborIndex];
+			p.value = colorUtil::toVec4uc(newSuperpixelColors[superpixels.assignments(p.x, p.y)]);
 		}
-		p.value = colorUtil::toVec4uc(sum);
+		else
+		{
+			vec3f sum = vec3f::origin;
+			for (size_t neighborIndex = 0; neighborIndex < k; neighborIndex++)
+			{
+				sum += newSuperpixelColors[neighborhood.neighbors[neighborIndex]] * (float)neighborhood.weights[neighborIndex];
+			}
+			p.value = colorUtil::toVec4uc(sum);
+		}
 	}
 
 	return result;
+}
+
+void Recolorizer::computeManifoldMatrix()
+{
+	ComponentTimer timer("Computing manifold matrix");
+	const size_t n = superpixels.superpixels.size();
+	SparseMatrix<double> M(n, n);
+
+	for (size_t superpixelIndex = 0; superpixelIndex < n; superpixelIndex++)
+	{
+		M(superpixelIndex, superpixelIndex) += 1.0;
+		auto &s = superpixels.superpixels[superpixelIndex];
+		for (size_t neighborIndex = 0; neighborIndex < s.neighborIndices.size(); neighborIndex++)
+		{
+			M((unsigned int)superpixelIndex, s.neighborIndices[neighborIndex]) += -s.neighborEmbeddingWeights[neighborIndex];
+		}
+	}
+
+	cout << "Building M-matrix" << endl;
+	SparseMatrix<double> MFinal = M.transpose() * M;
+
+	cout << "Building triplets" << endl;
+	manifoldDiagonal.resize(n);
+	for (int row = 0; row < n; row++)
+	{
+		manifoldDiagonal[row] = MFinal(row, row);
+		manifoldTriplets.push_back(Eigen::Triplet<double>(row, row, manifoldDiagonal[row]));
+	}
+
+	for (int rowIndex = 0; rowIndex < n; rowIndex++)
+	{
+		const SparseRow<double> &row = MFinal.sparseRow(rowIndex);
+		for (int colIndex = 0; colIndex < row.entries.size(); colIndex++)
+		{
+			auto &e = row.entries[colIndex];
+			if (rowIndex != e.col)
+			{
+				manifoldTriplets.push_back(Eigen::Triplet<double>(rowIndex, e.col, e.val));
+			}
+		}
+	}
 }
 
 #if 0
@@ -53,67 +149,6 @@ void Recolorizer::Init(const Bitmap &bmp)
 	VisualizeNearestNeighbors(bmp);
 
     ComputeWeightMatrix(parameters);
-}
-
-Bitmap Recolorizer::Recolor(const Bitmap &bmp, const vector<PixelConstraint> &targetPixelColors, double lowQuartile, double highQuartile)
-{
-    vector<SuperpixelConstraint> constraints = MapPixelConstraintsToSuperpixelConstraints(targetPixelColors);
-
-    const int superpixelCount = superpixelNeighbors.size();
-
-    struct SuperpixelInfo
-    {
-        SuperpixelInfo() {}
-        SuperpixelInfo(size_t _superpixelIndex, double _dist)
-        {
-            superpixelIndex = _superpixelIndex;
-            dist = _dist;
-        }
-        size_t superpixelIndex;
-        double dist;
-    };
-    vector<SuperpixelInfo> globalDistance(superpixelCount), localDistance(superpixelCount);
-    for(int superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
-    {
-        globalDistance[superpixelIndex] = SuperpixelInfo(superpixelIndex, 20000000000.0);
-    }
-
-    vector<SuperpixelConstraint> superpixelConstraints;
-    vector<vec3f> newSuperpixelColors(superpixelCount);
-    for(int i = 0; i < superpixelCount; i++) newSuperpixelColors[i] = vec3f(superpixelColors[i].color);
-
-    for(const SuperpixelConstraint &c : constraints)
-    {
-        ComputeSourceDistance(bmp, c.index);
-        VisualizeSourceDistance(bmp);
-        for(int superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
-        {
-            localDistance[superpixelIndex] = SuperpixelInfo(superpixelIndex, superpixelNeighbors[superpixelIndex].shortestDist);
-            globalDistance[superpixelIndex].dist = Math::Min(globalDistance[superpixelIndex].dist, superpixelNeighbors[superpixelIndex].shortestDist);
-        }
-
-        localDistance.Sort([](const SuperpixelInfo &a, const SuperpixelInfo &b) { return a.dist < b.dist; });
-
-        for(int i = 0; i < int(superpixelCount * lowQuartile); i++)
-        {
-            vec3f targetColor = c.targetColor;
-            if(RGBColor(targetColor) == RGBColor::Magenta) targetColor = vec3f(superpixelColors[localDistance[i].superpixelIndex].color);
-            superpixelConstraints.push_back(SuperpixelConstraint(localDistance[i].superpixelIndex, targetColor, appParams().userConstraintWeight));
-            newSuperpixelColors[localDistance[i].superpixelIndex] = c.targetColor;
-        }
-    }
-
-    globalDistance.Sort([](const SuperpixelInfo &a, const SuperpixelInfo &b) { return a.dist < b.dist; });
-    
-    for(int i = int(superpixelCount * highQuartile); i < superpixelCount; i++)
-    {
-        superpixelConstraints.push_back(SuperpixelConstraint(globalDistance[i].superpixelIndex, vec3f(superpixelColors[globalDistance[i].superpixelIndex].color), appParams().distantConstraintWeight));
-        newSuperpixelColors[globalDistance[i].superpixelIndex] = vec3f(RGBColor::Magenta);
-    }
-
-    VisualizeSuperpixels(bmp, &newSuperpixelColors, "superpixelsConstraints");
-
-    return Recolor(bmp, superpixelConstraints);
 }
 
 Bitmap Recolorizer::Recolor(const Bitmap &bmp, const vector<SuperpixelConstraint> &superpixelConstraints)
@@ -180,70 +215,6 @@ Bitmap Recolorizer::Recolor(const Bitmap &bmp, const vector<SuperpixelConstraint
     return Recolor(bmp, newSuperpixelColors);
 }
 
-Bitmap Recolorizer::Recolor(const Bitmap &bmp, const vector<vec3f> &newSuperpixelColors) const
-{
-    ComponentTimer timer("Final recoloring");
-
-    Bitmap result = bmp;
-
-    for(size_t y = 0; y < bmp.getDimY(); y++)
-    {
-        for(size_t x = 0; x < bmp.getDimX(); x++)
-        {
-            const PixelNeighborhood &curPixel = pixelNeighborhoods(y, x);
-            const size_t k = curPixel.indices.size();
-
-            vec3f sum = vec3f::origin;
-            for(size_t neighborIndex = 0; neighborIndex < k; neighborIndex++)
-            {
-                sum += vec3f(newSuperpixelColors[curPixel.indices[neighborIndex]]) * (float)curPixel.weights[neighborIndex];
-            }
-            result[y][x] = RGBColor(sum);
-        }
-    }
-    return result;
-}
-
-void Recolorizer::ComputeWeightMatrix(const AppParameters &parameters)
-{
-    ComponentTimer timer("Computing weight matrix");
-    const size_t n = superpixelNeighbors.size();
-    SparseMatrix<double> W(n, n);
-
-    for(size_t superpixelIndex = 0; superpixelIndex < n; superpixelIndex++)
-    {
-        W.PushDiagonalElement(superpixelIndex, 1.0);
-        const SuperpixelNeighborhood &neighborhood = superpixelNeighbors[superpixelIndex];
-        for(size_t neighborIndex = 0; neighborIndex < neighborhood.indices.size(); neighborIndex++)
-        {
-            W.PushElement(superpixelIndex, neighborhood.indices[neighborIndex], -neighborhood.embeddingWeights[neighborIndex]);
-        }
-    }
-
-    Console::WriteLine("Building W-matrix");
-    SparseMatrix<double> WMatrix = W.Transpose() * W;
-
-    Console::WriteLine("Building triplets");
-    weightMatrixDiagonal.Allocate(n);
-    for(size_t rowIndex = 0; rowIndex < n; rowIndex++)
-    {
-        weightMatrixDiagonal[rowIndex] = WMatrix.GetElement(rowIndex, rowIndex);
-        weightMatrixTriplets.push_back(Eigen::Triplet<double>(rowIndex, rowIndex, WMatrix.GetElement(rowIndex, rowIndex)));
-    }
-
-    for(size_t rowIndex = 0; rowIndex < n; rowIndex++)
-    {
-        const SparseRow<double> &row = WMatrix.Rows()[rowIndex];
-        for(size_t colIndex = 0; colIndex < row.Data.size(); colIndex++)
-        {
-            if(rowIndex != row.Data[colIndex].Col)
-            {
-                weightMatrixTriplets.push_back(Eigen::Triplet<double>(rowIndex, row.Data[colIndex].Col, row.Data[colIndex].Entry));
-            }
-        }
-    }
-}
-
 void Recolorizer::TestNeighborWeights(const Bitmap &bmp) const
 {
     ComponentTimer timer("Testing neighborhood weights");
@@ -265,45 +236,6 @@ void Recolorizer::TestNeighborWeights(const Bitmap &bmp) const
             Console::WriteLine("e=" + string(error));
         }
     }
-}
-
-vector<double> Recolorizer::ComputeWeights(const vector<size_t> &indices, const float *pixelFeatures)
-{
-    //
-    // Remember that for forming linear combinations, we consider only the color terms (3 dimensions) and not the spatial ones!
-    //
-
-    const size_t k = indices.size();
-    DenseMatrix<double> z(k, 3);
-    for(size_t neighborIndex = 0; neighborIndex < k; neighborIndex++)
-    {
-        const SuperpixelCoord &neighbor = superpixelColors[indices[neighborIndex]];
-        for(size_t dimensionIndex = 0; dimensionIndex < 3; dimensionIndex++)
-        {
-            z(neighborIndex, dimensionIndex) = neighbor.features[dimensionIndex] - pixelFeatures[dimensionIndex];
-        }
-    }
-
-    DenseMatrix<double> G = z * z.Transpose();
-
-    //
-    // Add weight regularization term
-    //
-    for(size_t neighborIndex = 0; neighborIndex < k; neighborIndex++)
-    {
-        G(neighborIndex, neighborIndex) += appParams().weightRegularizationTerm;
-    }
-
-    G.InvertInPlace();
-
-    vector<double> columnVector(k, 1.0);
-    vector<double> result;
-
-    DenseMatrix<double>::Multiply(result, G, columnVector);
-
-    result.Scale(1.0 / result.Sum());
-
-    return result;
 }
 
 void Recolorizer::ComputeSourceDistance(const Bitmap &bmp, size_t sourceSuperpixelIndex)
@@ -402,4 +334,66 @@ void Recolorizer::VisualizeNearestNeighbors(const Bitmap &bmp) const
         result.SavePNG("../Results/pixel" + string(debugPixelIndex) + ".png");
     }
 }
+
+Bitmap Recolorizer::Recolor(const Bitmap &bmp, const vector<PixelConstraint> &targetPixelColors, double lowQuartile, double highQuartile)
+{
+	vector<SuperpixelConstraint> constraints = MapPixelConstraintsToSuperpixelConstraints(targetPixelColors);
+
+	const int superpixelCount = superpixelNeighbors.size();
+
+	struct SuperpixelInfo
+	{
+		SuperpixelInfo() {}
+		SuperpixelInfo(size_t _superpixelIndex, double _dist)
+		{
+			superpixelIndex = _superpixelIndex;
+			dist = _dist;
+		}
+		size_t superpixelIndex;
+		double dist;
+	};
+	vector<SuperpixelInfo> globalDistance(superpixelCount), localDistance(superpixelCount);
+	for (int superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+	{
+		globalDistance[superpixelIndex] = SuperpixelInfo(superpixelIndex, 20000000000.0);
+	}
+
+	vector<SuperpixelConstraint> superpixelConstraints;
+	vector<vec3f> newSuperpixelColors(superpixelCount);
+	for (int i = 0; i < superpixelCount; i++) newSuperpixelColors[i] = vec3f(superpixelColors[i].color);
+
+	for (const SuperpixelConstraint &c : constraints)
+	{
+		ComputeSourceDistance(bmp, c.index);
+		VisualizeSourceDistance(bmp);
+		for (int superpixelIndex = 0; superpixelIndex < superpixelCount; superpixelIndex++)
+		{
+			localDistance[superpixelIndex] = SuperpixelInfo(superpixelIndex, superpixelNeighbors[superpixelIndex].shortestDist);
+			globalDistance[superpixelIndex].dist = Math::Min(globalDistance[superpixelIndex].dist, superpixelNeighbors[superpixelIndex].shortestDist);
+		}
+
+		localDistance.Sort([](const SuperpixelInfo &a, const SuperpixelInfo &b) { return a.dist < b.dist; });
+
+		for (int i = 0; i < int(superpixelCount * lowQuartile); i++)
+		{
+			vec3f targetColor = c.targetColor;
+			if (RGBColor(targetColor) == RGBColor::Magenta) targetColor = vec3f(superpixelColors[localDistance[i].superpixelIndex].color);
+			superpixelConstraints.push_back(SuperpixelConstraint(localDistance[i].superpixelIndex, targetColor, appParams().userConstraintWeight));
+			newSuperpixelColors[localDistance[i].superpixelIndex] = c.targetColor;
+		}
+	}
+
+	globalDistance.Sort([](const SuperpixelInfo &a, const SuperpixelInfo &b) { return a.dist < b.dist; });
+
+	for (int i = int(superpixelCount * highQuartile); i < superpixelCount; i++)
+	{
+		superpixelConstraints.push_back(SuperpixelConstraint(globalDistance[i].superpixelIndex, vec3f(superpixelColors[globalDistance[i].superpixelIndex].color), appParams().distantConstraintWeight));
+		newSuperpixelColors[globalDistance[i].superpixelIndex] = vec3f(RGBColor::Magenta);
+	}
+
+	VisualizeSuperpixels(bmp, &newSuperpixelColors, "superpixelsConstraints");
+
+	return Recolor(bmp, superpixelConstraints);
+}
+
 #endif

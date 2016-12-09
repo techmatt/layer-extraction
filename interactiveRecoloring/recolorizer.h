@@ -4,10 +4,15 @@ struct Recolorizer
 	void init(const Bitmap &_imgInput);
 
 	Bitmap recolor(const Bitmap &imgEdits);
-	Bitmap makeFinalRender(const vector<vec3f> &newSuperpixelColors);
+	Bitmap makeFinalRender(const vector<vec3f> &newSuperpixelColors, bool flat);
+
+	void computeManifoldMatrix();
 
 	ImageSuperpixels superpixels;
 	Bitmap imgInput;
+
+	vector< Eigen::Triplet<double> > manifoldTriplets;
+	vector<double> manifoldDiagonal;
 };
 
 /*struct SuperpixelQueueEntry

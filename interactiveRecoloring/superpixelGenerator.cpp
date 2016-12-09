@@ -97,8 +97,8 @@ void SuperpixelGeneratorSuperpixel::extract(const Bitmap &bmp, vector<Superpixel
         const bool dumpIntermediateResults = true;
         if(dumpIntermediateResults)
         {
-			LodePNG::save(drawSuperpixelIDs(), appParams().debugDir + "i" + to_string(iterationIndex) + "-IDs.png");
-			LodePNG::save(drawSuperpixelColors(), appParams().debugDir + "i" + to_string(iterationIndex) + "-colors.png");
+			LodePNG::save(drawSuperpixelIDs(), appParams().vizDir + "i" + to_string(iterationIndex) + "-IDs.png");
+			LodePNG::save(drawSuperpixelColors(), appParams().vizDir + "i" + to_string(iterationIndex) + "-colors.png");
         }
 
         recenterSuperpixels(bmp);
