@@ -7,6 +7,12 @@ void Recolorizer::init(const Bitmap &_imgInput)
 	SuperpixelGeneratorSuperpixel generator;
 	const vector<SuperpixelCoord> superpixelCoords = generator.extract(imgInput, superpixels.assignments);
 
+	for (auto &a : superpixels.assignments)
+	{
+		if (a.value == -1)
+			cout << "ERROR: Unassigned pixel" << endl;
+	}
+
 	superpixels.loadCoords(superpixelCoords);
 	superpixels.computeNeighborhoods(imgInput);
 	superpixels.computeNeighborhoodWeights(imgInput);
@@ -25,6 +31,10 @@ Bitmap Recolorizer::recolor(const Bitmap &imgEdits)
 	for (auto &p : iterate(targetSuperpixelColors))
 	{
 		p.value = superpixels.superpixels[p.index].targetColor;
+		if (!p.value.isValid() || !p.value.isFinite())
+		{
+			cout << "ERROR: Invalid target color!" << endl;
+		}
 	}
 	LodePNG::save(makeFinalRender(targetSuperpixelColors, true), appParams().vizDir + "targetSuperpixelColors.png");
 

@@ -1,19 +1,25 @@
 
 vizDir=C:\Code\layer-extraction\interactiveRecoloring\viz\
 
-inputImage=C:\Code\layer-extraction\interactiveRecoloring\examples\birdSmall.png
-editImage=C:\Code\layer-extraction\interactiveRecoloring\examples\birdSmallEditA.png
+inputImage=C:\Code\layer-extraction\interactiveRecoloring\examples\abstract.png
+editImage=C:\Code\layer-extraction\interactiveRecoloring\examples\abstractEditB.png
+
+#inputImage=C:\Code\layer-extraction\interactiveRecoloring\examples\birdTiny.png
+#editImage=C:\Code\layer-extraction\interactiveRecoloring\examples\birdTinyEditA.png
+
+#inputImage=C:\Code\layer-extraction\interactiveRecoloring\examples\birdSmall.png
+#editImage=C:\Code\layer-extraction\interactiveRecoloring\examples\birdSmallEditA.png
 
 superpixelIterations=5
-superpixelCount=2000
+superpixelCount=1000
 
 spatialToColorScale=0.5
-pixelNeighborCount=10
+pixelNeighborCount=30
 superpixelNeighborCount=30
 periodicBasisCount=3
 
 stasisWeight=0.00001
 editWeight=0.00001
-regularizationWeight=0.0000000000001
+regularizationWeight=0.0
 
 neighborhoodRegularizationWeight=0.0000001

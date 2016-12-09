@@ -5,12 +5,32 @@ struct Superpixel
 	{
 		targetColorWeight = 0.0f;
 		targetColor = vec3f::origin;
+		
+		constraintType = ConstraintType::Regularization;
+		targetColorWeight = appParams().regularizationWeight;
 	}
 
-	void addColorTarget(const vec3f &c, float weight)
+	enum class ConstraintType
+	{
+		Regularization,
+		Stasis,
+		Edit,
+	};
+
+	/*void addColorTarget(const vec3f &c, float weight)
 	{
 		targetColorWeight += weight;
 		targetColor += c * weight;
+	}*/
+
+	void recordConstraint(ConstraintType type, const vec3f &_targetColor)
+	{
+		if ((int)type <= (int)constraintType) return;
+		constraintType = type;
+		
+		targetColor = _targetColor;
+		if (constraintType == ConstraintType::Stasis) targetColorWeight = appParams().stasisWeight;
+		if (constraintType == ConstraintType::Edit) targetColorWeight = appParams().editWeight;
 	}
 
 	SuperpixelCoord coord;
@@ -20,6 +40,7 @@ struct Superpixel
 	//
 	float targetColorWeight;
 	vec3f targetColor;
+	ConstraintType constraintType;
 
 	//
 	// neighboring superpixel data

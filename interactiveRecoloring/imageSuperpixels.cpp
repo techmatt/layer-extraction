@@ -6,27 +6,32 @@ void ImageSuperpixels::loadEdits(const Bitmap &imgInput, const Bitmap & imgEdit)
 	for (auto &p : imgEdit)
 	{
 		const vec4uc inputColor = imgInput(p.x, p.y);
-
+		//cout << superpixels.size() << "," << assignments(p.x, p.y) << endl;
 		Superpixel &super = superpixels[assignments(p.x, p.y)];
 
 		if (p.value.getVec3() == vec3uc(255, 0, 255))
 		{
-			super.addColorTarget(colorUtil::toVec3f(inputColor), appParams().stasisWeight);
+			//super.addColorTarget(colorUtil::toVec3f(inputColor), appParams().stasisWeight);
+			super.recordConstraint(Superpixel::ConstraintType::Stasis, colorUtil::toVec3f(inputColor));
 		}
 		else if (p.value.getVec3() != inputColor.getVec3())
 		{
-			super.addColorTarget(colorUtil::toVec3f(p.value), appParams().editWeight);
+			//super.addColorTarget(colorUtil::toVec3f(p.value), appParams().editWeight);
+			super.recordConstraint(Superpixel::ConstraintType::Edit, colorUtil::toVec3f(p.value));
 		}
 		else
 		{
-			super.addColorTarget(colorUtil::toVec3f(inputColor), appParams().regularizationWeight);
+			//super.addColorTarget(colorUtil::toVec3f(inputColor), appParams().regularizationWeight);
 		}
 	}
 
-	for (auto &s : superpixels)
+	/*for (auto &s : superpixels)
 	{
-		s.targetColor /= s.targetColorWeight;
-	}
+		if (s.targetColorWeight == 0.0)
+			s.targetColor = vec3f::origin;
+		else
+			s.targetColor /= s.targetColorWeight;
+	}*/
 }
 
 void ImageSuperpixels::computeNeighborhoods(const Bitmap &imgInput)
