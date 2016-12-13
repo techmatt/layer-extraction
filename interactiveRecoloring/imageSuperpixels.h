@@ -13,7 +13,8 @@ struct Superpixel
 	enum class ConstraintType
 	{
 		Regularization,
-		Stasis,
+		PassiveStasis,
+		ActiveStasis,
 		Edit,
 	};
 
@@ -29,7 +30,8 @@ struct Superpixel
 		constraintType = type;
 		
 		targetColor = _targetColor;
-		if (constraintType == ConstraintType::Stasis) targetColorWeight = appParams().stasisWeight;
+		if (constraintType == ConstraintType::PassiveStasis) targetColorWeight = appParams().passiveStasisWeight;
+		if (constraintType == ConstraintType::ActiveStasis) targetColorWeight = appParams().activeStasisWeight;
 		if (constraintType == ConstraintType::Edit) targetColorWeight = appParams().editWeight;
 	}
 
@@ -49,10 +51,25 @@ struct Superpixel
 	vector<double> neighborEmbeddingWeights;
 	vector<double> neighborSimilarityWeights;
 
-	//double shortestDist;
-	//bool visited;
-
+	float constraintDist;
+	bool visited;
 };
+
+struct SuperpixelQueueEntry
+{
+	SuperpixelQueueEntry(Superpixel &_s, double _constraintDist)
+	{
+		s = &_s;
+		constraintDist = _constraintDist;
+	}
+	Superpixel *s;
+	double constraintDist;
+};
+
+inline bool operator < (const SuperpixelQueueEntry &a, const SuperpixelQueueEntry &b)
+{
+	return (a.constraintDist > b.constraintDist);
+}
 
 struct PixelNeighborhood
 {
@@ -61,6 +78,36 @@ struct PixelNeighborhood
 
 	vector<double> weights;
 };
+
+template<class BinaryDataBuffer, class BinaryDataCompressor>
+inline BinaryDataStream<BinaryDataBuffer, BinaryDataCompressor>& operator<<(BinaryDataStream<BinaryDataBuffer, BinaryDataCompressor>& s, const Superpixel &n) {
+	s.writeData(n.coord);
+	s << n.targetColorWeight << n.targetColor;
+	s.writeData(n.constraintType);
+	s << n.neighborIndices << n.neighborEmbeddingWeights << n.neighborSimilarityWeights;
+	return s;
+}
+
+template<class BinaryDataBuffer, class BinaryDataCompressor>
+inline BinaryDataStream<BinaryDataBuffer, BinaryDataCompressor>& operator >> (BinaryDataStream<BinaryDataBuffer, BinaryDataCompressor>& s, Superpixel &n) {
+	s.readData(n.coord);
+	s >> n.targetColorWeight >> n.targetColor;
+	s.readData(n.constraintType);
+	s >> n.neighborIndices >> n.neighborEmbeddingWeights >> n.neighborSimilarityWeights;
+	return s;
+}
+
+template<class BinaryDataBuffer, class BinaryDataCompressor>
+inline BinaryDataStream<BinaryDataBuffer, BinaryDataCompressor>& operator<<(BinaryDataStream<BinaryDataBuffer, BinaryDataCompressor>& s, const PixelNeighborhood &n) {
+	s << n.neighbors << n.weights;
+	return s;
+}
+
+template<class BinaryDataBuffer, class BinaryDataCompressor>
+inline BinaryDataStream<BinaryDataBuffer, BinaryDataCompressor>& operator >> (BinaryDataStream<BinaryDataBuffer, BinaryDataCompressor>& s, PixelNeighborhood &n) {
+	s >> n.neighbors >> n.weights;
+	return s;
+}
 
 struct ImageSuperpixels
 {
@@ -77,10 +124,29 @@ struct ImageSuperpixels
 	void computeNeighborhoodWeights(const Bitmap &imgInput);
 
 	vector<double> computeWeights(const vector<unsigned int>& indices, const float * pixelFeatures);
+
+	void computeConstraintDists();
 	
 	vector<Superpixel> superpixels;
 	Grid2<int> assignments;
 
 	Grid2<PixelNeighborhood> pixelNeighborhoods;
 
+	float maxConstraintDist;
+
+	void saveToFile(const string &filename) const
+	{
+		BinaryDataStreamFile out(filename, true);
+		out << superpixels << assignments << pixelNeighborhoods;
+		out.closeStream();
+	}
+
+	void loadFromFile(const string &filename)
+	{
+		BinaryDataStreamFile in(filename, false);
+		in >> superpixels;
+		in >> assignments;
+		in >> pixelNeighborhoods;
+		in.closeStream();
+	}
 };

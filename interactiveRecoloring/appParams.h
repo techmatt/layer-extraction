@@ -28,7 +28,9 @@ struct AppParameters
 		file.readParameter("superpixelNeighborCount", superpixelNeighborCount);
 		file.readParameter("periodicBasisCount", periodicBasisCount);
 
-		file.readParameter("stasisWeight", stasisWeight);
+		file.readParameter("passiveStasisWeight", passiveStasisWeight);
+		file.readParameter("passiveStasisQuertile", passiveStasisQuertile);
+		file.readParameter("activeStasisWeight", activeStasisWeight);
 		file.readParameter("editWeight", editWeight);
 		file.readParameter("regularizationWeight", regularizationWeight);
 
@@ -47,9 +49,11 @@ struct AppParameters
 	int superpixelNeighborCount;
 	int periodicBasisCount;
 
-	float stasisWeight;
+	float passiveStasisWeight;
+	float activeStasisWeight;
 	float editWeight;
 	float regularizationWeight;
+	float passiveStasisQuertile;
 
 	double neighborhoodRegularizationWeight;
 };

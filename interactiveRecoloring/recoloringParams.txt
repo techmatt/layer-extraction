@@ -18,8 +18,10 @@ pixelNeighborCount=30
 superpixelNeighborCount=30
 periodicBasisCount=3
 
-stasisWeight=0.00001
+activeStasisWeight=0.00001
 editWeight=0.00001
+passiveStasisWeight=0.000002
+passiveStasisQuertile=0.05
 regularizationWeight=0.0
 
 neighborhoodRegularizationWeight=0.0000001

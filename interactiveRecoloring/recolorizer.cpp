@@ -4,18 +4,27 @@ void Recolorizer::init(const Bitmap &_imgInput)
 {
 	imgInput = _imgInput;
 	
-	SuperpixelGeneratorSuperpixel generator;
-	const vector<SuperpixelCoord> superpixelCoords = generator.extract(imgInput, superpixels.assignments);
-
-	for (auto &a : superpixels.assignments)
+	const string cacheFilename = util::replace(appParams().inputImage, ".png", ".cache");
+	if (util::fileExists(cacheFilename))
 	{
-		if (a.value == -1)
-			cout << "ERROR: Unassigned pixel" << endl;
+		superpixels.loadFromFile(cacheFilename);
 	}
+	else
+	{
+		SuperpixelGeneratorSuperpixel generator;
+		const vector<SuperpixelCoord> superpixelCoords = generator.extract(imgInput, superpixels.assignments);
 
-	superpixels.loadCoords(superpixelCoords);
-	superpixels.computeNeighborhoods(imgInput);
-	superpixels.computeNeighborhoodWeights(imgInput);
+		for (auto &a : superpixels.assignments)
+		{
+			if (a.value == -1)
+				cout << "ERROR: Unassigned pixel" << endl;
+		}
+
+		superpixels.loadCoords(superpixelCoords);
+		superpixels.computeNeighborhoods(imgInput);
+		superpixels.computeNeighborhoodWeights(imgInput);
+		superpixels.saveToFile(cacheFilename);
+	}
 
 	computeManifoldMatrix();
 }
@@ -28,15 +37,29 @@ Bitmap Recolorizer::recolor(const Bitmap &imgEdits)
 	superpixels.loadEdits(imgInput, imgEdits);
 
 	vector<vec3f> targetSuperpixelColors(n);
-	for (auto &p : iterate(targetSuperpixelColors))
+	vector<vec3f> targetSuperpixelWeightColors(n);
+	vector<vec3f> superpixelConstraintDist(n);
+	for (const auto &s : iterate(superpixels.superpixels))
 	{
-		p.value = superpixels.superpixels[p.index].targetColor;
-		if (!p.value.isValid() || !p.value.isFinite())
+		targetSuperpixelColors[s.index] = s.value.targetColor;
+
+		const float v = s.value.targetColorWeight / appParams().editWeight;
+		vec3f &weightColor = targetSuperpixelWeightColors[s.index];
+		if(s.value.constraintType == Superpixel::ConstraintType::PassiveStasis) weightColor = vec3f(v, 0, 0);
+		if(s.value.constraintType == Superpixel::ConstraintType::ActiveStasis) weightColor = vec3f(v, 0, 0);
+		if(s.value.constraintType == Superpixel::ConstraintType::Edit) weightColor = vec3f(v, v, v);
+
+		const float d = s.value.constraintDist / superpixels.maxConstraintDist;
+		superpixelConstraintDist[s.index] = vec3f(d, d, d);
+
+		if (!targetSuperpixelColors[s.index].isValid() || !targetSuperpixelColors[s.index].isFinite())
 		{
 			cout << "ERROR: Invalid target color!" << endl;
 		}
 	}
 	LodePNG::save(makeFinalRender(targetSuperpixelColors, true), appParams().vizDir + "targetSuperpixelColors.png");
+	LodePNG::save(makeFinalRender(targetSuperpixelWeightColors, true), appParams().vizDir + "targetSuperpixelColorWeights.png");
+	LodePNG::save(makeFinalRender(superpixelConstraintDist, true), appParams().vizDir + "constraintDist.png");
 
 	vector<double> newDiagonal = manifoldDiagonal;
 
@@ -159,70 +182,6 @@ void Recolorizer::Init(const Bitmap &bmp)
 	VisualizeNearestNeighbors(bmp);
 
     ComputeWeightMatrix(parameters);
-}
-
-Bitmap Recolorizer::Recolor(const Bitmap &bmp, const vector<SuperpixelConstraint> &superpixelConstraints)
-{
-    ComponentTimer timer("Recoloring");
-
-    const size_t n = superpixelColors.size();
-
-    vector<double> newDiagonal = weightMatrixDiagonal;
-
-    for(const SuperpixelConstraint &c : superpixelConstraints)
-    {
-        newDiagonal[c.index] += c.weight;
-    }
-    for(size_t i = 0; i < n; i++)
-    {
-        newDiagonal[i] += appParams().colorInertiaWeight;
-    }
-    for(size_t i = 0; i < n; i++)
-    {
-        weightMatrixTriplets[i] = Eigen::Triplet<double>(i, i, newDiagonal[i]);
-    }
-
-    Console::WriteLine("Loading Eigen matrix...");
-    Eigen::SparseMatrix<double> M(n, n);
-    M.setFromTriplets(weightMatrixTriplets.begin(), weightMatrixTriplets.end());
-
-    //
-    // Don't delete the triplets I need those!
-    // Except that they are huge and you will run out of memory when cholesky factoring.
-    //
-    //weightMatrixTriplets.clear();
-    
-    Console::WriteLine("Starting cholesky solve...");
-    //Eigen::SimplicialCholesky< Eigen::SparseMatrix<double> > choleskyFactorization(M);
-    Eigen::SimplicialLDLT< Eigen::SparseMatrix<double> > choleskyFactorization(M);
-    Console::WriteLine("Cholesky solve done");
-
-    vector<vec3f> newSuperpixelColors(n);
-
-    for(size_t featureIndex = 0; featureIndex < 3; featureIndex++)
-    {
-        ComponentTimer("Linear solve " + string(featureIndex));
-        
-        Eigen::VectorXd b(n);
-        for(size_t i = 0; i < n; i++)
-        {
-            b[i] = appParams().colorInertiaWeight * superpixelColors[i].features[featureIndex];
-        }
-        for(const SuperpixelConstraint &c : superpixelConstraints)
-        {
-            b[c.index] += c.weight * c.targetColor[featureIndex];
-        }
-
-        Eigen::VectorXd x = choleskyFactorization.solve(b);
-        
-        for(size_t i = 0; i < n; i++)
-        {
-            newSuperpixelColors[i][featureIndex] = (float)x[i];
-        }
-    }
-
-    VisualizeSuperpixels(bmp, &newSuperpixelColors, "superpixelsRecolored");
-    return Recolor(bmp, newSuperpixelColors);
 }
 
 void Recolorizer::TestNeighborWeights(const Bitmap &bmp) const

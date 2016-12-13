@@ -2,7 +2,7 @@
 struct Recolorizer
 {
 	void init(const Bitmap &_imgInput);
-
+	
 	Bitmap recolor(const Bitmap &imgEdits);
 	Bitmap makeFinalRender(const vector<vec3f> &newSuperpixelColors, bool flat);
 

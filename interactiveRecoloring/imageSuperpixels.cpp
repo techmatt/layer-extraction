@@ -12,7 +12,7 @@ void ImageSuperpixels::loadEdits(const Bitmap &imgInput, const Bitmap & imgEdit)
 		if (p.value.getVec3() == vec3uc(255, 0, 255))
 		{
 			//super.addColorTarget(colorUtil::toVec3f(inputColor), appParams().stasisWeight);
-			super.recordConstraint(Superpixel::ConstraintType::Stasis, colorUtil::toVec3f(inputColor));
+			super.recordConstraint(Superpixel::ConstraintType::ActiveStasis, super.coord.color);
 		}
 		else if (p.value.getVec3() != inputColor.getVec3())
 		{
@@ -32,6 +32,36 @@ void ImageSuperpixels::loadEdits(const Bitmap &imgInput, const Bitmap & imgEdit)
 		else
 			s.targetColor /= s.targetColorWeight;
 	}*/
+
+	computeConstraintDists();
+
+	vector<float> dists;
+	for (auto &s : superpixels)
+	{
+		cout << s.constraintDist << endl;
+		dists.push_back(s.constraintDist);
+	}
+	sort(dists.begin(), dists.end());
+	maxConstraintDist = dists.back();
+	const float passiveThreshold = dists[math::round((1.0f - appParams().passiveStasisQuertile) * dists.size())];
+
+	int editCount = 0;
+	int activeStasisCount = 0;
+	int passiveStasisCount = 0;
+	for (auto &s : superpixels)
+	{
+		if (s.constraintDist >= passiveThreshold)
+		{
+			s.recordConstraint(Superpixel::ConstraintType::PassiveStasis, s.coord.color);
+		}
+		if (s.constraintType == Superpixel::ConstraintType::Edit) editCount++;
+		if (s.constraintType == Superpixel::ConstraintType::ActiveStasis) activeStasisCount++;
+		if (s.constraintType == Superpixel::ConstraintType::PassiveStasis) passiveStasisCount++;
+	}
+	cout << "edit superpixels: " << editCount << endl;
+	cout << "active stasis superpixels: " << activeStasisCount << endl;
+	cout << "passive stasis superpixels: " << passiveStasisCount << endl;
+	cout << "total superpixels: " << superpixels.size() << endl;
 }
 
 void ImageSuperpixels::computeNeighborhoods(const Bitmap &imgInput)
@@ -67,7 +97,6 @@ void ImageSuperpixels::computeNeighborhoods(const Bitmap &imgInput)
 			s.value.neighborIndices.pop_back();
 		}
 	}
-
 }
 
 void ImageSuperpixels::computeNeighborhoodWeights(const Bitmap &imgInput)
@@ -135,4 +164,54 @@ vector<double> ImageSuperpixels::computeWeights(const vector<unsigned int> &indi
 		v *= scale;
 	
 	return result;
+}
+
+void ImageSuperpixels::computeConstraintDists()
+{
+	priority_queue<SuperpixelQueueEntry> queue;
+
+	for (Superpixel &s : superpixels)
+	{
+		if (s.constraintType == Superpixel::ConstraintType::Edit)
+		{
+			queue.push(SuperpixelQueueEntry(s, 0.0));
+			s.constraintDist = 0.0;
+		}
+		else
+		{
+			s.constraintDist = numeric_limits<float>::max();
+		}
+
+		
+		s.visited = false;
+	}
+
+	float maxObservedDist = 0.0f;
+	while (!queue.empty())
+	{
+		SuperpixelQueueEntry curEntry = queue.top();
+		queue.pop();
+
+		if (!curEntry.s->visited)
+		{
+			curEntry.s->visited = true;
+			for (size_t neighborIndex = 0; neighborIndex < curEntry.s->neighborIndices.size(); neighborIndex++)
+			{
+				Superpixel &curNeighbor = superpixels[curEntry.s->neighborIndices[neighborIndex]];
+				const float newDist = curEntry.s->constraintDist + (float)curEntry.s->neighborSimilarityWeights[neighborIndex];
+				if (newDist < curNeighbor.constraintDist)
+				{
+					curNeighbor.constraintDist = newDist;
+					maxObservedDist = max(maxObservedDist, newDist);
+					queue.push(SuperpixelQueueEntry(curNeighbor, curNeighbor.constraintDist));
+				}
+			}
+		}
+	}
+
+	for (Superpixel &s : superpixels)
+	{
+		if (s.constraintDist == numeric_limits<float>::max())
+			s.constraintDist = maxObservedDist;
+	}
 }
