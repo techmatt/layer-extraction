@@ -3,9 +3,7 @@ struct Superpixel
 {
 	Superpixel()
 	{
-		targetColorWeight = 0.0f;
 		targetColor = vec3f::origin;
-		
 		constraintType = ConstraintType::Regularization;
 		targetColorWeight = appParams().regularizationWeight;
 	}

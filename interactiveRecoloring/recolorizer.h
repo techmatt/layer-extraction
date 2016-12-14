@@ -1,35 +1,20 @@
 
 struct Recolorizer
 {
-	void init(const Bitmap &_imgInput);
+	void init(const Bitmap &_imgInput, const string &cacheFilename);
 	
 	Bitmap recolor(const Bitmap &imgEdits);
 	Bitmap makeFinalRender(const vector<vec3f> &newSuperpixelColors, bool flat);
 
 	void computeManifoldMatrix();
 
+	string activeCacheFilename;
 	ImageSuperpixels superpixels;
 	Bitmap imgInput;
 
 	vector< Eigen::Triplet<double> > manifoldTriplets;
 	vector<double> manifoldDiagonal;
 };
-
-/*struct SuperpixelQueueEntry
-{
-    SuperpixelQueueEntry(SuperpixelNeighborhood &_n, double _shortestDist)
-    {
-        n = &_n;
-        shortestDist = _shortestDist;
-    }
-    SuperpixelNeighborhood *n;
-    double shortestDist;
-};
-
-__forceinline bool operator < (const SuperpixelQueueEntry &a, const SuperpixelQueueEntry &b)
-{
-    return (a.shortestDist > b.shortestDist);
-}*/
 
 /*class Recolorizer
 {

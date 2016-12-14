@@ -14,6 +14,7 @@ struct AppParameters
 		// directories
 		//
 		file.readParameter("vizDir", vizDir);
+		file.readParameter("stagingDir", stagingDir);
 		file.readParameter("inputImage", inputImage);
 		file.readParameter("editImage", editImage);
 
@@ -35,11 +36,19 @@ struct AppParameters
 		file.readParameter("regularizationWeight", regularizationWeight);
 
 		file.readParameter("neighborhoodRegularizationWeight", neighborhoodRegularizationWeight);
+
+		file.readParameter("stagingMode", stagingMode);
+
+		file.readParameter("superpixelSpatialScale", superpixelSpatialScale);
+		file.readParameter("superpixelMaxRadiusScale", superpixelMaxRadiusScale);
+		file.readParameter("superpixelSpatialScaleEpsilon", superpixelSpatialScaleEpsilon);
 	}
 
-	string vizDir;
+	string vizDir, stagingDir;
 
 	string inputImage, editImage;
+
+	bool stagingMode;
 
 	int superpixelIterations;
 	int superpixelCount;
@@ -54,6 +63,10 @@ struct AppParameters
 	float editWeight;
 	float regularizationWeight;
 	float passiveStasisQuertile;
+
+	float superpixelSpatialScale;
+	float superpixelMaxRadiusScale;
+	float superpixelSpatialScaleEpsilon;
 
 	double neighborhoodRegularizationWeight;
 };

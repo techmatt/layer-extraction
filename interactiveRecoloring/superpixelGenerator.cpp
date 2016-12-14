@@ -43,7 +43,23 @@ vec2i SuperpixelCluster::massCentroid() const
 
 double SuperpixelCluster::assignmentError(const Bitmap &bmp, const vec2i &coord) const
 {
-    return vec3f::distSq(color, colorUtil::toVec3f(bmp(coord.x, coord.y)));
+	const float colorDist = vec3f::dist(color, colorUtil::toVec3f(bmp(coord.x, coord.y)));
+	const float spatialDist = vec2f::dist(vec2f(coord), seed);
+
+	const float avgSuperpixelArea = (float)bmp.getDimX() * bmp.getDimY() / appParams().superpixelCount;
+	//a = pi * r * r;
+	//r = sqrt(a / pi)
+	const float avgSuperpixelRadius = sqrt(avgSuperpixelArea / math::PIf);
+
+	float relativeSpatialDist = spatialDist / avgSuperpixelRadius * appParams().superpixelMaxRadiusScale;
+
+	float spatialCost = relativeSpatialDist * appParams().superpixelSpatialScaleEpsilon;
+	if (relativeSpatialDist > 1.0f)
+	{
+		spatialCost += (relativeSpatialDist - 1.0f) * appParams().superpixelSpatialScale;
+	}
+
+    return colorDist + spatialCost;
 }
 
 void SuperpixelCluster::resetColor( const RGBColor &_color )

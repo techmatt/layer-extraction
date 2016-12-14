@@ -1,16 +1,22 @@
 #include "Main.h"
 
-void Recolorizer::init(const Bitmap &_imgInput)
+void Recolorizer::init(const Bitmap &_imgInput, const string &cacheFilename)
 {
+	if (activeCacheFilename == cacheFilename)
+		return;
+
 	imgInput = _imgInput;
 	
-	const string cacheFilename = util::replace(appParams().inputImage, ".png", ".cache");
 	if (util::fileExists(cacheFilename))
 	{
+		activeCacheFilename = cacheFilename;
 		superpixels.loadFromFile(cacheFilename);
 	}
 	else
 	{
+		activeCacheFilename = cacheFilename;
+		superpixels = ImageSuperpixels();
+
 		SuperpixelGeneratorSuperpixel generator;
 		const vector<SuperpixelCoord> superpixelCoords = generator.extract(imgInput, superpixels.assignments);
 

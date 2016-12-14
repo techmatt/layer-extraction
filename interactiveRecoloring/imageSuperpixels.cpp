@@ -3,6 +3,13 @@
 
 void ImageSuperpixels::loadEdits(const Bitmap &imgInput, const Bitmap & imgEdit)
 {
+	for (auto &s : superpixels)
+	{
+		s.targetColor = vec3f::origin;
+		s.targetColorWeight = appParams().regularizationWeight;
+		s.constraintType = Superpixel::ConstraintType::Regularization;
+	}
+
 	for (auto &p : imgEdit)
 	{
 		const vec4uc inputColor = imgInput(p.x, p.y);
@@ -38,7 +45,6 @@ void ImageSuperpixels::loadEdits(const Bitmap &imgInput, const Bitmap & imgEdit)
 	vector<float> dists;
 	for (auto &s : superpixels)
 	{
-		cout << s.constraintDist << endl;
 		dists.push_back(s.constraintDist);
 	}
 	sort(dists.begin(), dists.end());
@@ -181,8 +187,6 @@ void ImageSuperpixels::computeConstraintDists()
 		{
 			s.constraintDist = numeric_limits<float>::max();
 		}
-
-		
 		s.visited = false;
 	}
 
