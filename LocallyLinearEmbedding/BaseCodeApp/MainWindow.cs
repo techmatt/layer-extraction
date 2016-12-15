@@ -102,7 +102,7 @@ namespace BaseCodeApp
             }
 
             //UpdateImages();
-            paletteMethodBox.SelectedIndex = 3;
+            paletteMethodBox.SelectedIndex = 0;
             layerMethodBox.SelectedIndex = 0;
             colorSpaceBox.SelectedIndex = 0;
 

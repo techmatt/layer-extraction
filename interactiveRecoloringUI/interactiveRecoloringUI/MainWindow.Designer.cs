@@ -42,12 +42,12 @@
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.buttonUpdate = new System.Windows.Forms.Button();
-            this.radioButton1 = new System.Windows.Forms.RadioButton();
-            this.radioButton2 = new System.Windows.Forms.RadioButton();
-            this.radioButton3 = new System.Windows.Forms.RadioButton();
             this.pictureBoxSelectedColor = new System.Windows.Forms.PictureBox();
             this.pictureBoxResult = new System.Windows.Forms.PictureBox();
             this.colorDialog = new System.Windows.Forms.ColorDialog();
+            this.checkBoxOriginal = new System.Windows.Forms.CheckBox();
+            this.checkBoxShowConstraints = new System.Windows.Forms.CheckBox();
+            this.buttonSave = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPalette)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxMain)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarStationaryRadius)).BeginInit();
@@ -109,11 +109,12 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(352, 20);
+            this.label3.Location = new System.Drawing.Point(656, 20);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(198, 15);
+            this.label3.Size = new System.Drawing.Size(304, 15);
             this.label3.TabIndex = 1;
-            this.label3.Text = "Shift-click image for color dropper.";
+            this.label3.Text = "Shift-click image for color dropper.  Ctrl-click to erase.";
+            this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // label4
             // 
@@ -183,42 +184,6 @@
             this.buttonUpdate.UseVisualStyleBackColor = true;
             this.buttonUpdate.Click += new System.EventHandler(this.buttonUpdate_Click);
             // 
-            // radioButton1
-            // 
-            this.radioButton1.AutoSize = true;
-            this.radioButton1.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.radioButton1.Location = new System.Drawing.Point(10, 529);
-            this.radioButton1.Name = "radioButton1";
-            this.radioButton1.Size = new System.Drawing.Size(126, 23);
-            this.radioButton1.TabIndex = 9;
-            this.radioButton1.TabStop = true;
-            this.radioButton1.Text = "Original image";
-            this.radioButton1.UseVisualStyleBackColor = true;
-            // 
-            // radioButton2
-            // 
-            this.radioButton2.AutoSize = true;
-            this.radioButton2.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.radioButton2.Location = new System.Drawing.Point(10, 558);
-            this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size(141, 23);
-            this.radioButton2.TabIndex = 9;
-            this.radioButton2.TabStop = true;
-            this.radioButton2.Text = "Recolored image";
-            this.radioButton2.UseVisualStyleBackColor = true;
-            // 
-            // radioButton3
-            // 
-            this.radioButton3.AutoSize = true;
-            this.radioButton3.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.radioButton3.Location = new System.Drawing.Point(10, 587);
-            this.radioButton3.Name = "radioButton3";
-            this.radioButton3.Size = new System.Drawing.Size(104, 23);
-            this.radioButton3.TabIndex = 9;
-            this.radioButton3.TabStop = true;
-            this.radioButton3.Text = "Constraints";
-            this.radioButton3.UseVisualStyleBackColor = true;
-            // 
             // pictureBoxSelectedColor
             // 
             this.pictureBoxSelectedColor.BackColor = System.Drawing.Color.Black;
@@ -238,22 +203,56 @@
             this.pictureBoxResult.TabIndex = 11;
             this.pictureBoxResult.TabStop = false;
             // 
+            // checkBoxOriginal
+            // 
+            this.checkBoxOriginal.AutoSize = true;
+            this.checkBoxOriginal.Location = new System.Drawing.Point(421, 19);
+            this.checkBoxOriginal.Name = "checkBoxOriginal";
+            this.checkBoxOriginal.Size = new System.Drawing.Size(102, 19);
+            this.checkBoxOriginal.TabIndex = 12;
+            this.checkBoxOriginal.Text = "Show original";
+            this.checkBoxOriginal.UseVisualStyleBackColor = true;
+            this.checkBoxOriginal.CheckedChanged += new System.EventHandler(this.checkBoxOriginal_CheckedChanged);
+            // 
+            // checkBoxShowConstraints
+            // 
+            this.checkBoxShowConstraints.AutoSize = true;
+            this.checkBoxShowConstraints.Checked = true;
+            this.checkBoxShowConstraints.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxShowConstraints.Location = new System.Drawing.Point(529, 19);
+            this.checkBoxShowConstraints.Name = "checkBoxShowConstraints";
+            this.checkBoxShowConstraints.Size = new System.Drawing.Size(121, 19);
+            this.checkBoxShowConstraints.TabIndex = 12;
+            this.checkBoxShowConstraints.Text = "Show constraints";
+            this.checkBoxShowConstraints.UseVisualStyleBackColor = true;
+            this.checkBoxShowConstraints.CheckedChanged += new System.EventHandler(this.checkBoxShowConstraints_CheckedChanged);
+            // 
+            // buttonSave
+            // 
+            this.buttonSave.Location = new System.Drawing.Point(342, 12);
+            this.buttonSave.Name = "buttonSave";
+            this.buttonSave.Size = new System.Drawing.Size(73, 30);
+            this.buttonSave.TabIndex = 3;
+            this.buttonSave.Text = "Save";
+            this.buttonSave.UseVisualStyleBackColor = true;
+            this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1284, 1271);
+            this.Controls.Add(this.checkBoxShowConstraints);
+            this.Controls.Add(this.checkBoxOriginal);
             this.Controls.Add(this.pictureBoxResult);
             this.Controls.Add(this.pictureBoxSelectedColor);
-            this.Controls.Add(this.radioButton3);
-            this.Controls.Add(this.radioButton2);
-            this.Controls.Add(this.radioButton1);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.trackBarStationaryRadius);
             this.Controls.Add(this.pictureBoxMain);
             this.Controls.Add(this.label4);
+            this.Controls.Add(this.buttonSave);
             this.Controls.Add(this.buttonUpdate);
             this.Controls.Add(this.buttonReset);
             this.Controls.Add(this.buttonLoadImage);
@@ -290,12 +289,12 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Button buttonUpdate;
-        private System.Windows.Forms.RadioButton radioButton1;
-        private System.Windows.Forms.RadioButton radioButton2;
-        private System.Windows.Forms.RadioButton radioButton3;
         private System.Windows.Forms.PictureBox pictureBoxSelectedColor;
         private System.Windows.Forms.PictureBox pictureBoxResult;
         private System.Windows.Forms.ColorDialog colorDialog;
+        private System.Windows.Forms.CheckBox checkBoxOriginal;
+        private System.Windows.Forms.CheckBox checkBoxShowConstraints;
+        private System.Windows.Forms.Button buttonSave;
     }
 }
 

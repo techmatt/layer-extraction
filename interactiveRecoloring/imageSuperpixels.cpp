@@ -32,6 +32,23 @@ void ImageSuperpixels::loadEdits(const Bitmap &imgInput, const Bitmap & imgEdit)
 		}
 	}
 
+	if (appParams().equalizeCostraintLightness)
+	{
+		for (auto &s : superpixels)
+		{
+			if (s.constraintType == Superpixel::ConstraintType::Edit)
+			{
+				const float targetLightness = s.coord.color.length();
+				const float constraintLightness = s.targetColor.length();
+				const float scale = targetLightness / constraintLightness;
+				s.targetColor *= scale;
+				s.targetColor.x = math::clamp(s.targetColor.x, 0.0f, 1.0f);
+				s.targetColor.y = math::clamp(s.targetColor.y, 0.0f, 1.0f);
+				s.targetColor.z = math::clamp(s.targetColor.z, 0.0f, 1.0f);
+			}
+		}
+	}
+
 	/*for (auto &s : superpixels)
 	{
 		if (s.targetColorWeight == 0.0)
@@ -45,11 +62,12 @@ void ImageSuperpixels::loadEdits(const Bitmap &imgInput, const Bitmap & imgEdit)
 	vector<float> dists;
 	for (auto &s : superpixels)
 	{
+		//cout << s.constraintDist << endl;
 		dists.push_back(s.constraintDist);
 	}
 	sort(dists.begin(), dists.end());
 	maxConstraintDist = dists.back();
-	const float passiveThreshold = dists[math::round((1.0f - appParams().passiveStasisQuertile) * dists.size())];
+	const float passiveThreshold = util::clampedRead(dists, math::round((1.0f - appParams().passiveStasisQuertile) * dists.size()));
 
 	int editCount = 0;
 	int activeStasisCount = 0;
@@ -174,7 +192,52 @@ vector<double> ImageSuperpixels::computeWeights(const vector<unsigned int> &indi
 
 void ImageSuperpixels::computeConstraintDists()
 {
-	priority_queue<SuperpixelQueueEntry> queue;
+	vector<const Superpixel*> constrainedSuperpixels;
+	for (const Superpixel &s : superpixels)
+	{
+		if (s.constraintType == Superpixel::ConstraintType::Edit)
+			constrainedSuperpixels.push_back(&s);
+	}
+
+	vector<float> colorDists;
+	vector<float> spatialDists;
+	for (Superpixel &s : superpixels)
+	{
+		float bestDist = numeric_limits<float>::max();
+		for (const Superpixel *cPtr : constrainedSuperpixels)
+		{
+			const Superpixel &c = *cPtr;
+			const float colorDist = vec3f::dist(s.coord.color, c.coord.color);
+			const float spatialDist = vec2f::dist(vec2f(s.coord.coord), vec2f(c.coord.coord)) / assignments.getDimX();
+			colorDists.push_back(colorDist);
+			spatialDists.push_back(spatialDist);
+		}
+	}
+	if (colorDists.size() == 0) return;
+
+	sort(colorDists.begin(), colorDists.end());
+	sort(spatialDists.begin(), spatialDists.end());
+
+	const float colorDistScale = 1.0f / colorDists[math::round(colorDists.size() * 0.75f)];
+	const float spatialDistScale = 1.0f / spatialDists[math::round(spatialDists.size() * 0.75f)];
+
+	for (Superpixel &s : superpixels)
+	{
+		float bestDist = numeric_limits<float>::max();
+		for (const Superpixel *cPtr : constrainedSuperpixels)
+		{
+			const Superpixel &c = *cPtr;
+			const float colorDist = colorDistScale * vec3f::dist(s.coord.color, c.coord.color);
+			const float spatialDist = spatialDistScale * vec2f::dist(vec2f(s.coord.coord), vec2f(c.coord.coord)) / assignments.getDimX();
+
+			//const float curDist = min(colorDist, spatialDist);
+			const float curDist = colorDist * 0.1f + spatialDist;
+			bestDist = min(bestDist, curDist);
+		}
+		s.constraintDist = bestDist;
+	}
+
+	/*priority_queue<SuperpixelQueueEntry> queue;
 
 	for (Superpixel &s : superpixels)
 	{
@@ -217,5 +280,5 @@ void ImageSuperpixels::computeConstraintDists()
 	{
 		if (s.constraintDist == numeric_limits<float>::max())
 			s.constraintDist = maxObservedDist;
-	}
+	}*/
 }

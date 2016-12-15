@@ -17,7 +17,7 @@ namespace interactiveRecoloringUI
 {
     public partial class MainWindow : Form
     {
-        const int brushEllipseRadius = 4;
+        const int brushEllipseRadius = 3;
         const string stagingDir = @"C:\Code\layer-extraction\interactiveRecoloringUI\staging\";
 
         string imageFullPath;
@@ -26,6 +26,7 @@ namespace interactiveRecoloringUI
         Bitmap activeImage;
         Bitmap paletteImage;
         Bitmap editImage;
+        Bitmap resultImage;
         Graphics editImageGraphics;
         Graphics activeImageGraphics;
         Color selectedColor;
@@ -70,8 +71,11 @@ namespace interactiveRecoloringUI
             originalImage = loadImageFromFile(filename);
             activeImage = new Bitmap(originalImage);
             editImage = new Bitmap(originalImage);
+            resultImage = new Bitmap(originalImage);
             activeImageGraphics = Graphics.FromImage(activeImage);
             editImageGraphics = Graphics.FromImage(editImage);
+
+            editImageGraphics.Clear(Color.FromArgb(0, 0, 0, 0));
 
             pictureBoxMain.Image = activeImage;
             imageName = Path.GetFileNameWithoutExtension(filename);
@@ -94,6 +98,27 @@ namespace interactiveRecoloringUI
         {
 
         }
+        
+        private void drawEditCircle(MouseEventArgs e)
+        {
+            Color c = selectedColor;
+            if (e.Button == MouseButtons.Right)
+                c = Color.Magenta;
+
+            Brush brush = new SolidBrush(c);
+            int radius = brushEllipseRadius;
+            if (Control.ModifierKeys == Keys.Control)
+            {
+                brush = new SolidBrush(Color.FromArgb(0, 0, 0, 0));
+                radius *= 2;
+            }
+
+            editImageGraphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+            editImageGraphics.FillEllipse(brush, e.X - radius, e.Y - radius, radius * 2, radius * 2);
+            editImageGraphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
+
+            updateEditBox();
+        }
 
         private void pictureBoxMain_MouseDown(object sender, MouseEventArgs e)
         {
@@ -102,28 +127,37 @@ namespace interactiveRecoloringUI
                 updateSelectedColor(activeImage.GetPixel(e.Location.X, e.Location.Y));
                 return;
             }
-            Color c = selectedColor;
-            if (e.Button == MouseButtons.Right)
-                c = Color.Magenta;
-            activeImageGraphics.FillEllipse(new SolidBrush(c), e.X - brushEllipseRadius, e.Y - brushEllipseRadius, brushEllipseRadius * 2, brushEllipseRadius * 2);
-            pictureBoxMain.Image = activeImage;
+            drawEditCircle(e);
         }
 
         private void pictureBoxMain_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
             {
-                Color c = selectedColor;
-                if (e.Button == MouseButtons.Right)
-                    c = Color.Magenta;
-                activeImageGraphics.FillEllipse(new SolidBrush(c), e.X - brushEllipseRadius, e.Y - brushEllipseRadius, brushEllipseRadius * 2, brushEllipseRadius * 2);
-                pictureBoxMain.Image = activeImage;
+                drawEditCircle(e);
             }
         }
 
-        private void buttonUpdate_Click(object sender, EventArgs e)
+        private void updateResultBox()
+        {
+            pictureBoxResult.Image = resultImage;
+        }
+        private void updateEditBox()
+        {
+            if(checkBoxOriginal.Checked)
+                activeImageGraphics.DrawImageUnscaled(originalImage, new Point(0, 0));
+            else
+                activeImageGraphics.DrawImageUnscaled(resultImage, new Point(0, 0));
+            if(checkBoxShowConstraints.Checked)
+                activeImageGraphics.DrawImageUnscaled(editImage, new Point(0, 0));
+            pictureBoxMain.Image = activeImage;
+        }
+        private void update()
         {
             originalImage.Save(stagingDir + imageName + ".png");
+
+            activeImageGraphics.DrawImageUnscaled(originalImage, new Point(0, 0));
+            activeImageGraphics.DrawImageUnscaled(editImage, new Point(0, 0));
             activeImage.Save(stagingDir + imageName + "-edits.png");
 
             var lines = new List<string>();
@@ -131,13 +165,20 @@ namespace interactiveRecoloringUI
             lines.Add("editImage=" + stagingDir + imageName + "-edits.png");
             File.WriteAllLines(stagingDir + "recoloringParamsFromUI.txt", lines);
             File.WriteAllText(stagingDir + "update.txt", "update");
-            while(true)
+            while (true)
             {
                 if (!File.Exists(stagingDir + "update.txt"))
                     break;
                 Thread.Sleep(50);
             }
-            pictureBoxResult.Image = loadImageFromFile(stagingDir + imageName + "-result.png");
+            resultImage = loadImageFromFile(stagingDir + imageName + "-result.png");
+            updateResultBox();
+            updateEditBox();
+        }
+
+        private void buttonUpdate_Click(object sender, EventArgs e)
+        {
+            update();
         }
 
         private void buttonReset_Click(object sender, EventArgs e)
@@ -159,6 +200,34 @@ namespace interactiveRecoloringUI
             {
                 updateSelectedColor(colorDialog.Color);
             }
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBoxOriginal_CheckedChanged(object sender, EventArgs e)
+        {
+            updateResultBox();
+            updateEditBox();
+        }
+
+        private void checkBoxShowConstraints_CheckedChanged(object sender, EventArgs e)
+        {
+            updateResultBox();
+            updateEditBox();
+        }
+
+        private void buttonSave_Click(object sender, EventArgs e)
+        {
+            Bitmap saveImage = new Bitmap(originalImage, originalImage.Width * 3, originalImage.Height);
+            Graphics g = Graphics.FromImage(saveImage);
+            g.DrawImageUnscaled(originalImage, new Point(originalImage.Width * 0, 0));
+            g.DrawImageUnscaled(originalImage, new Point(originalImage.Width * 1, 0));
+            g.DrawImageUnscaled(editImage, new Point(originalImage.Width * 1, 0));
+            g.DrawImageUnscaled(resultImage, new Point(originalImage.Width * 2, 0));
+            saveImage.Save(stagingDir + "save.png");
         }
     }
 }

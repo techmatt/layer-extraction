@@ -1,7 +1,7 @@
 
 vizDir=C:\Code\layer-extraction\interactiveRecoloring\viz\
 
-stagingMode=false
+stagingMode=true
 stagingDir=C:\Code\layer-extraction\interactiveRecoloringUI\staging\
 
 inputImage=C:\Code\layer-extraction\interactiveRecoloring\examples\faceB-tiny.png
@@ -24,13 +24,15 @@ pixelNeighborCount=30
 superpixelNeighborCount=30
 periodicBasisCount=3
 
-activeStasisWeight=0.001
-editWeight=0.0001
-passiveStasisWeight=0.000002
-passiveStasisQuertile=0.05
+activeStasisWeight=0.02
+editWeight=0.005
+passiveStasisWeight=0.02
+passiveStasisQuertile=0.25
 regularizationWeight=0.0
 
 neighborhoodRegularizationWeight=0.000001
+
+equalizeCostraintLightness=false
 
 superpixelMaxRadiusScale=1.2
 superpixelSpatialScale=0.2

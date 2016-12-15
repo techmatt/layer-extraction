@@ -5,6 +5,8 @@ void Recolorizer::init(const Bitmap &_imgInput, const string &cacheFilename)
 	if (activeCacheFilename == cacheFilename)
 		return;
 
+	*this = Recolorizer();
+
 	imgInput = _imgInput;
 	
 	if (util::fileExists(cacheFilename))

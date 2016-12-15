@@ -42,6 +42,8 @@ struct AppParameters
 		file.readParameter("superpixelSpatialScale", superpixelSpatialScale);
 		file.readParameter("superpixelMaxRadiusScale", superpixelMaxRadiusScale);
 		file.readParameter("superpixelSpatialScaleEpsilon", superpixelSpatialScaleEpsilon);
+
+		file.readParameter("equalizeCostraintLightness", equalizeCostraintLightness);
 	}
 
 	string vizDir, stagingDir;
@@ -69,6 +71,8 @@ struct AppParameters
 	float superpixelSpatialScaleEpsilon;
 
 	double neighborhoodRegularizationWeight;
+
+	bool equalizeCostraintLightness;
 };
 
 extern AppParameters* g_appParams;
